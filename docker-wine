@@ -1,6 +1,7 @@
 #!/bin/bash
 docker run -ti --rm \
        -e DISPLAY=$DISPLAY \
-       -v /tmp/.X11-unix:/tmp/.X11-unix:ro \
-       --name=ubuntu-wine
+       -v /tmp/.X11-unix:/tmp/.X11-unix \
+       --name=docker-wine \
+       docker-wine
        

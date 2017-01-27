@@ -5,6 +5,6 @@ RUN dpkg --add-architecture i386 \
     && add-apt-repository ppa:wine/wine-builds \
     && apt-get update
 RUN apt-get install -y --install-recommends winehq-staging wget
-RUN wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
-    && install ./winetricks /usr/bin/winetricks 
+ADD https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks /usr/bin/winetricks 
+RUN chmod +x /usr/bin/winetricks
 CMD ["/bin/bash"]
