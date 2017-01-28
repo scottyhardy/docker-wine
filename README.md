@@ -1,13 +1,31 @@
 docker-wine
 ===========
 
-Included in the [`docker-wine` GitHub repo](https://github.com/scottyhardy/docker-wine) 
+Included in the [docker-wine GitHub repo](https://github.com/scottyhardy/docker-wine) 
 are scripts to enable you to build a Docker container that runs Wine. The 
 container is based on Ubuntu 16.04 and uses the Wine Staging branch (latest/
 less stable) and also includes the latest version of `winetricks`. Included 
 below are instructions for running the `docker-wine` container with X11 
 forwarding to display graphics in the local user's session without needing to 
 compromise xhost security.
+
+Creating your own docker-wine image
+-----------------------------------
+First, clone the repo from GitHub:
+```bash
+git clone https://github.com/scottyhardy/docker-wine.git
+```
+
+To build the container, simply run:
+```bash
+make
+```
+
+To run the container and start an interactive session with /bin/bash run either:
+```bash
+make run
+```
+or use the `docker-wine` script as described below.
 
 Running from Docker Hub image
 -----------------------------
@@ -92,7 +110,7 @@ docker run -it \
     --workdir="$HOME" \ 
     --user="`id -u`:`id -g`" \
     --name="wine" \
-    docker-wine $*
+    scottyhardy/docker-wine $*
 ```
 
 Running the `docker-wine` script
@@ -110,8 +128,8 @@ any other valid commands with their associated arguments:
 ./docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-Data Storage
-------------
+Local Data Storage
+------------------
 By default, running `./docker-wine` maps a volume on the local machine to 
 `$HOME/.docker-wine` which will hold all data created whenever you run any wine 
 commands with the `docker-wine` container.  You can change this default 
@@ -131,21 +149,3 @@ export DOCKERWINEHOME=.no_place_like_home
 It does not include any changes to files outside of the user's home folder in 
 the container, so it is not recommended to change any of these unless you 
 create additional volume mounts. 
-
-Creating your own docker-wine image
--------------------------------
-First, clone the repo from GitHub:
-```bash
-git clone https://github.com/scottyhardy/docker-wine.git
-```
-
-To build the container, simply run:
-```bash
-make
-```
-
-To run the container and start an interactive session with /bin/bash run either:
-```bash
-make run
-```
-or use the `docker-wine` script as described above.
