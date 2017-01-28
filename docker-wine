@@ -1,7 +1,17 @@
 #!/bin/bash
-docker run -ti --rm \
-       -e DISPLAY=$DISPLAY \
-       -v /tmp/.X11-unix:/tmp/.X11-unix \
-       --name=docker-wine \
-       docker-wine
-       
+
+DOCKERWINEHOME=${DOCKERWINEHOME:-.docker-wine}
+[ ! -d "$HOME/$DOCKERWINEHOME" ] && mkdir -p "$HOME/$DOCKERWINEHOME"
+
+docker run -it \
+    --rm \
+    --env="DISPLAY" \
+    --volume="/etc/group:/etc/group:ro" \
+    --volume="/etc/passwd:/etc/passwd:ro" \
+    --volume="/etc/shadow:/etc/shadow:ro" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
+    --volume="$HOME/$DOCKERWINEHOME:$HOME" \
+    --workdir="$HOME" \
+    --user="`id -u`:`id -g`" \
+    --name="wine" \
+    docker-wine $*
