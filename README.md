@@ -1,7 +1,7 @@
 docker-wine
 ===========
 
-Included in the [docker-wine GitHub repo](https://github.com/scottyhardy/docker-wine) 
+Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) 
 are scripts to enable you to build a Docker container that runs Wine. The 
 container is based on Ubuntu 16.04 and uses the Wine Staging branch (latest/
 less stable) and also includes the latest version of `winetricks`. Included 
@@ -11,7 +11,7 @@ compromise xhost security.
 
 Creating your own docker-wine image
 -----------------------------------
-First, clone the repo from GitHub:
+First, clone the repository from GitHub:
 ```bash
 git clone https://github.com/scottyhardy/docker-wine.git
 ```
@@ -58,7 +58,7 @@ docker run -it \
 ```
 First off, this will mean all data is stored in your container.  That's fine if 
 you're trying to achieve total abstraction from the host machine but not great 
-if you're looking to make your containers ephermal.
+if you're looking to make your containers ephemeral.
 Also, since Docker containers run as root by default it means running the above
 code will likely result in a bunch of errors as soon as you try to run anything 
 that tries to display graphics, unless you modify xhost permissions:
@@ -69,7 +69,7 @@ wine: created the configuration directory '/root/.wine'
 err:winediag:nulldrv_CreateWindow Application tried to create a window, but no driver could be loaded.
 err:winediag:nulldrv_CreateWindow Make sure that your X server is running and that $DISPLAY is set correctly.
 ```
-You can get around this by modifying xhosts permissions on your local machine by running:
+You can get around this by modifying xhost permissions on your local machine by running:
 ```bash
 xhost +
 ```
@@ -91,7 +91,7 @@ xhost -local:root
 
 Manually creating `docker-wine` script
 --------------------------------------
-To replicate the `docker-wine` script from the GitHub repo, just copy and paste 
+To replicate the `docker-wine` script from the GitHub repository, just copy and paste 
 the following into a file named docker-wine and run `chmod +x ./docker-wine`:
 ```bash
 #!/bin/bash
