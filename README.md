@@ -1,7 +1,7 @@
 docker-wine
 ===========
 
-Included in the [docker-wine GitHub repo](https://github.com/scottyhardy/docker-wine) 
+Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) 
 are scripts to enable you to build a Docker container that runs Wine. The 
 container is based on Ubuntu 16.04 and uses the Wine Staging branch (latest/
 less stable) and also includes the latest version of `winetricks`. Included 
@@ -11,7 +11,7 @@ compromise xhost security.
 
 Creating your own docker-wine image
 -----------------------------------
-First, clone the repo from GitHub:
+First, clone the repository from GitHub:
 ```bash
 git clone https://github.com/scottyhardy/docker-wine.git
 ```
@@ -91,7 +91,7 @@ xhost -local:root
 
 Manually creating `docker-wine` script
 --------------------------------------
-To replicate the `docker-wine` script from the GitHub repo, just copy and paste 
+To replicate the `docker-wine` script from the GitHub repository, just copy and paste 
 the following into a file named docker-wine and run `chmod +x ./docker-wine`:
 ```bash
 #!/bin/bash
