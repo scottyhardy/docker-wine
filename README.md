@@ -107,7 +107,7 @@ docker run -it \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volume="$HOME/$DOCKERWINEHOME:$HOME" \
-    --workdir="$HOME" \ 
+    --workdir="$HOME" \
     --user="`id -u`:`id -g`" \
     --name="wine" \
     scottyhardy/docker-wine $*
