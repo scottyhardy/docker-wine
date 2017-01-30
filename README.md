@@ -9,6 +9,15 @@ below are instructions for running the `docker-wine` container with X11
 forwarding to display graphics in the local user's session without needing to 
 compromise xhost security.
 
+Included packages
+-----------------
+| Package                    | Purpose                                        |
+| -------------------------- | ---------------------------------------------- |
+| software-properties-common | Required for `add-apt-repository`              |
+| winehq-staging             | Staging branch of `wine`                       |
+| winetricks                 | Script to assist with configuring your wine bottle and installing software |
+| wget                       | Required for `winetricks` to download binaries |
+
 Creating your own docker-wine image
 -----------------------------------
 First, clone the repository from GitHub:
