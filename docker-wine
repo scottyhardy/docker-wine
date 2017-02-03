@@ -1,16 +1,31 @@
 #!/bin/bash
 
-DOCKERWINEHOME=${DOCKERWINEHOME:-.docker-wine}
-[ ! -d "$HOME/$DOCKERWINEHOME" ] && mkdir -p "$HOME/$DOCKERWINEHOME"
+branch=$(git rev-parse --abbrev-ref HEAD)
+branch=$(echo $branch | perl -pe 's/\//-/g')
+branch=$(echo -$branch)
+branch=$(echo $branch | perl -pe 's/-main//')
+
+if ! docker ps -a | grep -q winehome${branch}; then
+    docker create \
+        -v /wine \
+        --user="`id -u`:`id -g`" \
+        --name winehome${branch} \
+        docker-wine \
+        /bin/true
+fi
 
 docker run -it \
     --rm \
     --env="DISPLAY" \
+    --env="USER" \
     --volume="/etc/group:/etc/group:ro" \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="$HOME/$DOCKERWINEHOME:/home/wine" \
-    --user="`id -u`:`id -g`" \
-    --name="wine" \
+    --volumes-from="winehome${branch}" \
+    --name=wine${branch} \
     docker-wine $*
+
+#    --workdir="$HOME" \
+
+#    docker rm winehome
