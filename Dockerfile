@@ -19,7 +19,7 @@ RUN \
         -O $HOME/.cache/wine/wine_gecko-2.47-x86.msi \
     && wget https://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86_64.msi \
         -O $HOME/.cache/wine/wine_gecko-2.47-x86_64.msi
-VOLUME ["/wine "]
+VOLUME ["/wine"]
 ENTRYPOINT chown -R $USER:$USER $HOME; \
     ln -s $HOME /home/$USER; \
     su $USER;
