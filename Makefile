@@ -1,6 +1,12 @@
 default: build 
 
+branch := $(shell git rev-parse --abbrev-ref HEAD)	
+branch := $(shell echo $(branch) | perl -pe 's/\//-/g')
+branch := -$(branch)
+branch := $(shell echo $(branch) | perl -pe 's/-main//')
+
 run:
 	./docker-wine
+
 build: Dockerfile
-	docker build -t docker-wine . 
+	docker build -t docker-wine$(branch) . 
