@@ -10,8 +10,7 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="$HOME/$DOCKERWINEHOME:$HOME" \
-    --workdir="$HOME" \
+    --volume="$HOME/$DOCKERWINEHOME:/home/wine" \
     --user="`id -u`:`id -g`" \
     --name="wine" \
     docker-wine $*
