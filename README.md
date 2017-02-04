@@ -24,8 +24,8 @@ are also included so you don't need to download them each time:
 | File                       | Purpose                                                                                 |
 | -------------------------- | --------------------------------------------------------------------------------------- |
 | wine-mono-4.6.4.msi        | [Mono](https://wiki.winehq.org/Mono) open-source .Net alternative                       |
-| wine_gecko-2.47-x86.msi    | [Gecko](https://wiki.winehq.org/Gecko) 32 bit Open-source Internet Explorer alternative |
-| wine_gecko-2.47-x86_64.msi | [Gecko](https://wiki.winehq.org/Gecko) 64 bit Open-source Internet Explorer alternative |
+| wine_gecko-2.47-x86.msi    | [Gecko](https://wiki.winehq.org/Gecko) 32 bit open-source Internet Explorer alternative |
+| wine_gecko-2.47-x86_64.msi | [Gecko](https://wiki.winehq.org/Gecko) 64 bit open-source Internet Explorer alternative |
 
 The Windows installation files are copied to `/wine/.cache/wine` as the `/wine` 
 folder is set to home for all users.
