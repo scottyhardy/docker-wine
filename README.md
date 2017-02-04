@@ -11,18 +11,18 @@ compromise xhost security.
 
 Included packages
 -----------------
-| Package                    | Purpose                                        |
-| -------------------------- | ---------------------------------------------- |
-| software-properties-common | Required for `add-apt-repository`              |
-| winehq-staging             | Staging branch of `wine`                       |
+| Package                    | Purpose                                                                    |
+| -------------------------- | -------------------------------------------------------------------------- |
+| software-properties-common | Required for `add-apt-repository`                                          |
+| winehq-staging             | Staging branch of `wine`                                                   |
 | winetricks                 | Script to assist with configuring your wine bottle and installing software |
-| wget                       | Required for `winetricks` to download binaries |
+| wget                       | Required for `winetricks` to download binaries                             |
 
 In addition to the system packages, the following Windows installation files 
 are also included so you don't need to download them each time:
-| File                       | Purpose                                        |
-| -------------------------- | ---------------------------------------------- |
-| wine-mono-4.6.4.msi        | [Mono](https://wiki.winehq.org/Mono) open-source .Net alternative |
+| File                       | Purpose                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| wine-mono-4.6.4.msi        | [Mono](https://wiki.winehq.org/Mono) open-source .Net alternative                       |
 | wine_gecko-2.47-x86.msi    | [Gecko](https://wiki.winehq.org/Gecko) 32 bit Open-source Internet Explorer alternative |
 | wine_gecko-2.47-x86_64.msi | [Gecko](https://wiki.winehq.org/Gecko) 64 bit Open-source Internet Explorer alternative |
 
