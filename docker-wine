@@ -5,15 +5,29 @@ branch=$(echo $branch | perl -pe 's/\//-/g')
 branch=$(echo -$branch)
 branch=$(echo $branch | perl -pe 's/-main//')
 
-if [[ $1 == "--rm" ]]; then
-    shift
-    $0 "$@"
-    exitcode=$?
-    docker rm winehome${branch}
-    exit $exitcode
-fi
+case $1 in
+    --rm)
+        echo "Auto-removing volume container 'winehome${branch}' after completing action..."
+        shift
+        $0 "$@"
+        exitcode=$?
+        docker rm winehome${branch} 2>&1 >/dev/null
+        echo "Removed 'winehome${branch}' volume container"
+        exit $exitcode
+        ;;
+    --help)
+        echo "Usage: $0 [--rm] [command] [arguments]..."
+        echo "e.g."
+        echo "    $0"
+        echo "    $0 --rm"
+        echo "    $0 wineboot --init"
+        echo "    $0 --rm wine explorer.exe"
+        exit 0
+        ;;
+esac
 
 if ! docker ps -a | grep -q winehome${branch}; then
+    echo "Creating volume container 'winehome${branch}'..."
     docker create \
         --volume="/wine" \
         --name="winehome${branch}" \
