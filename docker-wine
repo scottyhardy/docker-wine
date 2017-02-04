@@ -5,12 +5,19 @@ branch=$(echo $branch | perl -pe 's/\//-/g')
 branch=$(echo -$branch)
 branch=$(echo $branch | perl -pe 's/-main//')
 
+if [[ $1 == "--rm" ]]; then
+    shift
+    $0 "$@"
+    exitcode=$?
+    docker rm winehome${branch}
+    exit $exitcode
+fi
+
 if ! docker ps -a | grep -q winehome${branch}; then
     docker create \
-        -v /wine \
-        --user="`id -u`:`id -g`" \
-        --name winehome${branch} \
-        docker-wine \
+        --volume="/wine" \
+        --name="winehome${branch}" \
+        docker-wine${branch} \
         /bin/true
 fi
 
@@ -24,8 +31,4 @@ docker run -it \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volumes-from="winehome${branch}" \
     --name=wine${branch} \
-    docker-wine $*
-
-#    --workdir="$HOME" \
-
-#    docker rm winehome
+    docker-wine${branch} $*
