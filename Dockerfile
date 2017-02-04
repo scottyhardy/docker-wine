@@ -12,9 +12,9 @@ RUN apt-get update \
         -O /usr/bin/winetricks \
     && chmod +rx /usr/bin/winetricks \
     && mkdir -p $HOME/.cache/wine \
-    && wget http://dl.winehq.org/wine/wine-mono/4.6.4/wine-mono-4.6.4.msi \
+    && wget https://dl.winehq.org/wine/wine-mono/4.6.4/wine-mono-4.6.4.msi \
         -O $HOME/.cache/wine/wine-mono-4.6.4.msi \
-    && wget http://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86.msi \
+    && wget https://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86.msi \
         -O $HOME/.cache/wine/wine_gecko-2.47-x86.msi \
     && wget https://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86_64.msi \
         -O $HOME/.cache/wine/wine_gecko-2.47-x86_64.msi
