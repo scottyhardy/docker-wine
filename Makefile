@@ -2,7 +2,7 @@ default: build
 
 branch := $(shell git rev-parse --abbrev-ref HEAD)	
 branch := $(shell echo $(branch) | perl -pe 's/\//-/g')
-branch := -$(branch)
+branch := $(shell echo -$(branch))
 branch := $(shell echo $(branch) | perl -pe 's/-main//')
 
 run:
