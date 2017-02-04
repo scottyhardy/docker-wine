@@ -1,17 +1,44 @@
 #!/bin/bash
 
-DOCKERWINEHOME=${DOCKERWINEHOME:-.docker-wine}
-[ ! -d "$HOME/$DOCKERWINEHOME" ] && mkdir -p "$HOME/$DOCKERWINEHOME"
+branch=$(git rev-parse --abbrev-ref HEAD)
+branch=$(echo $branch | perl -pe 's/\//-/g')
+branch=$(echo -$branch)
+branch=$(echo $branch | perl -pe 's/-main//')
+
+case $1 in
+    --rm)
+        echo "Auto-removing volume container 'winehome${branch}' after completing action..."
+        shift
+        $0 "$@"
+        exitcode=$?
+        docker volume rm winehome${branch} 2>&1 >/dev/null
+        echo "Removed 'winehome${branch}' volume container"
+        exit $exitcode
+        ;;
+    --help)
+        echo "Usage: $0 [--rm] [command] [arguments]..."
+        echo "e.g."
+        echo "    $0"
+        echo "    $0 --rm"
+        echo "    $0 wineboot --init"
+        echo "    $0 --rm wine explorer.exe"
+        exit 0
+        ;;
+esac
+
+if ! docker volume ls | grep -q winehome${branch}; then
+    echo "Creating volume container 'winehome${branch}'..."
+    docker volume create winehome${branch}
+fi
 
 docker run -it \
     --rm \
     --env="DISPLAY" \
+    --env="USER" \
     --volume="/etc/group:/etc/group:ro" \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="$HOME/$DOCKERWINEHOME:$HOME" \
-    --workdir="$HOME" \
-    --user="`id -u`:`id -g`" \
-    --name="wine" \
-    docker-wine $*
+    --volume="winehome${branch}:/wine" \
+    --name=wine${branch} \
+    docker-wine${branch} $*
