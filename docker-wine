@@ -11,7 +11,7 @@ case $1 in
         shift
         $0 "$@"
         exitcode=$?
-        docker rm winehome${branch} 2>&1 >/dev/null
+        docker volume rm winehome${branch} 2>&1 >/dev/null
         echo "Removed 'winehome${branch}' volume container"
         exit $exitcode
         ;;
@@ -26,13 +26,9 @@ case $1 in
         ;;
 esac
 
-if ! docker ps -a | grep -q winehome${branch}; then
+if ! docker volume ls | grep -q winehome${branch}; then
     echo "Creating volume container 'winehome${branch}'..."
-    docker create \
-        --volume="/wine" \
-        --name="winehome${branch}" \
-        docker-wine${branch} \
-        /bin/true
+    docker volume create winehome${branch}
 fi
 
 docker run -it \
@@ -43,6 +39,6 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volumes-from="winehome${branch}" \
+    --volume="winehome${branch}:/wine" \
     --name=wine${branch} \
     docker-wine${branch} $*

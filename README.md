@@ -38,8 +38,10 @@ or use the `docker-wine` script as described below.
 
 Running from Docker Hub image
 -----------------------------
-The recommended command for running docker-wine securely is:
+The recommended commands for running docker-wine securely are:
 ```bash
+docker volume create winehome
+
 docker run -it \
     --rm \
     --env="DISPLAY" \
@@ -48,7 +50,8 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --name="wine" \
+    --volume="winehome:/wine" \
+    --name=wine \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
 This includes a lot of volumes on the local machine, but these are so that the 
@@ -106,7 +109,7 @@ case $1 in
         shift
         $0 "$@"
         exitcode=$?
-        docker rm winehome 2>&1 >/dev/null
+        docker volume rm winehome 2>&1 >/dev/null
         echo "Removed 'winehome' volume container"
         exit $exitcode
         ;;
@@ -121,13 +124,9 @@ case $1 in
         ;;
 esac
 
-if ! docker ps -a | grep -q winehome; then
+if ! docker volume ls | grep -q winehome; then
     echo "Creating volume container 'winehome'..."
-    docker create \
-        --volume="/wine" \
-        --name="winehome" \
-        scottyhardy/docker-wine \
-        /bin/true
+    docker volume create winehome
 fi
 
 docker run -it \
@@ -138,7 +137,7 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volumes-from="winehome" \
+    --volume="winehome:/wine" \
     --name=wine \
     scottyhardy/docker-wine $*
 ```
@@ -162,9 +161,20 @@ Volume Container
 ----------------
 By default, running `./docker-wine` creates a volume container named `winehome` 
 and will have a suffix of `-<branch name>` if not running from the master 
-branch.  This volume contains the folder `/wine` which is the common home 
+branch. This volume contains the folder `/wine` which is the common home 
 folder used no matter which user the container is running as.
 Within the volume container, some files required for setting up your wine 
 prefix will be replicated from the `docker-wine` container.  In this way the 
 actual wine program files will be separated from the user data so it can be 
-switched out any time to a newer image without losing any data.  
+switched out any time to a newer image without losing any data.
+
+If you don't want the volume container to persist after running `./docker-wine`, 
+just add `--rm` as your first argument.
+e.g.
+```bash
+./docker-wine --rm wine notepad.exe
+```
+Alternatively you can manually delete the volume container by using:
+```bash
+docker volume rm winehome
+```
