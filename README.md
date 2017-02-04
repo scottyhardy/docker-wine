@@ -43,13 +43,11 @@ The recommended command for running docker-wine securely is:
 docker run -it \
     --rm \
     --env="DISPLAY" \
+    --env="USER" \
     --volume="/etc/group:/etc/group:ro" \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="$HOME/.docker-wine:$HOME" \
-    --workdir="$HOME" \ 
-    --user="`id -u`:`id -g`" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
@@ -65,10 +63,7 @@ docker run -it \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     scottyhardy/docker-wine
 ```
-First off, this will mean all data is stored in your container.  That's fine if 
-you're trying to achieve total abstraction from the host machine but not great 
-if you're looking to make your containers ephemeral.
-Also, since Docker containers run as root by default it means running the above
+Since Docker containers run as root by default it means running the above
 code will likely result in a bunch of errors as soon as you try to run anything 
 that tries to display graphics, unless you modify xhost permissions:
 ```
@@ -98,27 +93,53 @@ or if you used the slightly more secure alternative:
 xhost -local:root
 ```
 
-Manually creating `docker-wine` script
---------------------------------------
+Manually creating `docker-wine` script for use with Docker Hub image
+--------------------------------------------------------------------
 To replicate the `docker-wine` script from the GitHub repository, just copy and paste 
 the following into a file named docker-wine and run `chmod +x ./docker-wine`:
 ```bash
 #!/bin/bash
 
-DOCKERWINEHOME=${DOCKERWINEHOME:-.docker-wine}
-[ ! -d "$HOME/$DOCKERWINEHOME" ] && mkdir -p "$HOME/$DOCKERWINEHOME"
+case $1 in
+    --rm)
+        echo "Auto-removing volume container 'winehome' after completing action..."
+        shift
+        $0 "$@"
+        exitcode=$?
+        docker rm winehome 2>&1 >/dev/null
+        echo "Removed 'winehome' volume container"
+        exit $exitcode
+        ;;
+    --help)
+        echo "Usage: $0 [--rm] [command] [arguments]..."
+        echo "e.g."
+        echo "    $0"
+        echo "    $0 --rm"
+        echo "    $0 wineboot --init"
+        echo "    $0 --rm wine explorer.exe"
+        exit 0
+        ;;
+esac
+
+if ! docker ps -a | grep -q winehome; then
+    echo "Creating volume container 'winehome'..."
+    docker create \
+        --volume="/wine" \
+        --name="winehome" \
+        scottyhardy/docker-wine \
+        /bin/true
+fi
 
 docker run -it \
     --rm \
     --env="DISPLAY" \
+    --env="USER" \
     --volume="/etc/group:/etc/group:ro" \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="$HOME/$DOCKERWINEHOME:$HOME" \
-    --workdir="$HOME" \
-    --user="`id -u`:`id -g`" \
-    --name="wine" \
+    --volumes-from="winehome" \
+    --name=wine \
     scottyhardy/docker-wine $*
 ```
 
@@ -137,24 +158,13 @@ any other valid commands with their associated arguments:
 ./docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-Local Data Storage
-------------------
-By default, running `./docker-wine` maps a volume on the local machine to 
-`$HOME/.docker-wine` which will hold all data created whenever you run any wine 
-commands with the `docker-wine` container.  You can change this default 
-location with the `DOCKERWINEHOME=<folder name>` environment variable to create 
-additional docker-wine environments under `$HOME/<folder name>`:
-```bash
-DOCKERWINEHOME=.my-wine-home ./docker-wine
-```
-If you plan to run multiple commands with the alternative environment, don't 
-forget to `export` your `DOCKERWINEHOME` value or else you will need to include 
-it every time you run `./docker-wine`:
-```bash
-export DOCKERWINEHOME=.no_place_like_home
-./docker-wine wine explorer.exe           # <-- Uses local folder $HOME/.no_place_like_home
-                                          #     for storing container volume
-```
-It does not include any changes to files outside of the user's home folder in 
-the container, so it is not recommended to change any of these unless you 
-create additional volume mounts. 
+Volume Container
+----------------
+By default, running `./docker-wine` creates a volume container named `winehome` 
+and will have a suffix of `-<branch name>` if not running from the master 
+branch.  This volume contains the folder `/wine` which is the common home 
+folder used no matter which user the container is running as.
+Within the volume container, some files required for setting up your wine 
+prefix will be replicated from the `docker-wine` container.  In this way the 
+actual wine program files will be separated from the user data so it can be 
+switched out any time to a newer image without losing any data.  
