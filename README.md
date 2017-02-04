@@ -18,6 +18,17 @@ Included packages
 | winetricks                 | Script to assist with configuring your wine bottle and installing software |
 | wget                       | Required for `winetricks` to download binaries |
 
+In addition to the system packages, the following Windows installation files 
+are also included so you don't need to download them each time:
+| File                       | Purpose                                        |
+| -------------------------- | ---------------------------------------------- |
+| wine-mono-4.6.4.msi        | [Mono](https://wiki.winehq.org/Mono) open-source .Net alternative |
+| wine_gecko-2.47-x86.msi    | [Gecko](https://wiki.winehq.org/Gecko) 32 bit Open-source Internet Explorer alternative |
+| wine_gecko-2.47-x86_64.msi | [Gecko](https://wiki.winehq.org/Gecko) 64 bit Open-source Internet Explorer alternative |
+
+The Windows installation files are copied to `/wine/.cache/wine` as the `/wine` 
+folder is set to home for all users.
+
 Creating your own docker-wine image
 -----------------------------------
 First, clone the repository from GitHub:
@@ -98,8 +109,9 @@ xhost -local:root
 
 Manually creating `docker-wine` script for use with Docker Hub image
 --------------------------------------------------------------------
-To replicate the `docker-wine` script from the GitHub repository, just copy and paste 
-the following into a file named docker-wine and run `chmod +x ./docker-wine`:
+To replicate the `docker-wine` script from the GitHub repository, just copy and 
+paste the following into a file named docker-wine and run 
+`chmod +x ./docker-wine`:
 ```bash
 #!/bin/bash
 
@@ -157,17 +169,27 @@ any other valid commands with their associated arguments:
 ./docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-Volume Container
-----------------
-By default, running `./docker-wine` creates a volume container named `winehome` 
-and will have a suffix of `-<branch name>` if not running from the master 
-branch. This volume contains the folder `/wine` which is the common home 
-folder used no matter which user the container is running as.
-Within the volume container, some files required for setting up your wine 
-prefix will be replicated from the `docker-wine` container.  In this way the 
-actual wine program files will be separated from the user data so it can be 
-switched out any time to a newer image without losing any data.
+Volume container `winehome`
+---------------------------
+When the docker-wine image is instantiated with `./docker-wine` script or with 
+the recommended `docker run` commands, the `/wine` folder is used as the home 
+for all users.  If running as root it will use `/wine` for home and for other 
+users a symbolic link is created in place of the user's home folder which 
+points to `/wine`.
 
+Using a volume container allows existing data from `/wine` on the docker-wine 
+container to be replicated into the `winehome` volume on instantiation of the 
+wine container. In this way the wine container which runs the `wine` commands 
+can remain unchanged and any user environments created with `wine` will be 
+stored separately.  This allows the docker-wine image to essentially be run in 
+read-only mode and be removed after execution with `docker run --rm ...`. User 
+data remains as long as the `winehome` volume persists and allows the 
+docker-wine image to be switched out to a newer image at anytime.
+
+You can manually create the `winehome` volume container by running:
+```bash
+docker volume create winehome
+```
 If you don't want the volume container to persist after running `./docker-wine`, 
 just add `--rm` as your first argument.
 e.g.
@@ -177,4 +199,61 @@ e.g.
 Alternatively you can manually delete the volume container by using:
 ```bash
 docker volume rm winehome
+```
+
+`entrypoint` script explained
+-----------------------------
+The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. 
+This script is key to ensuring the wine container is run as the correct user 
+and ownership of `/wine` is also set to the same user.
+
+The contents of the `/usr/bin/entrypoint` script is:
+```bash
+#!/bin/bash
+
+# $HOME = "/wine" - set by Dockerfile
+# $USER = username of user who was passed to container via:
+#           `docker run --env="USER"` ...
+
+chown -R $USER:$USER $HOME
+ln -s $HOME /home/$USER
+if [ $# == 0 specified]; then
+    su - $USER
+else
+    su -c "$*" - $USER
+fi
+```
+Arguments specified after `./docker-wine` or after the 
+`docker run ... docker-wine` command are also passed to this script. 
+For example:
+```bash
+./docker-wine wine notepad.exe
+```
+The arguments `wine notepad.exe` are interpreted by the wine container as 
+effectively overriding a `CMD` directive, which would normally follow the 
+`ENTRYPOINT` command. The `ENTRYPOINT` command in this case is 
+`/usr/bin/entrypoint` and the arguments are eventually run in the desired user 
+context by the `su -c "$*" - $USER`
+
+If no arguments are specified, it simply uses `su` to change to your username 
+which was collected from the host machine by the `--env="USER"` argument. This 
+in turn spawns a new `/bin/bash` session in your user context to interact with.
+
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker 
+image, you can set up exactly the same functionality by adding the following to 
+your Dockerfile:
+```
+FROM scottyhardy/docker-wine
+... <your code here>
+ENTRYPOINT ["/usr/bin/entrypoint"]
+```
+Or if you prefer to run a program by default you could use:
+```
+ENTRYPOINT ["/usr/bin/entrypoint", "wine", "notepad.exe"]
+```
+Or if you want to be able to run a program by default but still be able to 
+override it easily you could use:
+```
+ENTRYPOINT ["/usr/bin/entrypoint"]
+CMD ["wine", "notepad.exe"]
 ```
