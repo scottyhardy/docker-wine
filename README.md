@@ -20,6 +20,7 @@ Included packages
 
 In addition to the system packages, the following Windows installation files 
 are also included so you don't need to download them each time:
+
 | File                       | Purpose                                                                                 |
 | -------------------------- | --------------------------------------------------------------------------------------- |
 | wine-mono-4.6.4.msi        | [Mono](https://wiki.winehq.org/Mono) open-source .Net alternative                       |
