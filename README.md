@@ -63,9 +63,9 @@ docker run -it \
     --rm \
     --env="DISPLAY" \
     --volume="$HOME/.Xauthority:/home/wine/.Xauthority:ro" \
-    --volume="winehome${branch}:/home/wine" \
+    --volume="winehome:/home/wine" \
     --net="host" \
-    --name="wine${branch}" \
+    --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
 This includes the user's `~/.Xauthority` file which contains the magic cookie 
