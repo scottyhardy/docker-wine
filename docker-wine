@@ -26,7 +26,7 @@ case $1 in
         ;;
 esac
 
-if ! docker volume ls | grep -q winehome${branch}; then
+if ! docker volume ls -qf "name=winehome${branch}" | grep -q "winehome${branch}"; then
     echo "Creating volume container 'winehome${branch}'..."
     docker volume create winehome${branch}
 else
@@ -36,11 +36,8 @@ fi
 docker run -it \
     --rm \
     --env="DISPLAY" \
-    --env="USER" \
-    --volume="/etc/group:/etc/group:ro" \
-    --volume="/etc/passwd:/etc/passwd:ro" \
-    --volume="/etc/shadow:/etc/shadow:ro" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
+    --volume="$HOME/.Xauthority:/home/wine/.Xauthority:ro" \
     --volume="winehome${branch}:/home/wine" \
-    --name=wine${branch} \
+    --net="host" \
+    --name="wine${branch}" \
     docker-wine${branch} $*

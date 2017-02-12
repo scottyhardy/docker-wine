@@ -62,56 +62,16 @@ docker volume create winehome
 docker run -it \
     --rm \
     --env="DISPLAY" \
-    --env="USER" \
-    --volume="/etc/group:/etc/group:ro" \
-    --volume="/etc/passwd:/etc/passwd:ro" \
-    --volume="/etc/shadow:/etc/shadow:ro" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="winehome:/home/wine" \
-    --name=wine \
+    --volume="$HOME/.Xauthority:/home/wine/.Xauthority:ro" \
+    --volume="winehome${branch}:/home/wine" \
+    --net="host" \
+    --name="wine${branch}" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
-This includes a lot of volumes on the local machine, but these are so that the 
-container runs in the context of the user that executed the `docker run` 
-command.  This in turn means that the X11 redirection to the local machine can 
-be performed without needing to modify `xhost` permissions.
-
-The minimum command you'll need to run the image with graphical support is:
-```bash
-docker run -it \
-    --env="DISPLAY" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    scottyhardy/docker-wine
-```
-Since Docker containers run as root by default it means running the above
-code will likely result in a bunch of errors as soon as you try to run anything 
-that tries to display graphics, unless you modify xhost permissions:
-```
-root@d7dccdc39da1:/# wine notepad.exe
-wine: created the configuration directory '/root/.wine'
-...
-err:winediag:nulldrv_CreateWindow Application tried to create a window, but no driver could be loaded.
-err:winediag:nulldrv_CreateWindow Make sure that your X server is running and that $DISPLAY is set correctly.
-```
-You can get around this by modifying xhost permissions on your local machine by running:
-```bash
-xhost +
-```
-or slightly more securely:
-```bash
-xhost +local:root
-```
-Either of these are huge security concerns as it opens the possibility for 
-someone to run an application on your screen and capture input.  At worst if 
-you do use the above you should at least wrap a script around the `docker run` 
-command that disables the security hole after execution:
-```bash
-xhost -
-```
-or if you used the slightly more secure alternative:
-```
-xhost -local:root
-```
+This includes the user's `~/.Xauthority` file which contains the magic cookie 
+required to write to the current user's X session.  For this to work you also 
+need to include the `--net=host` argument when executing `docker run` to use 
+the host's network stack which includes the X11 socket.
 
 Manually creating `docker-wine` script for use with Docker Hub image
 --------------------------------------------------------------------
@@ -142,21 +102,20 @@ case $1 in
         ;;
 esac
 
-if ! docker volume ls | grep -q winehome; then
+if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
     echo "Creating volume container 'winehome'..."
     docker volume create winehome
+else
+    echo "Using existing volume container 'winehome'..."
 fi
 
 docker run -it \
     --rm \
     --env="DISPLAY" \
-    --env="USER" \
-    --volume="/etc/group:/etc/group:ro" \
-    --volume="/etc/passwd:/etc/passwd:ro" \
-    --volume="/etc/shadow:/etc/shadow:ro" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
+    --volume="$HOME/.Xauthority:/home/wine/.Xauthority:ro" \
     --volume="winehome:/home/wine" \
-    --name=wine \
+    --net="host" \
+    --name="wine" \
     scottyhardy/docker-wine $*
 ```
 
@@ -178,19 +137,15 @@ any other valid commands with their associated arguments:
 Volume container `winehome`
 ---------------------------
 When the docker-wine image is instantiated with `./docker-wine` script or with 
-the recommended `docker run` commands, the `/home/wine` folder is used as the home 
-for all users.  If running as root it will use `/home/wine` for home and for other 
-users a symbolic link is created in place of the user's home folder which 
-points to `/home/wine`.
+the recommended `docker volume create` and `docker run` commands, the contents 
+of the `/home/wine` folder is copied to the `winehome` volume container on 
+instantiation of the `wine` container.
 
-Using a volume container allows existing data from `/home/wine` on the docker-wine 
-container to be replicated into the `winehome` volume on instantiation of the 
-wine container. In this way the wine container which runs the `wine` commands 
-can remain unchanged and any user environments created with `wine` will be 
-stored separately.  This allows the docker-wine image to essentially be run in 
-read-only mode and be removed after execution with `docker run --rm ...`. User 
-data remains as long as the `winehome` volume persists and allows the 
-docker-wine image to be switched out to a newer image at anytime.
+Using a volume container allows the `wine` container to remain unchanged and be 
+safely removed after every execution with `docker run --rm ...`.  Any user 
+environments created with `wine` will be stored separately and user data 
+persists as long as the `winehome` volume is not removed.  This effectively 
+allows the `docker-wine` image to be switched out to a newer image at anytime.
 
 You can manually create the `winehome` volume container by running:
 ```bash
@@ -205,61 +160,4 @@ e.g.
 Alternatively you can manually delete the volume container by using:
 ```bash
 docker volume rm winehome
-```
-
-`entrypoint` script explained
------------------------------
-The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. 
-This script is key to ensuring the wine container is run as the correct user 
-and ownership of `/home/wine` is also set to the same user.
-
-The contents of the `/usr/bin/entrypoint` script is:
-```bash
-#!/bin/bash
-
-# $HOME = "/home/wine" - set by Dockerfile
-# $USER = username of user who was passed to container via:
-#           `docker run --env="USER"` ...
-
-chown -R $USER:$USER $HOME
-ln -s $HOME /home/$USER
-if [ $# == 0 specified]; then
-    su - $USER
-else
-    su -c "$*" - $USER
-fi
-```
-Arguments specified after `./docker-wine` or after the 
-`docker run ... docker-wine` command are also passed to this script. 
-For example:
-```bash
-./docker-wine wine notepad.exe
-```
-The arguments `wine notepad.exe` are interpreted by the wine container as 
-effectively overriding a `CMD` directive, which would normally follow the 
-`ENTRYPOINT` command. The `ENTRYPOINT` command in this case is 
-`/usr/bin/entrypoint` and the arguments are eventually run in the desired user 
-context by the `su -c "$*" - $USER`
-
-If no arguments are specified, it simply uses `su` to change to your username 
-which was collected from the host machine by the `--env="USER"` argument. This 
-in turn spawns a new `/bin/bash` session in your user context to interact with.
-
-If you plan to use `scottyhardy/docker-wine` as a base for another Docker 
-image, you can set up exactly the same functionality by adding the following to 
-your Dockerfile:
-```
-FROM scottyhardy/docker-wine
-... <your code here>
-ENTRYPOINT ["/usr/bin/entrypoint"]
-```
-Or if you prefer to run a program by default you could use:
-```
-ENTRYPOINT ["/usr/bin/entrypoint", "wine", "notepad.exe"]
-```
-Or if you want to be able to run a program by default but still be able to 
-override it easily you could use:
-```
-ENTRYPOINT ["/usr/bin/entrypoint"]
-CMD ["wine", "notepad.exe"]
 ```
