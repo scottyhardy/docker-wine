@@ -11,12 +11,17 @@ compromise xhost security.
 
 Included packages
 -----------------
+
 | Package                    | Purpose                                                                    |
 | -------------------------- | -------------------------------------------------------------------------- |
-| software-properties-common | Required for `add-apt-repository`                                          |
 | winehq-staging             | Staging branch of `wine`                                                   |
 | winetricks                 | Script to assist with configuring your wine bottle and installing software |
-| wget                       | Required for `winetricks` to download binaries                             |
+| wget                       | Required for `winetricks`                                                  |
+| cabextract                 | Required for `winetricks`                                                  |
+| p7zip                      | Required for `winetricks`                                                  |
+| unzip                      | Required for `winetricks`                                                  |
+| wget                       | Required for `winetricks`                                                  |
+| zenity                     | Required for `winetricks`                                                  |
 
 In addition to the system packages, the following Windows installation files 
 are also included so you don't need to download them each time:
@@ -27,7 +32,7 @@ are also included so you don't need to download them each time:
 | wine_gecko-2.47-x86.msi    | [Gecko](https://wiki.winehq.org/Gecko) 32 bit open-source Internet Explorer alternative |
 | wine_gecko-2.47-x86_64.msi | [Gecko](https://wiki.winehq.org/Gecko) 64 bit open-source Internet Explorer alternative |
 
-The Windows installation files are copied to `/wine/.cache/wine` as the `/wine` 
+The Windows installation files are copied to `/home/wine/.cache/wine` as the `/home/wine` 
 folder is set to home for all users.
 
 Creating your own docker-wine image
@@ -62,7 +67,7 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="winehome:/wine" \
+    --volume="winehome:/home/wine" \
     --name=wine \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
@@ -150,7 +155,7 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="winehome:/wine" \
+    --volume="winehome:/home/wine" \
     --name=wine \
     scottyhardy/docker-wine $*
 ```
@@ -173,12 +178,12 @@ any other valid commands with their associated arguments:
 Volume container `winehome`
 ---------------------------
 When the docker-wine image is instantiated with `./docker-wine` script or with 
-the recommended `docker run` commands, the `/wine` folder is used as the home 
-for all users.  If running as root it will use `/wine` for home and for other 
+the recommended `docker run` commands, the `/home/wine` folder is used as the home 
+for all users.  If running as root it will use `/home/wine` for home and for other 
 users a symbolic link is created in place of the user's home folder which 
-points to `/wine`.
+points to `/home/wine`.
 
-Using a volume container allows existing data from `/wine` on the docker-wine 
+Using a volume container allows existing data from `/home/wine` on the docker-wine 
 container to be replicated into the `winehome` volume on instantiation of the 
 wine container. In this way the wine container which runs the `wine` commands 
 can remain unchanged and any user environments created with `wine` will be 
@@ -206,13 +211,13 @@ docker volume rm winehome
 -----------------------------
 The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. 
 This script is key to ensuring the wine container is run as the correct user 
-and ownership of `/wine` is also set to the same user.
+and ownership of `/home/wine` is also set to the same user.
 
 The contents of the `/usr/bin/entrypoint` script is:
 ```bash
 #!/bin/bash
 
-# $HOME = "/wine" - set by Dockerfile
+# $HOME = "/home/wine" - set by Dockerfile
 # $USER = username of user who was passed to container via:
 #           `docker run --env="USER"` ...
 
