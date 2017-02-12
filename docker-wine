@@ -3,7 +3,7 @@
 branch=$(git rev-parse --abbrev-ref HEAD)
 branch=$(echo $branch | perl -pe 's/\//-/g')
 branch=$(echo -$branch)
-branch=$(echo $branch | perl -pe 's/-main//')
+branch=$(echo $branch | perl -pe 's/-master//')
 
 case $1 in
     --rm)
@@ -29,6 +29,8 @@ esac
 if ! docker volume ls | grep -q winehome${branch}; then
     echo "Creating volume container 'winehome${branch}'..."
     docker volume create winehome${branch}
+else
+    echo "Using existing volume container 'winehome${branch}'..."
 fi
 
 docker run -it \
@@ -39,6 +41,6 @@ docker run -it \
     --volume="/etc/passwd:/etc/passwd:ro" \
     --volume="/etc/shadow:/etc/shadow:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="winehome${branch}:/wine" \
+    --volume="winehome${branch}:/home/wine" \
     --name=wine${branch} \
     docker-wine${branch} $*
