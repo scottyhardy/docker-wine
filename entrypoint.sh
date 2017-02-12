@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# $HOME = "/wine" - set by Dockerfile
+# $HOME = "/home/wine" - set by Dockerfile
 # $USER = username of user who was passed to container via:
 #           `docker run --env="USER"` ...
 
