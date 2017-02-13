@@ -1,6 +1,6 @@
 #!/bin/bash
 
-branch=$(git rev-parse --abbrev-ref HEAD)
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 branch=$(echo $branch | perl -pe 's/\//-/g')
 branch=$(echo -$branch)
 branch=$(echo $branch | perl -pe 's/-master//')

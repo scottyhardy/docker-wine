@@ -34,7 +34,8 @@ RUN dpkg --add-architecture i386 \
     && wget https://download.microsoft.com/download/0/A/F/0AFB5316-3062-494A-AB78-7FB0D4461357/windows6.1-KB976932-X86.exe \
         -O /home/wine/.cache/winetricks/win7sp1/windows6.1-KB976932-X86.exe \
 # Create user and take ownership of files
-    && useradd -s /bin/bash wine \
+    && groupadd -g 1010 wine \
+    && useradd -s /bin/bash -u 1010 -g 1010 wine \
     && chown -R wine:wine /home/wine \
 # Clean up
     && apt-get autoremove -y \
