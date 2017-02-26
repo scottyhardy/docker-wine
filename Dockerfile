@@ -44,6 +44,5 @@ RUN dpkg --add-architecture i386 \
     && apt-get clean \
     && apt-get autoremove
 VOLUME /home/wine
-USER wine
-WORKDIR /home/wine
-ENTRYPOINT ["/bin/bash"]
+COPY entrypoint.sh /usr/bin/entrypoint
+ENTRYPOINT ["/usr/bin/entrypoint"]
