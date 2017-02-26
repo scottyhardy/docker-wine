@@ -112,7 +112,7 @@ fi
 docker run -it \
     --rm \
     --env="DISPLAY" \
-    --volume="$HOME/.Xauthority:/home/wine/.Xauthority:ro" \
+    --volume="$HOME/.Xauthority:/root/.Xauthority:ro" \
     --volume="winehome:/home/wine" \
     --net="host" \
     --name="wine" \
@@ -160,4 +160,63 @@ e.g.
 Alternatively you can manually delete the volume container by using:
 ```bash
 docker volume rm winehome
+```
+
+`entrypoint` script explained
+-----------------------------
+The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. 
+This script is key to ensuring the wine container is run as the _wine_ user 
+and ownership of `/home/wine/.Xauthority` is also set to the same user.
+
+The contents of the `/usr/bin/entrypoint` script is:
+```bash
+#!/bin/bash
+
+# Copy and take ownership of .Xauthority
+if [ -f /root/.Xauthority ]; then
+    cp /root/.Xauthority /home/wine
+    chown wine:wine /home/wine/.Xauthority
+fi
+
+# If no arguments, just su to 'wine' which will start /bin/bash
+if [ $# == 0 ]; then
+    su - wine
+
+# Otherwise, run the command line arguments as 'wine'
+else
+    su -c "$*" - wine
+fi
+```
+Arguments specified after `./docker-wine` or after the 
+`docker run ... docker-wine` command are also passed to this script. 
+For example:
+```bash
+./docker-wine wine notepad.exe
+```
+The arguments `wine notepad.exe` are interpreted by the wine container as 
+effectively overriding a `CMD` directive, which would normally follow the 
+`ENTRYPOINT` command. The `ENTRYPOINT` command in this case is 
+`/usr/bin/entrypoint` and the arguments are eventually run in the _wine_ user 
+context by the `su -c "$*" - wine`
+
+If no arguments are specified, it simply uses `su` to change to _wine_. This 
+in turn spawns a new `/bin/bash` session in _wine_'s context to interact with.
+
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker 
+image, you can set up exactly the same functionality by adding the following to 
+your Dockerfile:
+```
+FROM scottyhardy/docker-wine
+... <your code here>
+ENTRYPOINT ["/usr/bin/entrypoint"]
+```
+Or if you prefer to run a program by default you could use:
+```
+ENTRYPOINT ["/usr/bin/entrypoint", "wine", "notepad.exe"]
+```
+Or if you want to be able to run a program by default but still be able to 
+override it easily you could use:
+```
+ENTRYPOINT ["/usr/bin/entrypoint"]
+CMD ["wine", "notepad.exe"]
 ```
