@@ -12,5 +12,5 @@ if [ $# == 0 ]; then
 
 # Otherwise, run the command line arguments as 'wine'
 else
-    su -c "$@" - wine
+    su -c "$*" - wine
 fi
