@@ -30,13 +30,15 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
 
 FROM wine-base as wine-cache
 # Download wine cache files
-RUN mkdir -p /home/wine/.cache/wine \
-    && wget https://dl.winehq.org/wine/wine-mono/4.6.4/wine-mono-4.6.4.msi \
-        -O /home/wine/.cache/wine/wine-mono-4.6.4.msi \
-    && wget https://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86.msi \
-        -O /home/wine/.cache/wine/wine_gecko-2.47-x86.msi \
-    && wget https://dl.winehq.org/wine/wine-gecko/2.47/wine_gecko-2.47-x86_64.msi \
-        -O /home/wine/.cache/wine/wine_gecko-2.47-x86_64.msi \
+ARG MONO_VER=4.8.1
+ARG GECKO_VER=2.47
+RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
+    && wget https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}.msi \
+        -O /usr/share/wine/mono/wine-mono-${MONO_VER}.msi \
+    && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine_gecko-${GECKO_VER}-x86.msi \
+        -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86.msi \
+    && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine_gecko-${GECKO_VER}-x86_64.msi \
+        -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86_64.msi \
 # Download winetricks and cache files
     && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
         -O /usr/bin/winetricks \
