@@ -7,6 +7,7 @@ RUN dpkg --add-architecture i386 \
 # Required for adding repositories
         software-properties-common \
 # Required for wine
+        gosu \
         winbind \
 # Required for winetricks
         cabextract \
@@ -46,3 +47,4 @@ RUN dpkg --add-architecture i386 \
 VOLUME /home/wine
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
+CMD ["/bin/bash"]
