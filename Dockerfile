@@ -7,6 +7,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
 # Required for adding repositories
         software-properties-common \
 # Required for wine
+        apt-transport-https \
         gosu \
         winbind \
 # Required for winetricks
@@ -16,7 +17,9 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         wget \
         zenity \
 # Install wine
-    && add-apt-repository ppa:wine/wine-builds \
+    && wget -nc https://dl.winehq.org/wine-builds/winehq.key \
+    && apt-key add winehq.key \
+    && apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' \
     && apt-get update \
     && apt-get install -y --install-recommends winehq-staging \
 # Clean up
