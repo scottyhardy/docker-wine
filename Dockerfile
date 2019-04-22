@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 RUN export DEBIAN_FRONTEND="noninteractive" \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
 # Required for adding repositories
         software-properties-common \
 # Required for wine
@@ -19,6 +19,10 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && add-apt-repository ppa:wine/wine-builds \
     && apt-get update \
     && apt-get install -y --install-recommends winehq-staging \
+# Clean up
+    && apt-get autoremove -y \
+        software-properties-common \
+    && rm -rf /var/lib/apt/lists/* \
 # Download wine cache files
     && mkdir -p /home/wine/.cache/wine \
     && wget https://dl.winehq.org/wine/wine-mono/4.6.4/wine-mono-4.6.4.msi \
@@ -37,13 +41,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
 # Create user and take ownership of files
     && groupadd -g 1010 wine \
     && useradd -s /bin/bash -u 1010 -g 1010 wine \
-    && chown -R wine:wine /home/wine \
-# Clean up
-    && apt-get autoremove -y \
-        software-properties-common \
-    && apt-get autoclean \
-    && apt-get clean \
-    && apt-get autoremove
+    && chown -R wine:wine /home/wine
 VOLUME /home/wine
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
