@@ -6,11 +6,4 @@ if [ -f /root/.Xauthority ]; then
     chown wine:wine /home/wine/.Xauthority
 fi
 
-# If no arguments, just su to 'wine' which will start /bin/bash
-if [ $# == 0 ]; then
-    su - wine
-
-# Otherwise, run the command line arguments as 'wine'
-else
-    su -c "$*" - wine
-fi
+exec gosu wine "$@"
