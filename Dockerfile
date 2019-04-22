@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 # Prevents annoying debconf errors during builds
-ARG DEBIAN_FRONTEND="noninteractive"
-RUN dpkg --add-architecture i386 \
+RUN export DEBIAN_FRONTEND="noninteractive" \
+    && dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y \
 # Required for adding repositories
