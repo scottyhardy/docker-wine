@@ -1,18 +1,13 @@
 #!/bin/bash
 
-branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-branch=$(echo $branch | perl -pe 's/\//-/g')
-branch=$(echo -$branch)
-branch=$(echo $branch | perl -pe 's/-master//')
-
 case $1 in
     --rm)
-        echo "Auto-removing volume container 'winehome${branch}' after completing action..."
+        echo "Auto-removing volume container 'winehome' after completing action..."
         shift
         $0 "$@"
         exitcode=$?
-        docker volume rm winehome${branch} 2>&1 >/dev/null
-        echo "Removed 'winehome${branch}' volume container"
+        docker volume rm winehome 2>&1 >/dev/null
+        echo "Removed 'winehome' volume container"
         exit $exitcode
         ;;
     --help)
@@ -26,18 +21,18 @@ case $1 in
         ;;
 esac
 
-if ! docker volume ls -qf "name=winehome${branch}" | grep -q "winehome${branch}"; then
-    echo "Creating volume container 'winehome${branch}'..."
-    docker volume create winehome${branch}
+if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
+    echo "Creating volume container 'winehome'..."
+    docker volume create winehome
 else
-    echo "Using existing volume container 'winehome${branch}'..."
+    echo "Using existing volume container 'winehome'..."
 fi
 
 docker run -it \
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="winehome${branch}:/home/wine" \
+    --volume="winehome:/home/wine" \
     --net="host" \
-    --name="wine${branch}" \
-    docker-wine${branch} $*
+    --name="wine" \
+    docker-wine $*
