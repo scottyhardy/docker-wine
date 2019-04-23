@@ -4,17 +4,14 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-# Required for adding repositories
-        software-properties-common \
-# Required for wine
         apt-transport-https \
-        gosu \
-        winbind \
-# Required for winetricks
         cabextract \
+        gosu \
         p7zip \
+        software-properties-common \
         unzip \
         wget \
+        winbind \
         zenity \
 # Install wine
     && wget -nc https://dl.winehq.org/wine-builds/winehq.key \
