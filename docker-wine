@@ -28,6 +28,16 @@ else
     echo "Using existing volume container 'winehome'..."
 fi
 
+# $XAUTHORITY overrides default location of .Xauthority
+if [ -z $XAUTHORITY ]; then
+    if [ -s "~/.Xauthority" ]; then
+        export XAUTHORITY="~/.Xauthority"
+    else
+        echo "No valid .Xauthority file found for X11"
+        exit 1
+    fi
+fi
+
 docker run -it \
     --rm \
     --env="DISPLAY" \
