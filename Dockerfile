@@ -1,17 +1,19 @@
 FROM ubuntu:16.04 as wine-base
 
-LABEL maintainer="scotthardy42@outlook.com"
 ARG IMAGE_VER="0.6.0"
 ARG BUILD_DATE
-ARG VCS_REF
-LABEL org.label-schema.build-date="${BUILD_DATE}"
-LABEL org.label-schema.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
-LABEL org.label-schema.name="docker-wine"
-LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.usage="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
-LABEL org.label-schema.vcs-url="https://github.com/scottyhardy/docker-wine"
-LABEL org.label-schema.version="${IMAGE_VER}"
-LABEL org.label-schema.vcs-ref="${VCF_REF}"
+ARG GIT_REV
+LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
+LABEL org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.title="docker-wine"
+LABEL org.opencontainers.image.revision="${GIT_REV}"
+LABEL org.opencontainers.image.source="https://github.com/scottyhardy/docker-wine.git"
+LABEL org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine"
+LABEL org.opencontainers.image.vendor="scottyhardy"
+LABEL org.opencontainers.image.version="${IMAGE_VER}"
 
 # Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
@@ -41,8 +43,8 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
 
 
 FROM wine-base as wine-cache
-ARG MONO_VER=4.7.5
-ARG GECKO_VER=2.47
+ARG MONO_VER="4.7.5"
+ARG GECKO_VER="2.47"
 RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
     # Download wine cache files
     && wget https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}.msi \
