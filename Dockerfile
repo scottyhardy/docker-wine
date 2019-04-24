@@ -31,7 +31,8 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     # Clean up
     && apt-get autoremove -y \
         software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm winehq.key
 
 
 FROM wine-base as wine-cache
