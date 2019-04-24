@@ -99,7 +99,9 @@ For example:
 
 The arguments `wine notepad.exe` are interpreted by the wine container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as the `wine` user in the container.
 
-If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you can set up exactly the same functionality by adding the following to your `Dockerfile`:
+## Using docker-wine in your own Dockerfile
+
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as the `wine` user and X11 graphics continue to function by adding the following to your `Dockerfile`:
 
 ```dockerfile
 FROM scottyhardy/docker-wine:latest
