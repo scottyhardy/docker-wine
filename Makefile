@@ -4,4 +4,7 @@ run:
 	./docker-wine
 
 build: Dockerfile
-	docker build -t docker-wine .
+	docker build \
+		--build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+		--build-arg VCF_REF=$(git rev-parse --short HEAD) \
+		-t docker-wine .
