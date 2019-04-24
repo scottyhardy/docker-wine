@@ -12,6 +12,6 @@
 
 ### Documentation
 
-* Add changelog
+* Add `CHANGELOG.md`
 * Reduce size of `README.md`
 * Various linting changes
