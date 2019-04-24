@@ -41,7 +41,7 @@ docker run -it \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
 
-This assumes the `$XAUTHORITY` environment variable is set to the location of the MIT magic cookie.  If not set, the default location is in the user's home as `~/.Xauthority`.  This file is required to allow the container to write to the current user's X session. For this to work you also need to include the `--net=host` argument when executing `docker run` to use the host's network stack which includes the X11 socket.
+This assumes the `$XAUTHORITY` environment variable is set to the location of the MIT magic cookie.  If not set, the default location is in the user's home so you can replace `$XAUTHORITY` with `~/.Xauthority`.  This file is required to allow the container to write to the current user's X session. For this to work you also need to include the `--net=host` argument when executing `docker run` to use the host's network stack which includes the X11 socket.
 
 ## Running the `docker-wine` script
 
