@@ -1,6 +1,7 @@
 FROM ubuntu:16.04 as wine-base
 
 ARG IMAGE_VER="0.6.0"
+ARG WINE_VER="4.0~xenial"
 ARG BUILD_DATE
 ARG GIT_REV
 LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
@@ -34,7 +35,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && apt-get install -y --install-recommends winehq-stable \
+    && apt-get install -y --install-recommends winehq-stable="${WINE_VER}" \
     # Clean up
     && apt-get autoremove -y \
         software-properties-common \
