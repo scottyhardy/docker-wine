@@ -45,4 +45,4 @@ docker run -it \
     --volume="winehome:/home/wine" \
     --net="host" \
     --name="wine" \
-    docker-wine $*
+    docker-wine "$@"
