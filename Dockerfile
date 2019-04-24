@@ -1,12 +1,13 @@
 FROM ubuntu:16.04 as wine-base
 
 LABEL maintainer="scotthardy42@outlook.com"
-
+ARG VERSION="0.6.0"
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.name="docker-wine"
+LABEL org.label-schema.version="${VERSION}"
 LABEL org.label-schema.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
 LABEL org.label-schema.vcs-url="https://github.com/scottyhardy/docker-wine"
-LABEL org.label-schema.version="0.6.0"
+LABEL org.label-schema.usage="https://github.com/scottyhardy/docker-wine/blob/${VERSION}/README.md"
 
 # Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
