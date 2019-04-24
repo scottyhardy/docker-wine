@@ -41,7 +41,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
 
 
 FROM wine-base as wine-cache
-ARG MONO_VER=4.8.1
+ARG MONO_VER=4.7.5
 ARG GECKO_VER=2.47
 RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
     # Download wine cache files
