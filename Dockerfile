@@ -2,12 +2,16 @@ FROM ubuntu:16.04 as wine-base
 
 LABEL maintainer="scotthardy42@outlook.com"
 ARG VERSION="0.6.0"
-LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.name="docker-wine"
-LABEL org.label-schema.version="${VERSION}"
+ARG BUILD_DATE
+ARG VCS_REF
+LABEL org.label-schema.build-date="${BUILD_DATE}"
 LABEL org.label-schema.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
-LABEL org.label-schema.vcs-url="https://github.com/scottyhardy/docker-wine"
+LABEL org.label-schema.name="docker-wine"
+LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.usage="https://github.com/scottyhardy/docker-wine/blob/${VERSION}/README.md"
+LABEL org.label-schema.vcs-url="https://github.com/scottyhardy/docker-wine"
+LABEL org.label-schema.version="${VERSION}"
+LABEL org.label-schema.vcs-ref="${VCF_REF}"
 
 # Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
@@ -28,7 +32,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && apt-get install -y --install-recommends winehq-staging \
+    && apt-get install -y --install-recommends winehq-stable \
     # Clean up
     && apt-get autoremove -y \
         software-properties-common \
