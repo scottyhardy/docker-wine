@@ -10,7 +10,6 @@ LABEL org.label-schema.version="0.6.0"
 
 # Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
-    && dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         apt-transport-https \
@@ -26,6 +25,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
     && wget -nc https://dl.winehq.org/wine-builds/winehq.key \
     && apt-key add winehq.key \
     && apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' \
+    && dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --install-recommends winehq-staging \
     # Clean up
