@@ -1,5 +1,7 @@
 # docker-wine
 
+![docker-wine logo](logo.png)
+
 Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) are scripts to enable you to build a Docker container that runs `wine`. The  container is based on Ubuntu 16.04 and includes the latest version of `winetricks`. Included below are instructions for running the `docker-wine` container with X11 forwarding to display graphics in the local user's session without needing to compromise xhost security.
 
 ## Creating your own docker-wine image

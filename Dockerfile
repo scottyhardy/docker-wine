@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-ARG IMAGE_VER="0.6.0"
+ARG IMAGE_VER="0.6.1"
 ARG WINE_VER="4.0~xenial"
 LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
 LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1 (2019-04-25)
+
+* Add logo
+
 ## 0.6.0 (2019-04-25)
 
 ### Dockerfile
