@@ -2,6 +2,15 @@ FROM ubuntu:16.04
 
 ARG IMAGE_VER="0.6.0"
 ARG WINE_VER="4.0~xenial"
+LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
+LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
+LABEL org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.title="docker-wine"
+LABEL org.opencontainers.image.source="https://github.com/scottyhardy/docker-wine.git"
+LABEL org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine"
+LABEL org.opencontainers.image.vendor="scottyhardy"
+LABEL org.opencontainers.image.version="${IMAGE_VER}"
 
 # Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
@@ -54,17 +63,8 @@ COPY entrypoint.sh /usr/bin/entrypoint
 
 ARG BUILD_DATE
 ARG GIT_REV
-LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
-LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
-LABEL org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
-LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.title="docker-wine"
 LABEL org.opencontainers.image.revision="${GIT_REV}"
-LABEL org.opencontainers.image.source="https://github.com/scottyhardy/docker-wine.git"
-LABEL org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine"
-LABEL org.opencontainers.image.vendor="scottyhardy"
-LABEL org.opencontainers.image.version="${IMAGE_VER}"
 
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
