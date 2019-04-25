@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 as wine-base
+FROM ubuntu:16.04
 
 ARG IMAGE_VER="0.6.0"
 ARG WINE_VER="4.0~xenial"
@@ -41,9 +41,6 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         software-properties-common \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
-
-
-FROM wine-base as wine-cache
 ARG MONO_VER="4.7.5"
 ARG GECKO_VER="2.47"
 RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
@@ -61,17 +58,11 @@ RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
     && mkdir -p /home/wine/.cache/winetricks/win7sp1 \
     && wget https://download.microsoft.com/download/0/A/F/0AFB5316-3062-494A-AB78-7FB0D4461357/windows6.1-KB976932-X86.exe \
         -O /home/wine/.cache/winetricks/win7sp1/windows6.1-KB976932-X86.exe
-
-
-FROM wine-cache as wine-user
 # Create user and take ownership of files
 RUN groupadd -g 1010 wine \
     && useradd -s /bin/bash -u 1010 -g 1010 wine \
     && chown -R wine:wine /home/wine
 VOLUME /home/wine
-
-
-FROM wine-user as wine-final
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
