@@ -1,5 +1,32 @@
 #!/bin/bash
 
+# Run docker with just X11 support
+docker_run () {
+    docker run -it \
+    --rm \
+    --env="DISPLAY" \
+    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="winehome:/home/wine" \
+    --net="host" \
+    --name="wine" \
+    docker-wine "$@"
+}
+
+
+# Run docker with X11 and audio support
+docker_run_with_audio () {
+    docker run -it \
+    --rm \
+    --env="DISPLAY" \
+    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
+    --volume="winehome:/home/wine" \
+    --net="host" \
+    --name="wine" \
+    docker-wine "$@"
+}
+
+
 case $1 in
     --rm)
         echo "Auto-removing volume container 'winehome' after completing action..."
@@ -30,19 +57,38 @@ fi
 
 # $XAUTHORITY overrides default location of .Xauthority
 if [ -z $XAUTHORITY ]; then
-    if [ -s "~/.Xauthority" ]; then
-        export XAUTHORITY="~/.Xauthority"
+    if [ -s "${HOME}/.Xauthority" ]; then
+        export XAUTHORITY="${HOME}/.Xauthority"
     else
         echo "No valid .Xauthority file found for X11"
         exit 1
     fi
 fi
 
-docker run -it \
-    --rm \
-    --env="DISPLAY" \
-    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="winehome:/home/wine" \
-    --net="host" \
-    --name="wine" \
-    docker-wine "$@"
+# Use audio if PulseAudio is installed
+if which pulseaudio >/dev/null 2>&1; then
+    # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
+    if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+        echo "Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
+        mkdir -p "${HOME}/.config/pulse"
+        echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > ${HOME}/.config/pulse/default.pa
+    fi
+
+    if [ ! -e "/tmp/pulse-socket" ]; then
+        # Restart PulseAudio daemon to ensure the UNIX socket is created
+        echo "INFO: No socket found for PulseAudio so restarting service..."
+        pulseaudio -k
+        pulseaudio --start
+        sleep 1
+    fi
+
+    if [ -e "/tmp/pulse-socket" ]; then
+        docker_run_with_audio "$@"
+    else
+        echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+        docker_run "$@"
+    fi
+else
+    echo "INFO: PulseAudio not installed so running without sound"
+    docker_run "$@"
+fi
