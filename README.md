@@ -2,26 +2,64 @@
 
 ![docker-wine logo](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo.png)
 
-Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) are scripts to enable you to build a Docker container that runs `wine`. The  container is based on Ubuntu 16.04 and includes the latest version of `winetricks`. Included below are instructions for running the `docker-wine` container with X11 forwarding to display graphics in the local user's session without needing to compromise xhost security.
+Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) are scripts to enable you to build a Docker container that runs [Wine](https://www.winehq.org). The  container is based on Ubuntu 16.04 and includes the latest version of [Winetricks](https://wiki.winehq.org/Winetricks). Included below are instructions for running the `docker-wine` container to allow you to use the host's X11 session to display graphics and the host's PulseAudio server for sound without needing to compromise security.
 
 ## Running from Docker Hub image
+
+### Create a Docker volume container for user data
+
+Create a volume container so user data is kept separate and can persist after the `docker-wine` container is removed:
+
+```bash
+docker volume create winehome
+```
+
+### Run without sound
 
 The recommended commands for running `docker-wine` securely are:
 
 ```bash
-docker volume create winehome
-
 docker run -it \
     --rm \
     --env="DISPLAY" \
-    --volume="$XAUTHORITY:/root/.Xauthority:ro" \
+    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="winehome:/home/wine" \
     --net="host" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
 ```
 
-This assumes the `$XAUTHORITY` environment variable is set to the location of the MIT magic cookie.  If not set, the default location is in the user's home so you can replace `$XAUTHORITY` with `~/.Xauthority`.  This file is required to allow the container to write to the current user's X session. For this to work you also need to include the `--net=host` argument when executing `docker run` to use the host's network stack which includes the X11 socket.
+This assumes the `$XAUTHORITY` environment variable is set to the location of the MIT magic cookie.  If not set, the default location is in the user's home so you can replace `${XAUTHORITY}` with `${HOME}/.Xauthority`. This file is required to allow the container to write to the current user's X session. For this to work you also need to include the `--net=host` argument when executing `docker run` to use the host's network stack which includes the X11 socket.
+
+### Run using PulseAudio for sound
+
+As a one-off, you will need to create the file `.config/pulse/default.pa` in your home folder, to enable you to create a shared UNIX socket `/tmp/pulse-socket` to allow other users on the same host to access the user's PulseAudio server:
+
+```bash
+mkdir -p "${HOME}/.config/pulse"
+echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > ${HOME}/.config/pulse/default.pa
+```
+
+Restart your PulseAudio server to create the new socket:
+
+```bash
+pulseaudio -k
+pulseaudio --start
+```
+
+Now you're ready to run the container using PulseAudio for sound:
+
+```bash
+docker run -it \
+    --rm \
+    --env="DISPLAY" \
+    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
+    --volume="winehome:/home/wine" \
+    --net="host" \
+    --name="wine" \
+    scottyhardy/docker-wine <Additional arguments e.g. winetricks vlc>
+```
 
 ## Build and run locally on your PC
 
