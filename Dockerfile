@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-ARG IMAGE_VER="0.6.1"
+ARG IMAGE_VER="0.7.0"
 ARG WINE_VER="4.0~xenial"
 LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
 LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
@@ -20,6 +20,7 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         cabextract \
         gosu \
         p7zip \
+        pulseaudio-utils \
         software-properties-common \
         unzip \
         wget \
@@ -47,18 +48,15 @@ RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
         -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86.msi \
     && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine_gecko-${GECKO_VER}-x86_64.msi \
         -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86_64.msi \
-    # Download winetricks and cache files
+    # Download winetricks
     && wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
         -O /usr/bin/winetricks \
-    && chmod +rx /usr/bin/winetricks \
-    && mkdir -p /home/wine/.cache/winetricks/win7sp1 \
-    && wget https://download.microsoft.com/download/0/A/F/0AFB5316-3062-494A-AB78-7FB0D4461357/windows6.1-KB976932-X86.exe \
-        -O /home/wine/.cache/winetricks/win7sp1/windows6.1-KB976932-X86.exe
+    && chmod +rx /usr/bin/winetricks
 # Create user and take ownership of files
 RUN groupadd -g 1010 wine \
-    && useradd -s /bin/bash -u 1010 -g 1010 wine \
-    && chown -R wine:wine /home/wine
+    && useradd --shell /bin/bash --uid 1010 --gid 1010 --home-dir /home/wine wine
 VOLUME /home/wine
+COPY pulse-client.conf /etc/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 
 ARG BUILD_DATE
