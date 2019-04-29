@@ -1,8 +1,17 @@
 # Changelog
 
+## 0.7.0 (2019-04-29)
+
+* Release improved logo
+* Enable sound using host PulseAudio server and a bind mount to a shared UNIX socket
+* Add instructions for using PulseAudio for sound to `README.md`
+* Remove Winetricks cache download as it's extremely large and not always necessary
+
 ## 0.6.1 (2019-04-25)
 
-* Add logo
+* Add logo first draft
+* Improve license formatting
+* Add `license.md` with reference to `LICENSE`
 
 ## 0.6.0 (2019-04-25)
 
