@@ -14,6 +14,8 @@ Create a volume container so user data is kept separate and can persist after th
 docker volume create winehome
 ```
 
+Please note: It is not recommended to use your own home folder for storing data as it will change ownership to the `wine` user, which has a UID and GID of `1010`.
+
 ### Run without sound
 
 The recommended commands for running `docker-wine` securely are:
