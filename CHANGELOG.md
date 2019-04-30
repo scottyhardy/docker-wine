@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 (2019-04-30)
+
+* Rename username `wine` to `wineuser` for clarity
+* Use Ubuntu 18.04 for base image
+* Add table of contents to `README.md`
+* Add shields.io and microbadger.com badges to `README.md`
+* Remove file `license.md` as preventing GitHub from identifying MIT license
+
 ## 0.7.0 (2019-04-29)
 
 * Release improved logo
