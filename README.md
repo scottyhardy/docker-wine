@@ -1,8 +1,32 @@
 # docker-wine
 
+![Docker Build Status](https://img.shields.io/docker/build/scottyhardy/docker-wine.svg)
+![Docker Image Size](https://images.microbadger.com/badges/image/scottyhardy/docker-wine.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg)
+![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg)
+[![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/network)
+[![GitHub stars](https://img.shields.io/github/stars/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/stargazers)
+
 ![docker-wine logo](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo.png)
 
-Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) are scripts to enable you to build a Docker container that runs [Wine](https://www.winehq.org). The  container is based on Ubuntu 16.04 and includes the latest version of [Winetricks](https://wiki.winehq.org/Winetricks). Included below are instructions for running the `docker-wine` container to allow you to use the host's X11 session to display graphics and the host's PulseAudio server for sound without needing to compromise security.
+* [About docker-wine](#about-docker-wine)
+* [Running from Docker Hub image](#running-from-docker-hub-image)
+  * [Create a Docker volume container for user data](#create-a-docker-volume-container-for-user-data)
+  * [Run without sound](#run-without-sound)
+  * [Run using PulseAudio for sound](#run-using-pulseaudio-for-sound)
+* [Build and run locally on your PC](#build-and-run-locally-on-your-pc)
+* [Running the docker-wine script](#running-the-docker-wine-script)
+* [Volume container winehome](#volume-container-winehome)
+* [ENTRYPOINT script explained](#entrypoint-script-explained)
+* [Using docker-wine in your own Dockerfile](#using-docker-wine-in-your-own-dockerfile)
+
+## About docker-wine
+
+The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is based on Ubuntu 18.04 and includes Wine version 4.0 ([stable branch](https://wiki.winehq.org/Wine_User%27s_Guide#Wine_from_WineHQ)) and the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
+
+Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets.
+
+The source code is freely available from the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) for you to build the image yourself and contributions are welcome.
 
 ## Running from Docker Hub image
 
@@ -14,18 +38,18 @@ Create a volume container so user data is kept separate and can persist after th
 docker volume create winehome
 ```
 
-Please note: It is not recommended to use your own home folder for storing data as it will change ownership to the `wine` user, which has a UID and GID of `1010`.
+Please note: It is not recommended to use your own home folder for storing data as it will change ownership to `wineuser`, which has a UID and GID of `1010`.
 
 ### Run without sound
 
-The recommended commands for running `docker-wine` securely are:
+The recommended commands for running `docker-wine` are:
 
 ```bash
 docker run -it \
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
@@ -57,7 +81,7 @@ docker run -it \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. winetricks vlc>
@@ -85,7 +109,7 @@ make run
 
 or use the `docker-wine` script as described below.
 
-## Running the `docker-wine` script
+## Running the docker-wine script
 
 When the container is run with the `docker-wine` script, you can override the default interactive bash session by adding `wine`, `winetricks`, `winecfg` or any other valid commands with their associated arguments:
 
@@ -101,11 +125,11 @@ When the container is run with the `docker-wine` script, you can override the de
 ./docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-## Volume container `winehome`
+## Volume container winehome
 
-When the docker-wine image is instantiated with `./docker-wine` script or with the recommended `docker volume create` and `docker run` commands, the contents of the `/home/wine` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
+When the docker-wine image is instantiated with `./docker-wine` script or with the recommended `docker volume create` and `docker run` commands, the contents of the `/home/wineuser` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
 
-Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
+Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `docker-wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
 
 You can manually create the `winehome` volume container by running:
 
@@ -118,7 +142,6 @@ e.g.
 
 ```bash
 ./docker-wine --rm wine notepad.exe
-
 ```
 
 Alternatively you can manually delete the volume container by using:
@@ -127,11 +150,11 @@ Alternatively you can manually delete the volume container by using:
 docker volume rm winehome
 ```
 
-## `ENTRYPOINT` script explained
+## ENTRYPOINT script explained
 
-The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wine/.Xauthority` and ownership of the file is set to the `wine` user each time the container is instantiated.
+The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wineuser/.Xauthority` and ownership of the file is set to `wineuser` each time the container is instantiated.
 
-Arguments specified after `./docker-wine` or after the `docker run ... docker-wine` command are also passed to this script to ensure it is executed as the `wine` user.
+Arguments specified after `./docker-wine` or after the `docker run ... docker-wine` command are also passed to this script to ensure it is executed as `wineuser`.
 
 For example:
 
@@ -139,11 +162,11 @@ For example:
 ./docker-wine wine notepad.exe
 ```
 
-The arguments `wine notepad.exe` are interpreted by the wine container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as the `wine` user in the container.
+The arguments `wine notepad.exe` are interpreted by the `wine` container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as `wineuser` within the container.
 
 ## Using docker-wine in your own Dockerfile
 
-If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as the `wine` user and X11 graphics continue to function by adding the following to your `Dockerfile`:
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as `wineuser` and X11 graphics continue to function by adding the following to your `Dockerfile`:
 
 ```dockerfile
 FROM scottyhardy/docker-wine:latest

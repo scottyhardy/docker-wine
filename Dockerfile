@@ -1,9 +1,9 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
-ARG IMAGE_VER="0.7.0"
-ARG WINE_VER="4.0~xenial"
+ARG IMAGE_VER="1.0.0"
+ARG WINE_VER="4.0~bionic"
 LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
-LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
+LABEL org.opencontainers.image.description="This image runs Wine on your Linux desktop and uses your local X11 and PulseAudio servers for graphics and sound"
 LABEL org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.title="docker-wine"
@@ -12,13 +12,14 @@ LABEL org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine"
 LABEL org.opencontainers.image.vendor="scottyhardy"
 LABEL org.opencontainers.image.version="${IMAGE_VER}"
 
-# Prevents annoying debconf errors during builds
 RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
         apt-transport-https \
+        ca-certificates \
         cabextract \
         gosu \
+        gpg-agent \
         p7zip \
         pulseaudio-utils \
         software-properties-common \
@@ -27,9 +28,9 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         winbind \
         zenity \
     # Install wine
-    && wget -nc https://dl.winehq.org/wine-builds/winehq.key \
+    && wget https://dl.winehq.org/wine-builds/winehq.key \
     && apt-key add winehq.key \
-    && apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ xenial main' \
+    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --install-recommends winehq-stable="${WINE_VER}" \
@@ -53,9 +54,10 @@ RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
         -O /usr/bin/winetricks \
     && chmod +rx /usr/bin/winetricks
 # Create user and take ownership of files
-RUN groupadd -g 1010 wine \
-    && useradd --shell /bin/bash --uid 1010 --gid 1010 --home-dir /home/wine wine
-VOLUME /home/wine
+RUN groupadd -g 1010 wineuser \
+    && useradd --shell /bin/bash --uid 1010 --gid 1010 --create-home --home-dir /home/wineuser wineuser \
+    && chown -R wineuser:wineuser /home/wineuser
+VOLUME /home/wineuser
 COPY pulse-client.conf /etc/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 
@@ -64,5 +66,6 @@ ARG GIT_REV
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${GIT_REV}"
 
+WORKDIR /home/wineuser
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]

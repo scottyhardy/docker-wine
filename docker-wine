@@ -6,7 +6,7 @@ docker_run () {
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     docker-wine "$@"
@@ -20,7 +20,7 @@ docker_run_with_audio () {
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     docker-wine "$@"
