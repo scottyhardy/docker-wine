@@ -64,5 +64,6 @@ ARG GIT_REV
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
 LABEL org.opencontainers.image.revision="${GIT_REV}"
 
+WORKDIR /home/wine
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
