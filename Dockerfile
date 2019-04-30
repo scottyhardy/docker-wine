@@ -1,9 +1,9 @@
 FROM ubuntu:16.04
 
-ARG IMAGE_VER="0.7.0"
+ARG IMAGE_VER="1.0.0"
 ARG WINE_VER="4.0~xenial"
 LABEL org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>"
-LABEL org.opencontainers.image.description="This container runs wine on your Linux desktop and uses your local X11 server for graphics"
+LABEL org.opencontainers.image.description="This image runs Wine on your Linux desktop and uses your local X11 and PulseAudio servers for graphics and sound"
 LABEL org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.title="docker-wine"
