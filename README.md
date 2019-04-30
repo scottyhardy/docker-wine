@@ -2,7 +2,24 @@
 
 ![docker-wine logo](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo.png)
 
-Included in the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) are scripts to enable you to build a Docker container that runs [Wine](https://www.winehq.org). The  container is based on Ubuntu 16.04 and includes the latest version of [Winetricks](https://wiki.winehq.org/Winetricks). Included below are instructions for running the `docker-wine` container to allow you to use the host's X11 session to display graphics and the host's PulseAudio server for sound without needing to compromise security.
+* [About docker-wine](#about-docker-wine)
+* [Running from Docker Hub image](#running-from-docker-hub-image)
+  * [Create a Docker volume container for user data](#create-a-docker-volume-container-for-user-data)
+  * [Run without sound](#run-without-sound)
+  * [Run using PulseAudio for sound](#run-using-pulseaudio-for-sound)
+* [Build and run locally on your PC](#build-and-run-locally-on-your-pc)
+* [Running the docker-wine script](#running-the-docker-wine-script)
+* [Volume container winehome](#volume-container-winehome)
+* [ENTRYPOINT script explained](#entrypoint-script-explained)
+* [Using docker-wine in your own Dockerfile](#using-docker-wine-in-your-own-dockerfile)
+
+## About docker-wine
+
+The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is currently based on Ubuntu 16.04 and includes the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
+
+Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets.
+
+The source code is freely available from the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) for you to build the image yourself and contributions are welcome.
 
 ## Running from Docker Hub image
 
@@ -85,7 +102,7 @@ make run
 
 or use the `docker-wine` script as described below.
 
-## Running the `docker-wine` script
+## Running the docker-wine script
 
 When the container is run with the `docker-wine` script, you can override the default interactive bash session by adding `wine`, `winetricks`, `winecfg` or any other valid commands with their associated arguments:
 
@@ -101,7 +118,7 @@ When the container is run with the `docker-wine` script, you can override the de
 ./docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-## Volume container `winehome`
+## Volume container winehome
 
 When the docker-wine image is instantiated with `./docker-wine` script or with the recommended `docker volume create` and `docker run` commands, the contents of the `/home/wineuser` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
 
@@ -118,7 +135,6 @@ e.g.
 
 ```bash
 ./docker-wine --rm wine notepad.exe
-
 ```
 
 Alternatively you can manually delete the volume container by using:
@@ -127,7 +143,7 @@ Alternatively you can manually delete the volume container by using:
 docker volume rm winehome
 ```
 
-## `ENTRYPOINT` script explained
+## ENTRYPOINT script explained
 
 The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wineuser/.Xauthority` and ownership of the file is set to `wineuser` each time the container is instantiated.
 
