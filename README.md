@@ -14,18 +14,18 @@ Create a volume container so user data is kept separate and can persist after th
 docker volume create winehome
 ```
 
-Please note: It is not recommended to use your own home folder for storing data as it will change ownership to the `wine` user, which has a UID and GID of `1010`.
+Please note: It is not recommended to use your own home folder for storing data as it will change ownership to `wineuser`, which has a UID and GID of `1010`.
 
 ### Run without sound
 
-The recommended commands for running `docker-wine` securely are:
+The recommended commands for running `docker-wine` are:
 
 ```bash
 docker run -it \
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. wine notepad.exe>
@@ -57,7 +57,7 @@ docker run -it \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
-    --volume="winehome:/home/wine" \
+    --volume="winehome:/home/wineuser" \
     --net="host" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. winetricks vlc>
@@ -103,9 +103,9 @@ When the container is run with the `docker-wine` script, you can override the de
 
 ## Volume container `winehome`
 
-When the docker-wine image is instantiated with `./docker-wine` script or with the recommended `docker volume create` and `docker run` commands, the contents of the `/home/wine` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
+When the docker-wine image is instantiated with `./docker-wine` script or with the recommended `docker volume create` and `docker run` commands, the contents of the `/home/wineuser` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
 
-Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
+Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `docker-wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
 
 You can manually create the `winehome` volume container by running:
 
@@ -129,9 +129,9 @@ docker volume rm winehome
 
 ## `ENTRYPOINT` script explained
 
-The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wine/.Xauthority` and ownership of the file is set to the `wine` user each time the container is instantiated.
+The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wineuser/.Xauthority` and ownership of the file is set to `wineuser` each time the container is instantiated.
 
-Arguments specified after `./docker-wine` or after the `docker run ... docker-wine` command are also passed to this script to ensure it is executed as the `wine` user.
+Arguments specified after `./docker-wine` or after the `docker run ... docker-wine` command are also passed to this script to ensure it is executed as `wineuser`.
 
 For example:
 
@@ -139,11 +139,11 @@ For example:
 ./docker-wine wine notepad.exe
 ```
 
-The arguments `wine notepad.exe` are interpreted by the wine container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as the `wine` user in the container.
+The arguments `wine notepad.exe` are interpreted by the `wine` container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as `wineuser` within the container.
 
 ## Using docker-wine in your own Dockerfile
 
-If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as the `wine` user and X11 graphics continue to function by adding the following to your `Dockerfile`:
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as `wineuser` and X11 graphics continue to function by adding the following to your `Dockerfile`:
 
 ```dockerfile
 FROM scottyhardy/docker-wine:latest
