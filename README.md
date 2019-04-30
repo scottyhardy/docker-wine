@@ -1,5 +1,12 @@
 # docker-wine
 
+![Docker Build Status](https://img.shields.io/docker/build/scottyhardy/docker-wine.svg)
+![Docker Image Size](https://images.microbadger.com/badges/image/scottyhardy/docker-wine.svg)
+![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg)
+![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg)
+[![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/network)
+[![GitHub stars](https://img.shields.io/github/stars/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/stargazers)
+
 ![docker-wine logo](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo.png)
 
 * [About docker-wine](#about-docker-wine)
@@ -15,7 +22,7 @@
 
 ## About docker-wine
 
-The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is currently based on Ubuntu 16.04 and includes the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
+The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is based on Ubuntu 18.04 and includes Wine version 4.0 ([stable branch](https://wiki.winehq.org/Wine_User%27s_Guide#Wine_from_WineHQ)) and the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
 
 Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets.
 
