@@ -7,6 +7,8 @@
 * Add table of contents to `README.md`
 * Add shields.io and microbadger.com badges to `README.md`
 * Remove file `license.md` as preventing GitHub from identifying MIT license
+* Create `README-short.txt`
+* Set `WORKDIR` to `wineuser`'s home
 
 ## 0.7.0 (2019-04-29)
 
