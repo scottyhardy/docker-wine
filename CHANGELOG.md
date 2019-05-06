@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 (2019-05-06)
+
+* Refactor `Dockerfile` to reduce number of layers and allow for choosing a different branch of Wine using build args
+* Add small version of logo to `README.md`
+
 ## 1.0.0 (2019-04-30)
 
 * Rename username `wine` to `wineuser` for clarity
