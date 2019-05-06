@@ -1,4 +1,4 @@
-# docker-wine
+# docker-wine ![](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo_small.png)
 
 ![Docker Build Status](https://img.shields.io/docker/build/scottyhardy/docker-wine.svg)
 ![Docker Image Size](https://images.microbadger.com/badges/image/scottyhardy/docker-wine.svg)
@@ -6,8 +6,6 @@
 ![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg)
 [![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/network)
 [![GitHub stars](https://img.shields.io/github/stars/scottyhardy/docker-wine.svg)](https://github.com/scottyhardy/docker-wine/stargazers)
-
-![docker-wine logo](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo.png)
 
 * [About docker-wine](#about-docker-wine)
 * [Running from Docker Hub image](#running-from-docker-hub-image)
