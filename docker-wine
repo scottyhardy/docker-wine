@@ -27,14 +27,24 @@ docker_run_with_audio () {
 }
 
 
+docker_run_on_mac () {
+    docker run -it \
+    --rm \
+    --env="DISPLAY=host.docker.internal:0" \
+    --volume="winehome:/home/wineuser" \
+    --hostname="winery" \
+    --name="wine" \
+    docker-wine "$@"
+}
+
 case $1 in
     --rm)
-        echo "Auto-removing volume container 'winehome' after completing action..."
+        echo "INFO: Auto-removing Docker volume container 'winehome' after completing action..."
         shift
         $0 "$@"
         exitcode=$?
         docker volume rm winehome 2>&1 >/dev/null
-        echo "Removed 'winehome' volume container"
+        echo "INFO: Removed 'winehome' Docker volume container"
         exit $exitcode
         ;;
     --help)
@@ -49,46 +59,61 @@ case $1 in
 esac
 
 if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
-    echo "Creating volume container 'winehome'..."
+    echo "INFO: Creating Docker volume container 'winehome'..."
     docker volume create winehome
 else
-    echo "Using existing volume container 'winehome'..."
+    echo "INFO: Using existing Docker volume container 'winehome'..."
 fi
 
-# $XAUTHORITY overrides default location of .Xauthority
-if [ -z $XAUTHORITY ]; then
-    if [ -s "${HOME}/.Xauthority" ]; then
-        export XAUTHORITY="${HOME}/.Xauthority"
+# Check if running on a Mac
+if [ `uname` == "Darwin" ]; then
+    # Check XQuartz installed
+    if ! which xquartz >/dev/null 2>&1; then
+        echo "INFO: XQuartz does not appear to be installed, so docker-wine will run without support for graphics"
+    
+    # Allow localhost to access XQuartz if required
+    elif ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
+        echo "WARNING: Adding localhost to authorized xhost clients"
+        xhost + 127.0.0.1
+    fi
+
+    docker_run_on_mac "$@"
+else
+    # $XAUTHORITY overrides default location of .Xauthority
+    if [ -z $XAUTHORITY ]; then
+        if [ -s "${HOME}/.Xauthority" ]; then
+            export XAUTHORITY="${HOME}/.Xauthority"
+        else
+            echo "No valid .Xauthority file found for X11"
+            exit 1
+        fi
+    fi
+
+    # Use audio if PulseAudio is installed
+    if which pulseaudio >/dev/null 2>&1; then
+        # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
+        if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+            echo "INFO: Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
+            mkdir -p "${HOME}/.config/pulse"
+            echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > ${HOME}/.config/pulse/default.pa
+        fi
+
+        if [ ! -e "/tmp/pulse-socket" ]; then
+            # Restart PulseAudio daemon to ensure the UNIX socket is created
+            echo "INFO: No socket found for PulseAudio so restarting service..."
+            pulseaudio -k
+            pulseaudio --start
+            sleep 1
+        fi
+
+        if [ -e "/tmp/pulse-socket" ]; then
+            docker_run_with_audio "$@"
+        else
+            echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+            docker_run "$@"
+        fi
     else
-        echo "No valid .Xauthority file found for X11"
-        exit 1
-    fi
-fi
-
-# Use audio if PulseAudio is installed
-if which pulseaudio >/dev/null 2>&1; then
-    # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
-    if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
-        echo "Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
-        mkdir -p "${HOME}/.config/pulse"
-        echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > ${HOME}/.config/pulse/default.pa
-    fi
-
-    if [ ! -e "/tmp/pulse-socket" ]; then
-        # Restart PulseAudio daemon to ensure the UNIX socket is created
-        echo "INFO: No socket found for PulseAudio so restarting service..."
-        pulseaudio -k
-        pulseaudio --start
-        sleep 1
-    fi
-
-    if [ -e "/tmp/pulse-socket" ]; then
-        docker_run_with_audio "$@"
-    else
-        echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+        echo "INFO: PulseAudio not installed so running without sound"
         docker_run "$@"
     fi
-else
-    echo "INFO: PulseAudio not installed so running without sound"
-    docker_run "$@"
 fi
