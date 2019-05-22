@@ -7,6 +7,7 @@ docker_run () {
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
+    --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
     --hostname="winery" \
     --name="wine" \
@@ -22,6 +23,7 @@ docker_run_with_audio () {
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
     --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
+    --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
     --hostname="winery" \
     --name="wine" \
@@ -29,6 +31,7 @@ docker_run_with_audio () {
 }
 
 
+# Run docker on macOS with X11 over TCP socket
 docker_run_on_mac () {
     docker run -it \
     --rm \
@@ -38,6 +41,7 @@ docker_run_on_mac () {
     --name="wine" \
     docker-wine "$@"
 }
+
 
 case $1 in
     --rm)
