@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:bionic
 RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -15,9 +15,8 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         winbind \
         zenity \
     && rm -rf /var/lib/apt/lists/*
-
-ARG WINEBRANCH="stable"
-ARG WINE_VER="4.0~bionic"
+ARG WINEBRANCH
+ARG WINE_VER
 RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && apt-key add winehq.key \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main" \
@@ -27,8 +26,8 @@ RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 # Download mono and gecko
-ARG MONO_VER="4.7.5"
-ARG GECKO_VER="2.47"
+ARG MONO_VER
+ARG GECKO_VER
 RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
     && wget https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}.msi \
         -O /usr/share/wine/mono/wine-mono-${MONO_VER}.msi \
@@ -48,14 +47,13 @@ VOLUME /home/wineuser
 COPY pulse-client.conf /etc/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 WORKDIR /home/wineuser
-
-ARG IMAGE_VER="1.1.0"
+ARG IMAGE_VER
 ARG BUILD_DATE
 ARG GIT_REV
 LABEL \
     org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>" \
     org.opencontainers.image.created="${BUILD_DATE}" \
-    org.opencontainers.image.description="This image runs Wine on your Linux desktop and uses your local X11 and PulseAudio servers for graphics and sound" \
+    org.opencontainers.image.description="This image includes Wine and Winetricks for running Windows applications on Linux and macOS" \
     org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md" \
     org.opencontainers.image.licenses="MIT" \
     org.opencontainers.image.revision="${GIT_REV}" \
@@ -64,6 +62,5 @@ LABEL \
     org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine" \
     org.opencontainers.image.vendor="scottyhardy" \
     org.opencontainers.image.version="${IMAGE_VER}"
-
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
