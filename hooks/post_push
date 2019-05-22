@@ -3,4 +3,7 @@
 if [ "$SOURCE_BRANCH" != "dev" ]; then
     docker tag $IMAGE_NAME ${DOCKER_REPO}:latest
     docker push ${DOCKER_REPO}:latest
+else
+    docker tag $IMAGE_NAME ${DOCKER_REPO}:dev-$(cat VERSION)
+    docker push ${DOCKER_REPO}:dev-$(cat VERSION)
 fi
