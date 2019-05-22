@@ -6,8 +6,8 @@ docker_run () {
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
     --volume="winehome:/home/wineuser" \
-    --net="host" \
     --name="wine" \
     docker-wine "$@"
 }
@@ -19,9 +19,9 @@ docker_run_with_audio () {
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
     --volume="winehome:/home/wineuser" \
-    --net="host" \
     --name="wine" \
     docker-wine "$@"
 }
@@ -69,8 +69,9 @@ fi
 if [ `uname` == "Darwin" ]; then
     # Check XQuartz installed
     if ! which xquartz >/dev/null 2>&1; then
-        echo "INFO: XQuartz does not appear to be installed, so docker-wine will run without support for graphics"
-    
+        echo "ERROR: XQuartz does not appear to be installed"
+        exit 1
+
     # Allow localhost to access XQuartz if required
     elif ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
         echo "WARNING: Adding localhost to authorized xhost clients"
@@ -84,7 +85,7 @@ else
         if [ -s "${HOME}/.Xauthority" ]; then
             export XAUTHORITY="${HOME}/.Xauthority"
         else
-            echo "No valid .Xauthority file found for X11"
+            echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
         fi
     fi
