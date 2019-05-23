@@ -1,9 +1,14 @@
 #!/bin/bash
 
-if [ "$SOURCE_BRANCH" != "dev" ]; then
+source build_args/ubuntu-stable
+VERSION=$(cat VERSION)
+
+if [ "$SOURCE_BRANCH" == "dev" ]; then
+    docker tag $IMAGE_NAME ${DOCKER_REPO}:dev-${WINEBRANCH}-${VERSION}
+    docker push ${DOCKER_REPO}:dev-${WINEBRANCH}-${VERSION}
+else
     docker tag $IMAGE_NAME ${DOCKER_REPO}:latest
     docker push ${DOCKER_REPO}:latest
-else
-    docker tag $IMAGE_NAME ${DOCKER_REPO}:dev-$(cat VERSION)
-    docker push ${DOCKER_REPO}:dev-$(cat VERSION)
+    docker tag $IMAGE_NAME ${DOCKER_REPO}:${WINEBRANCH}-${VERSION}
+    docker push ${DOCKER_REPO}:${WINEBRANCH}-${VERSION}
 fi
