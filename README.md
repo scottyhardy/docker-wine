@@ -12,6 +12,7 @@
   * [Create a Docker volume container for user data](#create-a-docker-volume-container-for-user-data)
   * [Run without sound](#run-without-sound)
   * [Run using PulseAudio for sound](#run-using-pulseaudio-for-sound)
+  * [Run on macOS](#run-on-macos)
 * [Build and run locally on your PC](#build-and-run-locally-on-your-pc)
 * [Running the docker-wine script](#running-the-docker-wine-script)
 * [Volume container winehome](#volume-container-winehome)
@@ -81,6 +82,72 @@ docker run -it \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
     --volume="winehome:/home/wineuser" \
     --net="host" \
+    --name="wine" \
+    scottyhardy/docker-wine <Additional arguments e.g. winetricks vlc>
+```
+
+### Run on macOS
+
+Unfortunately there's a lot of additional barriers when attempting to run containers on macOS.  At time of writing, it is not possible to directly mount UNIX sockets like you can do in Linux. There's a few different ways this problem can be solved, but essentially it comes down to using TCP sockets or a remote desktop protocol such as VNC.
+
+Below are instructions for using TCP sockets on macOS but unfortunately performance is way slower than with UNIX sockets on Linux, plus I haven't managed to get audio working yet. If you're serious about using a Windows application on macOS then this is probably not the best solution. If you'd just like to give it a go for shits and giggles, then this should be enough to get you started.
+
+Install homebrew:
+
+```bash
+ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+Install XQuartz:
+
+```bash
+brew install xquartz
+```
+
+Start XQuartz:
+
+```bash
+open -a xquartz
+```
+
+Enable network clients in XQuartz Preferences:
+
+Go to **XQuartz** -> **Preferences...**
+
+Or use shortcut keys: **&#8984;,**
+
+On the **Security** tab, tick the option **Allow connections from network clients**
+
+![XQuartz Preferences screenshot](images/xquartz_prefs.png)
+
+**IMPORTANT! Restart XQuartz:**
+
+Go to **XQuartz** -> **Quit X11**
+
+Or use shortcut keys: **&#8984;Q**
+
+*Note: If graphics are not working and you get errors that X11 is not available it's probably because you missed this step.*
+
+Run container with docker-wine script:
+
+This is the easiest way to ensure `docker-wine` runs successfully each time.  Just jump ahead to LINK and continue from there.
+
+Otherwise, if you prefer to run the container manually, then continue reading.
+
+Allow localhost to access XQuartz:
+
+```bash
+xhost + 127.0.0.1
+```
+
+Start container:
+
+```bash
+docker run -it \
+    --rm \
+    --env="DISPLAY=host.docker.internal:0" \
+    --volume="winehome:/home/wineuser" \
+    --hostname="winery" \
     --name="wine" \
     scottyhardy/docker-wine <Additional arguments e.g. winetricks vlc>
 ```
