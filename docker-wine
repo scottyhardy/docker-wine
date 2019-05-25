@@ -9,7 +9,7 @@ docker_run () {
     --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
     --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
-    --hostname="winery" \
+    --hostname="winecellar" \
     --name="wine" \
     docker-wine "$@"
 }
@@ -25,7 +25,7 @@ docker_run_with_audio () {
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
     --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
-    --hostname="winery" \
+    --hostname="winecellar" \
     --name="wine" \
     docker-wine "$@"
 }
@@ -37,7 +37,7 @@ docker_run_on_mac () {
     --rm \
     --env="DISPLAY=host.docker.internal:0" \
     --volume="winehome:/home/wineuser" \
-    --hostname="winery" \
+    --hostname="winecellar" \
     --name="wine" \
     docker-wine "$@"
 }
