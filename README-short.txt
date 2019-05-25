@@ -1,1 +1,1 @@
-This image includes Wine and Winetricks for running Windows applications on Linux and macOS
+Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS

@@ -53,7 +53,7 @@ ARG GIT_REV
 LABEL \
     org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>" \
     org.opencontainers.image.created="${BUILD_DATE}" \
-    org.opencontainers.image.description="This image includes Wine and Winetricks for running Windows applications on Linux and macOS" \
+    org.opencontainers.image.description="Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS" \
     org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md" \
     org.opencontainers.image.licenses="MIT" \
     org.opencontainers.image.revision="${GIT_REV}" \
