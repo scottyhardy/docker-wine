@@ -53,12 +53,13 @@ case $1 in
         USE_DOCKER_IMAGE="false"
         ;;
     --help)
-        echo "Usage: $0 [--rm] [command] [arguments]..."
+        echo "Usage: $0 [--local] [command] [arguments]..."
         echo "e.g."
         echo "    $0"
-        echo "    $0 --rm"
+        echo "    $0 wine notepad.exe"
         echo "    $0 wineboot --init"
-        echo "    $0 --rm wine explorer.exe"
+        echo "    $0 --local"
+        echo "    $0 --local wine explorer.exe"
         exit 0
         ;;
 esac
