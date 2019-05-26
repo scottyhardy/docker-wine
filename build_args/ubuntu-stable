@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export WINEBRANCH="stable"
+export WINE_VER="4.0.1~bionic"
+export MONO_VER="4.7.5"
+export GECKO_VER="2.47"

@@ -1,1 +1,1 @@
-This Docker image runs Wine on your Linux desktop and uses your local X11 and PulseAudio servers for graphics and sound.
+Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS
