@@ -1,4 +1,4 @@
-# docker-wine ![ ](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/logo_small.png)
+# docker-wine ![ ](https://raw.githubusercontent.com/scottyhardy/docker-wine/2.0.0/images/logo_small.png)
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg?style=social)
 ![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg?style=social)
@@ -92,7 +92,7 @@ Or use shortcut keys: **&#8984;,**
 
 On the **Security** tab, tick the option **Allow connections from network clients**
 
-![XQuartz Preferences screenshot](images/xquartz_prefs.png)
+![XQuartz Preferences screenshot](https://raw.githubusercontent.com/scottyhardy/docker-wine/2.0.0/images/xquartz_prefs.png)
 
 #### IMPORTANT! Restart XQuartz
 
