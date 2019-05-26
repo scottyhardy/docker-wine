@@ -11,7 +11,7 @@ docker_run () {
     --volume="winehome:/home/wineuser" \
     --hostname="winecellar" \
     --name="wine" \
-    docker-wine "$@"
+    $DOCKER_IMAGE "$@"
 }
 
 
@@ -27,7 +27,7 @@ docker_run_with_audio () {
     --volume="winehome:/home/wineuser" \
     --hostname="winecellar" \
     --name="wine" \
-    docker-wine "$@"
+    $DOCKER_IMAGE "$@"
 }
 
 
@@ -39,19 +39,18 @@ docker_run_on_mac () {
     --volume="winehome:/home/wineuser" \
     --hostname="winecellar" \
     --name="wine" \
-    docker-wine "$@"
+    $DOCKER_IMAGE "$@"
 }
 
 
+USE_DOCKER_IMAGE="true"
+DOCKER_IMAGE="scottyhardy/docker-wine:latest"
+
 case $1 in
-    --rm)
-        echo "INFO: Auto-removing Docker volume container 'winehome' after completing action..."
+    --local)
         shift
-        $0 "$@"
-        exitcode=$?
-        docker volume rm winehome 2>&1 >/dev/null
-        echo "INFO: Removed 'winehome' Docker volume container"
-        exit $exitcode
+        echo "INFO: Running locally built docker-wine image"
+        USE_DOCKER_IMAGE="false"
         ;;
     --help)
         echo "Usage: $0 [--rm] [command] [arguments]..."
@@ -63,6 +62,13 @@ case $1 in
         exit 0
         ;;
 esac
+
+# Grab the latest image from docker hub or use the locally built version
+if [ $USE_DOCKER_IMAGE == "true" ]; then
+    docker pull $DOCKER_IMAGE
+else
+    DOCKER_IMAGE="docker-wine"
+fi
 
 if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
     echo "INFO: Creating Docker volume container 'winehome'..."
@@ -77,9 +83,10 @@ if [ `uname` == "Darwin" ]; then
     if ! which xquartz >/dev/null 2>&1; then
         echo "ERROR: XQuartz does not appear to be installed"
         exit 1
+    fi
 
     # Allow localhost to access XQuartz if required
-    elif ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
+    if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
         echo "WARNING: Adding localhost to authorized xhost clients"
         xhost + 127.0.0.1
     fi
