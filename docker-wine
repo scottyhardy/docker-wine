@@ -68,7 +68,9 @@ esac
 if [ $USE_DOCKER_IMAGE == "true" ]; then
     docker pull $DOCKER_IMAGE
 else
-    DOCKER_IMAGE="docker-wine"
+    if [ -z "${DOCKER_IMAGE}" ]; then
+        DOCKER_IMAGE="docker-wine:local"
+    fi
 fi
 
 if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
