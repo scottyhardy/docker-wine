@@ -88,6 +88,15 @@ if [ `uname` == "Darwin" ]; then
         exit 1
     fi
 
+    # Configure XQuartz if required
+    if [ "`defaults read org.macosforge.xquartz.X11 app_to_run`" -ne "/usr/bin/true" ]; then
+        defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+    fi
+
+    if "`defaults read org.macosforge.xquartz.X11 nolisten_tcp`" -ne "0"; then
+        defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+    fi
+
     # Allow localhost to access XQuartz if required
     if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
         echo "WARNING: Adding localhost to authorized xhost clients"
