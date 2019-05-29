@@ -6,7 +6,7 @@ docker_run () {
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
     --hostname="winecellar" \
@@ -21,7 +21,7 @@ docker_run_with_audio () {
     --rm \
     --env="DISPLAY" \
     --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
-    --volume="/tmp/.X11-unix:/tmp/X11-unix:ro" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
     --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
@@ -44,7 +44,7 @@ docker_run_on_mac () {
 
 
 USE_DOCKER_IMAGE="true"
-DOCKER_IMAGE="scottyhardy/docker-wine:latest"
+DOCKER_IMAGE=${DOCKER_IMAGE:-"scottyhardy/docker-wine:latest"}
 
 case $1 in
     --local)

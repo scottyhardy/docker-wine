@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.1 (2019-05-29)
+
+### Contributions
+
+#### iuridiniz
+
+* allow overwrite DOCKER_IMAGE from environment
+* fix wrong path for /tmp/.X11-unix
+
 ## 2.0.0 (2019-05-26)
 
 * Enable `docker-wine` script to run on macOS
