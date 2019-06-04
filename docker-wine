@@ -5,7 +5,7 @@ docker_run () {
     docker run -it \
     --rm \
     --env="DISPLAY" \
-    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volume="/etc/localtime:/etc/localtime:ro" \
     --volume="winehome:/home/wineuser" \
@@ -20,7 +20,7 @@ docker_run_with_audio () {
     docker run -it \
     --rm \
     --env="DISPLAY" \
-    --volume="${XAUTHORITY}:/root/.Xauthority:ro" \
+    --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
     --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
     --volume="/etc/localtime:/etc/localtime:ro" \
@@ -105,14 +105,10 @@ if [ `uname` == "Darwin" ]; then
 
     docker_run_on_mac "$@"
 else
-    # $XAUTHORITY overrides default location of .Xauthority
-    if [ -z $XAUTHORITY ]; then
-        if [ -s "${HOME}/.Xauthority" ]; then
-            export XAUTHORITY="${HOME}/.Xauthority"
-        else
-            echo "ERROR: No valid .Xauthority file found for X11"
-            exit 1
-        fi
+    # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
+    if [ -z $XAUTHORITY ] && [ -s "${HOME}/.Xauthority" ]; then
+        echo "ERROR: No valid .Xauthority file found for X11"
+        exit 1
     fi
 
     # Use audio if PulseAudio is installed
