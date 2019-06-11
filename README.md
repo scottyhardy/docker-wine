@@ -33,8 +33,8 @@ Using the `docker-wine` script is the easiest way to get started and should be a
 On Linux:
 
 ```bash
-wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -O /usr/local/bin/docker-wine
-chmod +x /usr/local/bin/docker-wine
+sudo wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -O /usr/local/bin/docker-wine
+sudo chmod +x /usr/local/bin/docker-wine
 ```
 
 On macOS:
