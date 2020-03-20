@@ -1,5 +1,6 @@
 FROM ubuntu:eoan
 
+# Install prerequisites
 RUN export DEBIAN_FRONTEND="noninteractive" \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -17,9 +18,9 @@ RUN export DEBIAN_FRONTEND="noninteractive" \
         zenity \
     && rm -rf /var/lib/apt/lists/*
 
+# Install wine
 ARG WINEBRANCH
 ARG WINE_VER
-
 RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add winehq.key \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main" \
@@ -36,9 +37,9 @@ RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
     && wget https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}.msi \
         -O /usr/share/wine/mono/wine-mono-${MONO_VER}.msi \
     && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86.msi \
-        -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86.msi \
+        -O /usr/share/wine/gecko/wine-gecko-${GECKO_VER}-x86.msi \
     && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86_64.msi \
-        -O /usr/share/wine/gecko/wine_gecko-${GECKO_VER}-x86_64.msi
+        -O /usr/share/wine/gecko/wine-gecko-${GECKO_VER}-x86_64.msi
 
 # Download winetricks
 RUN wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
@@ -70,5 +71,6 @@ LABEL \
     org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine" \
     org.opencontainers.image.vendor="scottyhardy" \
     org.opencontainers.image.version="${IMAGE_VER}"
+
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
