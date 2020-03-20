@@ -2,5 +2,5 @@
 
 export WINEBRANCH="stable"
 export WINE_VER="5.0.0~eoan"
-export MONO_VER="4.7.5"
-export GECKO_VER="2.47"
+export MONO_VER="4.9.4"
+export GECKO_VER="2.47.1"
