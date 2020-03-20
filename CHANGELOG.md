@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.0.1 (2019-05-29)
+## 5.0.0 (2020-03-20)
+
+* Adapt for wine 5.0 under ubuntu-eoan
+* Fixed paths for gecko installers (`_` vs `-`)
+* Upgraded default versions in `ubuntu-stable`
 
 ### Contributions
 
