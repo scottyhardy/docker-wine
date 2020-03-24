@@ -1,4 +1,4 @@
-FROM ubuntu:eoan
+FROM ubuntu:eoan-20200313
 
 # Install prerequisites
 RUN export DEBIAN_FRONTEND="noninteractive" \
