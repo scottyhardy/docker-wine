@@ -1,9 +1,8 @@
 FROM ubuntu:eoan-20200313
 
 # Install prerequisites
-RUN export DEBIAN_FRONTEND="noninteractive" \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN apt-get update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         apt-transport-https \
         ca-certificates \
         cabextract \
@@ -26,7 +25,7 @@ RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && apt-get install -o Debug::pkgProblemResolver=true -y --install-recommends winehq-${WINEBRANCH}="${WINE_VER}" \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -o Debug::pkgProblemResolver=true -y --install-recommends winehq-${WINEBRANCH}="${WINE_VER}" \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 
