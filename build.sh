@@ -14,7 +14,8 @@ VERSION=$(cat ./VERSION)
 # shellcheck source=build_args/ubuntu-stable
 . "build_args/${BUILD_TARGET}"
 
-docker build "${BUILDER_ARGS}" \
+# shellcheck disable=SC2086
+docker build ${BUILDER_ARGS} \
     --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
     --build-arg GECKO_VER="${GECKO_VER}" \
     --build-arg GIT_REV="$(git rev-parse HEAD)" \
