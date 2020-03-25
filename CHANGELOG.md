@@ -5,6 +5,8 @@
 * Use specific image version for base
 * Use local machine hostname for container hostname to fix bug on Ubuntu 16.04 ([#44](https://github.com/scottyhardy/docker-wine/issues/44))
 * Automate installation and configuration of Homebrew and XQuartz on macOS in `docker-wine` script
+* Add `build-from-scratch` option to Makefile to allow local image builds using `--no-cache` and `--pull` build options
+* Update README.md
 
 ### Contributions
 
