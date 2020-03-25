@@ -8,11 +8,12 @@ if [ $# -lt 1 ]; then
 fi
 
 BUILD_TARGET="$1"
+BUILDER_ARGS="$2"
 VERSION=$(cat ./VERSION)
 
 source ./build_args/${BUILD_TARGET}
 
-docker build \
+docker build ${BUILDER_ARGS} \
     --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
     --build-arg GECKO_VER=$GECKO_VER \
     --build-arg GIT_REV=$(git rev-parse HEAD) \
