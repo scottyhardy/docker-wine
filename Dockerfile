@@ -25,7 +25,7 @@ RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get install -o Debug::pkgProblemResolver=true -y --install-recommends winehq-${WINEBRANCH}="${WINE_VER}" \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINEBRANCH}="${WINE_VER}" \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 
