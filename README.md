@@ -9,24 +9,24 @@
 * [Getting Started](#getting-started)
   * [Download the docker-wine script](#download-the-docker-wine-script)
   * [Run the docker-wine script](#run-the-docker-wine-script)
-  * [Run on macOS](#run-on-macos)
-* [Build and run locally on your PC](#build-and-run-locally-on-your-pc)
+  * [Note about running on macOS](#Note-about-running-on-macos)
+* [Build and run locally on your own computer](#build-and-run-locally-on-your-own-computer)
 * [Volume container winehome](#volume-container-winehome)
 * [ENTRYPOINT script explained](#entrypoint-script-explained)
-* [Using docker-wine in your own Dockerfile](#using-docker-wine-in-your-own-dockerfile)
+* [Use docker-wine image in a Dockerfile](#use-docker-wine-image-in-a-Dockerfile)
 * [Troubleshooting](#troubleshooting)
 
 ## About docker-wine
 
-The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is based on Ubuntu 18.04 and includes Wine version 4.0.1 ([stable branch](https://wiki.winehq.org/Wine_User%27s_Guide#Wine_from_WineHQ)) and the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
+The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is based on Ubuntu 19.10 (Eoan Ermine) and includes Wine version 5.0.0 ([stable branch](https://wiki.winehq.org/Wine_User%27s_Guide#Wine_from_WineHQ)) and the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
 
-Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets.
+Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets (See [Note about running on macOS](#Note-about-running-on-macos)).
 
 The source code is freely available from the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) for you to build the image yourself and contributions are welcome.
 
 ## Getting Started
 
-Using the `docker-wine` script is the easiest way to get started and should be all you need for Linux OSes.  There's a few extra hurdles to get it working on macOS, so there's instructions on what you need to do at [Run on macOS](#run-on-macos).
+Using the `docker-wine` script is the easiest way to get started and should be all you need for Linux and macOS.
 
 ### Download the docker-wine script
 
@@ -60,53 +60,15 @@ docker-wine winecfg
 docker-wine winetricks msxml3 dotnet40 win7
 ```
 
-### Run on macOS
+### Note about running on macOS
 
 Unfortunately there's a lot of additional barriers when attempting to run containers on macOS.  At time of writing, it is not possible to directly mount UNIX sockets like you can do in Linux. There's a few different ways this problem can be solved, but essentially it comes down to using TCP sockets or a remote desktop protocol such as VNC.
 
-Below are instructions for using TCP sockets on macOS but unfortunately performance is way slower than with UNIX sockets on Linux, plus I haven't managed to get audio working yet. If you're serious about using a Windows application on macOS then this is probably not the best solution. If you'd just like to give it a go for shits and giggles, then this should be enough to get you started.
+The `docker-wine` script uses TCP sockets on macOS but unfortunately performance is way slower than with UNIX sockets on Linux, plus I haven't managed to get audio working yet. If you're serious about using a Windows application on macOS then this is probably not the best solution. If you'd just like to give it a go for shits and giggles, then this should be enough to get you started.
 
-#### Install homebrew
+To use the docker-wine container on macOS, jump back up to [Download the docker-wine script](#download-the-docker-wine-script) and continue from there.
 
-```bash
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
-
-#### Install XQuartz
-
-```bash
-brew install xquartz
-```
-
-#### Start XQuartz
-
-```bash
-open -a xquartz
-```
-
-#### Enable network clients in XQuartz Preferences
-
-Go to **XQuartz** -> **Preferences...**
-
-Or use shortcut keys: **&#8984;,**
-
-On the **Security** tab, tick the option **Allow connections from network clients**
-
-![XQuartz Preferences screenshot](https://raw.githubusercontent.com/scottyhardy/docker-wine/2.0.0/images/xquartz_prefs.png)
-
-#### IMPORTANT! Restart XQuartz
-
-Go to **XQuartz** -> **Quit X11**
-
-Or use shortcut keys: **&#8984;Q**
-
-*Note: If graphics are not working and you get errors that X11 is not available it's probably because you missed this step.*
-
-#### Run container with docker-wine script
-
-Jump back up to [Run the docker-wine script](#run-the-docker-wine-script) and continue from there.
-
-## Build and run locally on your PC
+## Build and run locally on your own computer
 
 First, clone the repository from GitHub:
 
@@ -129,7 +91,7 @@ make run
 or use the `docker-wine` script with the `--local` switch.:
 
 ```bash
-docker-wine --local
+docker-wine --local wine notepad
 ```
 
 ## Volume container winehome
