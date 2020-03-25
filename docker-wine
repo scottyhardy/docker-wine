@@ -13,7 +13,7 @@ docker_run () {
     --volume="winehome:/home/wineuser" \
     --hostname="$(hostname)" \
     --name="wine" \
-    $DOCKER_IMAGE "$@"
+    "${DOCKER_IMAGE}" "$@"
 }
 
 
@@ -29,7 +29,7 @@ docker_run_with_audio () {
     --volume="winehome:/home/wineuser" \
     --hostname="$(hostname)" \
     --name="wine" \
-    $DOCKER_IMAGE "$@"
+    "${DOCKER_IMAGE}" "$@"
 }
 
 
@@ -41,7 +41,7 @@ docker_run_on_mac () {
     --volume="winehome:/home/wineuser" \
     --hostname="$(hostname)" \
     --name="wine" \
-    $DOCKER_IMAGE "$@"
+    "${DOCKER_IMAGE}" "$@"
 }
 
 
@@ -67,8 +67,8 @@ main () {
     esac
 
     # Grab the latest image from docker hub or use the locally built version
-    if [ $USE_DOCKER_IMAGE == "true" ]; then
-        docker pull $DOCKER_IMAGE
+    if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
+        docker pull "${DOCKER_IMAGE}"
     else
         if [ -z "${DOCKER_IMAGE}" ]; then
             DOCKER_IMAGE="docker-wine:local"
@@ -83,19 +83,19 @@ main () {
     fi
 
     # Check if running on a Mac
-    if [ `uname` == "Darwin" ]; then
+    if [ "$(uname)" == "Darwin" ]; then
         # Check XQuartz installed
-        if ! which xquartz >/dev/null 2>&1; then
+        if ! command -v xquartz >/dev/null 2>&1; then
             echo "ERROR: XQuartz does not appear to be installed"
             exit 1
         fi
 
         # Configure XQuartz if required
-        if [ "`defaults read org.macosforge.xquartz.X11 app_to_run`" != "/usr/bin/true" ]; then
+        if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
             defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
         fi
 
-        if [ "`defaults read org.macosforge.xquartz.X11 nolisten_tcp`" != "0" ]; then
+        if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
             defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
         fi
 
@@ -107,19 +107,19 @@ main () {
 
         docker_run_on_mac "$@"
     else
-        # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
-        if [ -z $XAUTHORITY ] && [ -s "${HOME}/.Xauthority" ]; then
+        # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
+        if [ -z "${XAUTHORITY}" ] && [ -s "${HOME}/.Xauthority" ]; then
             echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
         fi
 
         # Use audio if PulseAudio is installed
-        if which pulseaudio >/dev/null 2>&1; then
+        if command -v pulseaudio >/dev/null 2>&1; then
             # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
             if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
                 echo "INFO: Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
                 mkdir -p "${HOME}/.config/pulse"
-                echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > ${HOME}/.config/pulse/default.pa
+                echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
             fi
 
             if [ ! -e "/tmp/pulse-socket" ]; then
