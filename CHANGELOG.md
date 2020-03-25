@@ -1,13 +1,27 @@
 # Changelog
 
+## 2.1.0 (2020-03-25)
+
+* Use specific image version for base
+* Use local machine hostname for container hostname to fix bug on Ubuntu 16.04 ([#44](https://github.com/scottyhardy/docker-wine/issues/44))
+* Automate installation and configuration of Homebrew and XQuartz on macOS in `docker-wine` script
+
+### Contributions
+
+#### [jdehaan](https://github.com/jdehaan)
+
+* Upgrade to Wine 5.0.0
+* Update gecko and mono versions
+* Use Ubuntu 19.10 eoan for base image
+
 ## 2.0.1 (2019-05-29)
 
 ### Contributions
 
-#### iuridiniz
+#### [iuridiniz](https://github.com/iuridiniz)
 
-* allow overwrite DOCKER_IMAGE from environment
-* fix wrong path for /tmp/.X11-unix
+* Allow overwrite DOCKER_IMAGE from environment
+* Fix wrong path for /tmp/.X11-unix
 
 ## 2.0.0 (2019-05-26)
 
@@ -30,7 +44,7 @@
 * Move `logo_small.png` to images folder
 * Add instructions for using on macOS
 * Rename container hostname to winecellar
-* Use docker hub image by default, use --local for locally built image
+* Use docker hub image by default
 * Use `--local` switch to run locally built image
 * Add wine branch and version tag to local builds
 * Update help
