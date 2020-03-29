@@ -10,9 +10,7 @@ groupadd --gid "${USER_GID}" "${USER}"
 useradd --shell /bin/bash --uid 1010 --gid 1010 --no-create-home --home-dir /home/wineuser wineuser
 
 # Create the user's home if it doesn't exist
-if [ ! -d "${USER_HOME}" ]; then
-    mkdir -p "${USER_HOME}"
-fi
+[ ! -d "${USER_HOME}" ] && mkdir -p "${USER_HOME}"
 
 # Take ownership of user's home directory
 if [ "$(stat -c '%u:%g' ${USER_HOME})" != "${USER_UID}:${USER_GID}" ]; then
