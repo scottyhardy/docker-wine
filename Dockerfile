@@ -27,21 +27,12 @@ RUN wget -nv https://dl.winehq.org/wine-builds/winehq.key \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 
-# Download winetricks
+# Install winetricks
 RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
         -O /usr/bin/winetricks \
     && chmod +rx /usr/bin/winetricks
 
-# Create user and take ownership of files
-RUN groupadd -g 1010 wineuser \
-    && useradd --shell /bin/bash --uid 1010 --gid 1010 --create-home --home-dir /home/wineuser wineuser \
-    && chown -R wineuser:wineuser /home/wineuser
-
-VOLUME /home/wineuser
 COPY pulse-client.conf /etc/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
-
-WORKDIR /home/wineuser
-
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
