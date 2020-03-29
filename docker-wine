@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DOCKER_IMAGE=${DOCKER_IMAGE:-"scottyhardy/docker-wine:latest"}
-
 # Run docker with just X11 support
 docker_run () {
     docker run -it \
@@ -44,103 +42,124 @@ docker_run_on_mac () {
     "${DOCKER_IMAGE}" "$@"
 }
 
-
-main () {
-    USE_DOCKER_IMAGE="true"
-
-    case $1 in
-        --local)
-            shift
-            echo "INFO: Running locally built docker-wine image"
-            USE_DOCKER_IMAGE="false"
-            ;;
-        --help)
-            echo "Usage: $0 [--local] [command] [arguments]..."
-            echo "e.g."
-            echo "    $0"
-            echo "    $0 wine notepad.exe"
-            echo "    $0 wineboot --init"
-            echo "    $0 --local"
-            echo "    $0 --local wine explorer.exe"
-            exit 0
-            ;;
-    esac
-
-    # Grab the latest image from docker hub or use the locally built version
-    if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
-        docker pull "${DOCKER_IMAGE}"
-    else
-        if [ -z "${DOCKER_IMAGE}" ]; then
-            DOCKER_IMAGE="docker-wine:local"
-        fi
-    fi
-
-    if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
-        echo "INFO: Creating Docker volume container 'winehome'..."
-        docker volume create winehome
-    else
-        echo "INFO: Using existing Docker volume container 'winehome'..."
-    fi
-
-    # Check if running on a Mac
-    if [ "$(uname)" == "Darwin" ]; then
-        # Check XQuartz installed
-        if ! command -v xquartz >/dev/null 2>&1; then
-            echo "ERROR: XQuartz does not appear to be installed"
-            exit 1
-        fi
-
-        # Configure XQuartz if required
-        if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
-            defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
-        fi
-
-        if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
-            defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
-        fi
-
-        # Allow localhost to access XQuartz if required
-        if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
-            echo "WARNING: Adding localhost to authorized xhost clients"
-            xhost + 127.0.0.1
-        fi
-
-        docker_run_on_mac "$@"
-    else
-        # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
-        if [ -z "${XAUTHORITY}" ] && [ -s "${HOME}/.Xauthority" ]; then
-            echo "ERROR: No valid .Xauthority file found for X11"
-            exit 1
-        fi
-
-        # Use audio if PulseAudio is installed
-        if command -v pulseaudio >/dev/null 2>&1; then
-            # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
-            if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
-                echo "INFO: Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
-                mkdir -p "${HOME}/.config/pulse"
-                echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
-            fi
-
-            if [ ! -e "/tmp/pulse-socket" ]; then
-                # Restart PulseAudio daemon to ensure the UNIX socket is created
-                echo "INFO: No socket found for PulseAudio so restarting service..."
-                pulseaudio -k
-                pulseaudio --start
-                sleep 1
-            fi
-
-            if [ -e "/tmp/pulse-socket" ]; then
-                docker_run_with_audio "$@"
-            else
-                echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
-                docker_run "$@"
-            fi
-        else
-            echo "INFO: PulseAudio not installed so running without sound"
-            docker_run "$@"
-        fi
-    fi
+print_help () {
+    echo "Usage: $0 [--local|run-as-root|run-as-me ...] [command] [arguments]"
+    echo "e.g."
+    echo "    $0"
+    echo "    $0 wine notepad.exe"
+    echo "    $0 wineboot --init"
+    echo "    $0 --local"
+    echo "    $0 --local wine explorer.exe"
+    echo "    $0 --run-as-root --rdp=interactive"
+    echo "    $0 rdp=yes"
 }
 
-main "$@"
+
+DOCKER_IMAGE=${DOCKER_IMAGE:-"scottyhardy/docker-wine:latest"}
+USE_LOCAL_IMAGE="no"
+RUN_AS_ROOT="no"
+RUN_AS_ME="no"
+RDP_SERVER="no"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --local)
+        USE_LOCAL_IMAGE="yes"
+        ;;
+    --run-as-root)
+        RUN_AS_ROOT="yes"
+        ;;
+    --run-as-me)
+        RUN_AS_ME="yes"
+        ;;
+    --rdp=*)
+        RDP_SERVER="${1#*=}"
+        ;;
+    --help)
+        print_help
+        exit 0
+        ;;
+    *)
+        echo "ERROR: '$1' is not a valid option"
+        echo
+        print_help
+        exit 1
+    esac
+    shift
+done
+
+# Grab the latest image from docker hub or use the locally built version
+if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
+    docker pull "${DOCKER_IMAGE}"
+else
+    if [ -z "${DOCKER_IMAGE}" ]; then
+        DOCKER_IMAGE="docker-wine:local"
+    fi
+fi
+
+if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
+    echo "INFO: Creating Docker volume container 'winehome'..."
+    docker volume create winehome
+else
+    echo "INFO: Using existing Docker volume container 'winehome'..."
+fi
+
+# Check if running on a Mac
+if [ "$(uname)" == "Darwin" ]; then
+    # Check XQuartz installed
+    if ! command -v xquartz >/dev/null 2>&1; then
+        echo "ERROR: XQuartz does not appear to be installed"
+        exit 1
+    fi
+
+    # Configure XQuartz if required
+    if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
+        defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+    fi
+
+    if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
+        defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+    fi
+
+    # Allow localhost to access XQuartz if required
+    if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
+        echo "WARNING: Adding localhost to authorized xhost clients"
+        xhost + 127.0.0.1
+    fi
+
+    docker_run_on_mac "$@"
+else
+    # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
+    if [ -z "${XAUTHORITY}" ] && [ -s "${HOME}/.Xauthority" ]; then
+        echo "ERROR: No valid .Xauthority file found for X11"
+        exit 1
+    fi
+
+    # Use audio if PulseAudio is installed
+    if command -v pulseaudio >/dev/null 2>&1; then
+        # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
+        if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+            echo "INFO: Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
+            mkdir -p "${HOME}/.config/pulse"
+            echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
+        fi
+
+        if [ ! -e "/tmp/pulse-socket" ]; then
+            # Restart PulseAudio daemon to ensure the UNIX socket is created
+            echo "INFO: No socket found for PulseAudio so restarting service..."
+            pulseaudio -k
+            pulseaudio --start
+            sleep 1
+        fi
+
+        if [ -e "/tmp/pulse-socket" ]; then
+            docker_run_with_audio "$@"
+        else
+            echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+            docker_run "$@"
+        fi
+    else
+        echo "INFO: PulseAudio not installed so running without sound"
+        docker_run "$@"
+    fi
+fi
