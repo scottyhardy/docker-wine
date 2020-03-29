@@ -55,11 +55,11 @@ print_help () {
 }
 
 
-DOCKER_IMAGE=${DOCKER_IMAGE:-"scottyhardy/docker-wine:latest"}
-USE_LOCAL_IMAGE="no"
-RUN_AS_ROOT="no"
-RUN_AS_ME="no"
+DOCKER_IMAGE="${scottyhardy/docker-wine:latest}"
+LOCAL_IMAGE="${docker-wine:latest}"
+RUN_AS="wineuser"
 RDP_SERVER="no"
+INTERACTIVE="yes"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -67,26 +67,36 @@ while [ $# -gt 0 ]; do
         USE_LOCAL_IMAGE="yes"
         ;;
     --run-as-root)
-        RUN_AS_ROOT="yes"
+        RUN_AS="root"
         ;;
     --run-as-me)
-        RUN_AS_ME="yes"
+        RUN_AS="me"
         ;;
-    --rdp=*)
-        RDP_SERVER="${1#*=}"
+    --rdp)
+        RDP_SERVER="yes"
+        INTERACTIVE="no"
+        ;;
+    --rdp-interactive)
+        RDP_SERVER="yes"
         ;;
     --help)
         print_help
         exit 0
         ;;
-    *)
+    -*)
         echo "ERROR: '$1' is not a valid option"
         echo
         print_help
         exit 1
+        ;;
+    *)
+        break
+        ;;
     esac
     shift
 done
+
+CMD_ARGS="$@"
 
 # Grab the latest image from docker hub or use the locally built version
 if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
