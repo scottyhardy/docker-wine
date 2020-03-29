@@ -1,4 +1,4 @@
-FROM ubuntu:eoan-20200313
+FROM scottyhardy/docker-remote-desktop:latest
 
 # Install prerequisites
 RUN apt-get update \
@@ -18,14 +18,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
-ARG WINEBRANCH
-ARG WINE_VER
 RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add winehq.key \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINEBRANCH}="${WINE_VER}" \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-stable \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 
@@ -55,21 +53,6 @@ COPY pulse-client.conf /etc/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 
 WORKDIR /home/wineuser
-ARG IMAGE_VER
-ARG BUILD_DATE
-ARG GIT_REV
-LABEL \
-    org.opencontainers.image.authors="scottyhardy <scotthardy42@outlook.com>" \
-    org.opencontainers.image.created="${BUILD_DATE}" \
-    org.opencontainers.image.description="Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS" \
-    org.opencontainers.image.documentation="https://github.com/scottyhardy/docker-wine/blob/${IMAGE_VER}/README.md" \
-    org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.revision="${GIT_REV}" \
-    org.opencontainers.image.source="https://github.com/scottyhardy/docker-wine.git" \
-    org.opencontainers.image.title="docker-wine" \
-    org.opencontainers.image.url="https://github.com/scottyhardy/docker-wine" \
-    org.opencontainers.image.vendor="scottyhardy" \
-    org.opencontainers.image.version="${IMAGE_VER}"
 
 ENTRYPOINT ["/usr/bin/entrypoint"]
 CMD ["/bin/bash"]
