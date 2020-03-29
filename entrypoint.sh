@@ -5,7 +5,7 @@ USER="${USER:-wineuser}"
 USER_UID="${USER_UID:-1010}"
 USER_GID="${USER_GID:-1010}"
 USER_HOME="${USER_HOME:-/home/wineuser}"
-USER_PASSWD="${USER_PASSWORD:-ubuntu}"
+USER_PASSWD="${USER_PASSWORD:-$USER}"
 
 # Create the user account
 groupadd --gid "${USER_GID}" "${USER}"
