@@ -20,7 +20,7 @@ RUN apt-get update \
 # Install wine
 RUN wget https://dl.winehq.org/wine-builds/winehq.key \
     && APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add winehq.key \
-    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ eoan main" \
+    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME /etc/os-release | cut -d= -f2) main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-stable \
