@@ -18,28 +18,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
-RUN wget https://dl.winehq.org/wine-builds/winehq.key \
-    && APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add winehq.key \
-    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME /etc/os-release | cut -d= -f2) main" \
+RUN wget -nv https://dl.winehq.org/wine-builds/winehq.key \
+    && apt-key add winehq.key \
+    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-stable \
     && rm -rf /var/lib/apt/lists/* \
     && rm winehq.key
 
-# Download mono and gecko
-ARG MONO_VER
-ARG GECKO_VER
-RUN mkdir -p /usr/share/wine/mono /usr/share/wine/gecko \
-    && wget https://dl.winehq.org/wine/wine-mono/${MONO_VER}/wine-mono-${MONO_VER}.msi \
-        -O /usr/share/wine/mono/wine-mono-${MONO_VER}.msi \
-    && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86.msi \
-        -O /usr/share/wine/gecko/wine-gecko-${GECKO_VER}-x86.msi \
-    && wget https://dl.winehq.org/wine/wine-gecko/${GECKO_VER}/wine-gecko-${GECKO_VER}-x86_64.msi \
-        -O /usr/share/wine/gecko/wine-gecko-${GECKO_VER}-x86_64.msi
-
 # Download winetricks
-RUN wget https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
+RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
         -O /usr/bin/winetricks \
     && chmod +rx /usr/bin/winetricks
 
