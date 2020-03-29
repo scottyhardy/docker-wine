@@ -28,6 +28,9 @@ RUN_AS_ROOT="${RUN_AS_ROOT:-no}"
 # Run in X11 redirection mode (default)
 if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
 
+    # Set up pulseaudio for redirection to UNIX socket
+    cp /root/pulse/client.conf /etc/pulse/client.conf
+
     # Run in X11 redirection mode as $USER (default)
     if echo "${RUN_AS_ROOT}" | grep -q -i -E '^(no|off|false|0)$'; then
 

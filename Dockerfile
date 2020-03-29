@@ -32,6 +32,6 @@ RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/
         -O /usr/bin/winetricks \
     && chmod +rx /usr/bin/winetricks
 
-COPY pulse-client.conf /etc/pulse/client.conf
+COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 ENTRYPOINT ["/usr/bin/entrypoint"]
