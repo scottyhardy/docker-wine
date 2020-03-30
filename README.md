@@ -10,7 +10,7 @@
 
 >Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS
 
-The docker-wine container can either be run with X11 forwarding or as an RDP server to suit your use case.  The default is to use X11 forwarding which utilizes your machine's X server to render graphics directly into your current session and play sounds through pulseaudio (Linux only).
+The docker-wine container can either be run with X11 forwarding or as an RDP server to suit your use case.  The default is to use X11 forwarding which utilizes your machine's X server to render graphics directly into your current session and play sounds through pulseaudio (audio redirection on Linux only).
 
 Using docker-wine with an RDP server allows the container to be run on a headless machine or a machine that may not be running an X server. You can then use a Remote Desktop client to connect to the container which may be located either on your local or a remote machine.  This is currently the only solution if you require sound on macOS.
 
@@ -50,14 +50,14 @@ You can override the default interactive bash session by adding `wine`, `winetri
 ./docker-wine wine notepad
 ```
 
-![](images/screenshot_1.png)
+![Screenshot of Notepad](images/screenshot_1.png)
 
 ## Run `docker-wine` with RDP server
 
-Run with the `--rdp=interactive` option to start the RDP server
+Run with the `--rdp` option to start the RDP server with an interactive bash session:
 
 ```bash
-./docker-wine --rdp=interactive
+./docker-wine --rdp
 ```
 
 Or, you can run the container as a detached daemon that runs in the background.  To start the daemon:
@@ -66,7 +66,7 @@ Or, you can run the container as a detached daemon that runs in the background. 
 ./docker-wine --rdp=start
 ```
 
-You can then stop the daemon:
+Then to stop the daemon:
 
 ```bash
 ./docker-wine --rdp=stop
@@ -74,7 +74,7 @@ You can then stop the daemon:
 
 ## Connecting with an RDP client
 
-All Windows desktops and servers come with Remote Desktop pre-installed and macOS users can download the Microsoft Remote Desktop application for free from the App Store.  For Linux users, I'd suggest using the Remmina Remote Desktop client.
+All Windows desktops and servers come with the Remote Desktop Connection client pre-installed and macOS users can download the Microsoft Remote Desktop application for free from the App Store. For Linux users, I'd suggest using the Remmina Remote Desktop client.
 
 For the hostname, use `localhost` if the container is hosted on the same machine you're running your Remote Desktop client on and for remote connections just use the name or IP address of the machine you are connecting to.
 NOTE: To connect to a remote machine, it will require TCP port 3389 to be exposed through the firewall.
@@ -140,9 +140,7 @@ To run the your locally built container, use `docker-run` with the `--local` swi
 
 ## Volume container winehome
 
-When the docker-wine image is instantiated with `docker-wine` script, the contents of the `/home/wineuser` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
-
-Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `docker-wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
+When the docker-wine container is instantiated with the `docker-wine` script, a volume container named `winehome` is created and is mapped to the user's home within the container.  Using a volume container allows the docker-wine container to be safely removed after every execution as user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
 
 You can manually create the `winehome` volume container by running:
 
@@ -168,9 +166,36 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 
 ## Manually running with `docker run` commands
 
+There's a number of prerequisites to getting pulseaudio redirection working on Linux and for X11 redirection to work on macOS.  I plan to document these in a wiki in the near future but this should be enough to get you started.
+
 First, pull the latest image from DockerHub:
 
+```bash
+docker pull scottyhardy/docker-wine
+```
 
+Here is a basic `docker run` command for X11 redirection on Linux that will start an interactive bash session:
+
+```bash
+docker run -it \
+  --rm \
+  --hostname="$(hostname)" \
+  --env="DISPLAY" \
+  --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
+  --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
+  scottyhardy/docker-wine /bin/bash
+```
+
+Here is a basic `docker run` command for starting the RDP server on both macOS and Linux with an interactive bash session:
+
+```bash
+docker run -it \
+  --rm \
+  --hostname="$(hostname)" \
+  --env="RDP_SERVER=yes" \
+  --publish="3389:3389/tcp" \
+  scottyhardy/docker-wine /bin/bash
+```
 
 ## Troubleshooting
 
@@ -180,7 +205,7 @@ To test video, try opening Notepad:
 docker-wine wine notepad
 ```
 
-To test sound, try using `pacat` just to confirm PulseAudio is working:
+To test sound, try using `pacat`:
 
 ```bash
 docker-wine pacat -vv /dev/random
