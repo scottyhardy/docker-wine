@@ -43,23 +43,68 @@ docker_run_on_mac () {
 }
 
 print_help () {
-    echo "Usage: $0 [--local|run-as-root|run-as-me ...] [command] [arguments]"
+    echo "Usage: $0 [--local|run-as-root|run-as-me ...][...] [command passed to container] [command args]"
+    echo "    --local               Use locally built docker-wine image instead of pulling image from DockerHub"
+    echo "    --run-as-root         Run as root"
+    echo "    --run-as-me           Run using your current username, UID and GID (default when alternate --user-home value specified)"
+    echo "    --rdp=option          Runs docker-wine container with Remote Desktop Protocol server"
+    echo "                          Valid values for option are:"
+    echo "                              no             Don't use RDP server (default)"
+    echo "                              start          Start the RDP server as a detached daemon"
+    echo "                              stop           Stop the detached RDP server by stopping the docker-wine container"
+    echo "                              restart        Restart the detached RDP server by stopping and starting the docker-wine container"
+    echo "                              interactive    Start the RDP server and also run an interactive bash session"
+    echo "    --user-home=value     Use an alternate volume to ${USER_VOLUME} for storing persistent user data (NOTE: Use with caution!)"
+    echo "                          Valid values can specify either a docker volume or local path"
+    echo "                          e.g."
+    echo "                              --user-home=my_new_volume"
+    echo "                              --user-home=/tmp/my_user"
+    echo "    --user-passwd=value   Specify a password for the user in plain text (default is the user's username)"
+    echo "    --volume=value        Specify additional volume(s) to be mounted"
+    echo "                          Values are passed to docker run command as-is and use standard syntax for specifying volumes and mount points"
+    echo "                          Multiple --volume=value statements can be included to mount as many volumes as required"
+    echo "    --help                Display this help screen"
+    echo
     echo "e.g."
     echo "    $0"
     echo "    $0 wine notepad.exe"
     echo "    $0 wineboot --init"
     echo "    $0 --local"
-    echo "    $0 --local wine explorer.exe"
+    echo "    $0 --local --run-as-me --user-passwd=pa55w0rd --volume=my_vol:/some/path:ro wine explorer.exe"
     echo "    $0 --run-as-root --rdp=interactive"
-    echo "    $0 rdp=yes"
+    echo "    $0 --rdp=start"
+}
+
+add_run_arg () {
+    local arg="$1"
+
+    if [ -z "${RUN_ARGS}" ]; then
+        RUN_ARGS+="${arg}"
+    else
+        RUN_ARGS+=" ${arg}"
+    fi
+}
+
+docker_run () {
+    local run_mode="$1"
+    local run_args="$2"
+    local image="$3"
+    local cmd_args="$4"
+
+    docker run $run_mode $run_args $image $cmd_args
 }
 
 
 DOCKER_IMAGE="${scottyhardy/docker-wine:latest}"
 LOCAL_IMAGE="${docker-wine:latest}"
-RUN_AS="wineuser"
+USE_LOCAL_IMAGE="no"
 RDP_SERVER="no"
-INTERACTIVE="yes"
+RUN_MODE="-it"
+RUN_ARGS=""
+
+USER="wineuser"
+USER_VOLUME="winehome"
+USER_PASSWD=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -72,12 +117,17 @@ while [ $# -gt 0 ]; do
     --run-as-me)
         RUN_AS="me"
         ;;
-    --rdp)
-        RDP_SERVER="yes"
-        INTERACTIVE="no"
+    --rdp=*)
+        RDP_SERVER="$1#*="
         ;;
-    --rdp-interactive)
-        RDP_SERVER="yes"
+    --user-home=*)
+        USER_HOME="$1#*="
+        ;;
+    --user-passwd=*)
+        USER_PASSWD="$1#*="
+        ;;
+    --volume=*)
+        add_run_option "$1"
         ;;
     --help)
         print_help
@@ -98,16 +148,28 @@ done
 
 CMD_ARGS="$@"
 
-# Grab the latest image from docker hub or use the locally built version
-if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
-    docker pull "${DOCKER_IMAGE}"
-else
-    if [ -z "${DOCKER_IMAGE}" ]; then
-        DOCKER_IMAGE="docker-wine:local"
-    fi
+# Sanity check
+if ! docker -v >/dev/null 2>&1; then
+    echo "ERROR: Docker is not running or not installed, unable to proceed"
+    exit 1
 fi
 
-if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
+# Process RDP_SERVER value
+if ! echo "${RDP_SERVER}" | grep -i -E '^(no|start|stop|restart|interactive)$'; then
+    echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
+    exit 1
+fi
+
+
+# Grab the latest image from docker hub or use the locally built version
+if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
+    docker pull "${DOCKER_IMAGE}"
+else
+    DOCKER_IMAGE="${LOCAL_IMAGE}"
+fi
+
+# Create the docker volume to store user's home
+if ! docker volume ls -qf "name=winehome" | grep -q "^winehome$"; then
     echo "INFO: Creating Docker volume container 'winehome'..."
     docker volume create winehome
 else
