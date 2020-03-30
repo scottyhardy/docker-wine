@@ -116,7 +116,7 @@ if ! docker -v >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! echo "${RDP_SERVER}" | grep -E '^(no|start|stop|restart|interactive)$'; then
+if ! echo "${RDP_SERVER}" | grep -q -E '^(no|start|stop|restart|interactive)$'; then
     echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
     exit 1
 fi
@@ -148,12 +148,15 @@ add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
 # Run in RDP mode
 if [ "${RDP_SERVER}" != "no" ]; then
 
+    add_run_arg --env="RDP_SERVER=yes"
+    add_run_arg --publish="3389:3389/tcp"
+
     case "${RDP_SERVER}" in
         interactive)
-            docker_run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" /bin/bash
+            docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" /bin/bash
             ;;
         start)
-            docker_run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
             ;;
         stop)
             docker kill wine
@@ -161,7 +164,7 @@ if [ "${RDP_SERVER}" != "no" ]; then
             ;;
         restart)
             docker kill wine
-            docker_run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
             ;;
         *)
             echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
@@ -171,6 +174,9 @@ if [ "${RDP_SERVER}" != "no" ]; then
 
 # Run in X11 forwarding mode
 else
+
+    # Set CMD_ARGS to /bin/bash if no commands specified
+    [ -z "${CMD_ARGS[0]}" ] && CMD_ARGS=("/bin/bash")
 
     # Run in X11 forwarding mode on macOS
     if [ "$(uname)" == "Darwin" ]; then
@@ -197,7 +203,7 @@ else
         fi
 
         add_run_arg --env="DISPLAY=host.docker.internal:0"
-        docker_run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
 
     # Run in X11 forwarding mode on Linux
     elif [ "$(uname)" == "Linux" ]; then
@@ -241,7 +247,7 @@ else
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
         add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
 
-        docker_run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
     else
         echo "ERROR: Unknown operating system '$(uname)'"
         exit 1
