@@ -197,12 +197,14 @@ else
         fi
 
         # Allow localhost to access XQuartz
-        if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
+        if ! xhost | grep -q "^INET:localhost$"; then
             echo "WARNING: Adding localhost to authorized xhost clients"
             xhost + 127.0.0.1
         fi
 
+        # Add macOS run args
         add_run_arg --env="DISPLAY=host.docker.internal:0"
+
         docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
 
     # Run in X11 forwarding mode on Linux
@@ -216,6 +218,7 @@ else
 
         # Use audio if pulseaudio is installed
         if command -v pulseaudio >/dev/null 2>&1; then
+
             # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
             if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
                 echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
@@ -223,8 +226,8 @@ else
                 echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
             fi
 
+            # Restart pulseaudio daemon to create the UNIX socket
             if [ ! -e "/tmp/pulse-socket" ]; then
-                # Restart pulseaudio daemon to ensure the UNIX socket is created
                 echo "INFO: No socket found for pulseaudio so restarting service..."
                 pulseaudio -k
                 pulseaudio --start
@@ -241,7 +244,7 @@ else
             echo "INFO: pulseaudio not installed so running without sound"
         fi
 
-        # Add common Linux docker run args
+        # Add Linux docker run args
         add_run_arg --env="DISPLAY"
         add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
