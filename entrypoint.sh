@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set user account and run values
-USER="${USER:-wineuser}"
+USER_NAME="${USER_NAME:-wineuser}"
 USER_UID="${USER_UID:-1010}"
 USER_GID="${USER_GID:-$USER_UID}"
 USER_HOME="${USER_HOME:-/home/$USER}"
