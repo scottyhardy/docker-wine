@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Set user account and run values
 USER_NAME="${USER_NAME:-wineuser}"

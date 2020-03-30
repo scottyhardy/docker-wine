@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
