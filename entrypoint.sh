@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# Set user account details
+# Set user account and run values
 USER="${USER:-wineuser}"
 USER_UID="${USER_UID:-1010}"
-USER_GID="${USER_GID:-1010}"
-USER_HOME="${USER_HOME:-/home/wineuser}"
+USER_GID="${USER_GID:-$UID}"
+USER_HOME="${USER_HOME:-/home/$USER}"
 USER_PASSWD="${USER_PASSWORD:-$USER}"
+RDP_SERVER="${RDP_SERVER:-no}"
+RUN_AS_ROOT="${RUN_AS_ROOT:-no}"
 
 # Create the user account
 groupadd --gid "${USER_GID}" "${USER}"
@@ -18,12 +20,6 @@ useradd --shell /bin/bash --uid 1010 --gid 1010 --password $(openssl passwd "${U
 if [ "$(stat -c '%u:%g' ${USER_HOME})" != "${USER_UID}:${USER_GID}" ]; then
     chown "${USER_UID}":"${USER_GID}" "${USER_HOME}"
 fi
-
-# Container can be run with X11 redirection or as an RDP server
-RDP_SERVER="${RDP_SERVER:-no}"
-
-# Can run as root for troubleshooting, default is to run as $USER
-RUN_AS_ROOT="${RUN_AS_ROOT:-no}"
 
 # Run in X11 redirection mode (default)
 if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
@@ -40,6 +36,7 @@ if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
             chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.Xauthority"
         fi
 
+        # Run in X11 redirection mode as user
         exec gosu "${USER}" "$@"
 
     # Run in X11 redirection mode as root
@@ -50,7 +47,7 @@ if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
         exit 1
     fi
 
-# Run as RDP server
+# Run in RDP server mode
 elif echo "${RDP_SERVER}" | grep -q -i -E '^(yes|on|true|1)$'; then
 
     # Start xrdp sesman service
