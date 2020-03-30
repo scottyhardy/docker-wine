@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 print_help () {
-    echo "Usage: $0 [OPTION]... [COMMAND [ARGS]...]..."
+    echo "Usage: $0 [OPTION[=VALUE]]... [COMMAND [ARGS]...]..."
     echo
     echo "Run the docker-wine container with behaviour determined by the following"
     echo "OPTIONS:"
@@ -10,6 +10,7 @@ print_help () {
     echo "  --run-as-root         Run as root"
     echo "  --run-as-me           Run using your current username, UID and GID (default"
     echo "                          when alternate --user-home value specified)"
+    echo "  --rdp                 Shortcut for --rdp=interactive"
     echo "  --rdp=OPTION          Runs docker-wine container with Remote Desktop Protocol"
     echo "                          server"
     echo "                        Valid values for OPTION are:"
@@ -22,7 +23,7 @@ print_help () {
     echo "                                           stopping and starting the container"
     echo "                          interactive    Start the RDP server and also run an"
     echo "                                           interactive bash session"
-    echo "  --user-home=VALUE     Use an alternate volume to ${USER_VOLUME} for storing"
+    echo "  --user-home=VALUE     Use an alternate volume to winehome for storing"
     echo "                          persistent user data (NOTE: Use with caution!)"
     echo "                        Valid values can specify either a docker volume or"
     echo "                          local path"
@@ -44,7 +45,7 @@ print_help () {
     echo "  $0 wineboot --init"
     echo "  $0 --local --volume=my_vol:/some/path:ro"
     echo "  $0 --local --run-as-me wine notepad"
-    echo "  $0 --run-as-root --rdp=interactive"
+    echo "  $0 --run-as-root --rdp"
     echo "  $0 --rdp=start --user-passwd=pa55w0rd"
 }
 
@@ -59,10 +60,10 @@ add_run_arg () {
 DOCKER_IMAGE="scottyhardy/docker-wine:latest"
 LOCAL_IMAGE="docker-wine:latest"
 USE_LOCAL_IMAGE="no"
-RDP_SERVER="no"
-RUN_ARGS=()
+USE_RDP_SERVER="no"
 USER_HOME="/home/wineuser"
 USER_VOLUME="winehome"
+RUN_ARGS=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -77,8 +78,11 @@ while [ $# -gt 0 ]; do
         add_run_arg --env="USER_UID=$(id -u)"
         add_run_arg --env="USER_GID=$(id -g)"
         ;;
+    --rdp)
+        USE_RDP_SERVER="interactive"
+        ;;
     --rdp=*)
-        RDP_SERVER="${1#*=}"
+        USE_RDP_SERVER="${1#*=}"
         ;;
     --user-home=*)
         USER_HOME="${1#*=}"
@@ -116,12 +120,12 @@ if ! docker -v >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! echo "${RDP_SERVER}" | grep -q -E '^(no|start|stop|restart|interactive)$'; then
-    echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
+if ! echo "${USE_RDP_SERVER}" | grep -q -E '^(no|start|stop|restart|interactive)$'; then
+    echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
     exit 1
 fi
 
-if [ "${RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
+if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     echo "ERROR: Commands cannot be passed to container when using --rdp option"
     exit 1
 fi
@@ -146,12 +150,12 @@ add_run_arg --name="wine"
 add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
 
 # Run in RDP mode
-if [ "${RDP_SERVER}" != "no" ]; then
+if [ "${USE_RDP_SERVER}" != "no" ]; then
 
-    add_run_arg --env="RDP_SERVER=yes"
+    add_run_arg --env="USE_RDP_SERVER=yes"
     add_run_arg --publish="3389:3389/tcp"
 
-    case "${RDP_SERVER}" in
+    case "${USE_RDP_SERVER}" in
         interactive)
             docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" /bin/bash
             ;;
@@ -160,14 +164,13 @@ if [ "${RDP_SERVER}" != "no" ]; then
             ;;
         stop)
             docker kill wine
-            exit $?
             ;;
         restart)
             docker kill wine
             docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
             ;;
         *)
-            echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
+            echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
             exit 1
             ;;
     esac
@@ -234,7 +237,7 @@ else
                 sleep 1
             fi
 
-            # Add the pulseaudio UNIX socket
+            # Add the pulseaudio UNIX socket to run args
             if [ -e "/tmp/pulse-socket" ]; then
                 add_run_arg --volume="/tmp/pulse-socket:/tmp/pulse-socket"
             else
@@ -244,7 +247,7 @@ else
             echo "INFO: pulseaudio not installed so running without sound"
         fi
 
-        # Add Linux docker run args
+        # Add Linux run args
         add_run_arg --env="DISPLAY"
         add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
