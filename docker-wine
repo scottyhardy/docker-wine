@@ -152,7 +152,7 @@ add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
 # Run in RDP mode
 if [ "${USE_RDP_SERVER}" != "no" ]; then
 
-    add_run_arg --env="USE_RDP_SERVER=yes"
+    add_run_arg --env="RDP_SERVER=yes"
     add_run_arg --publish="3389:3389/tcp"
 
     case "${USE_RDP_SERVER}" in
