@@ -3,7 +3,7 @@
 # Set user account and run values
 USER="${USER:-wineuser}"
 USER_UID="${USER_UID:-1010}"
-USER_GID="${USER_GID:-$UID}"
+USER_GID="${USER_GID:-$USER_UID}"
 USER_HOME="${USER_HOME:-/home/$USER}"
 USER_PASSWD="${USER_PASSWORD:-$USER}"
 RDP_SERVER="${RDP_SERVER:-no}"
