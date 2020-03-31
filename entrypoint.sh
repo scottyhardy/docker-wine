@@ -5,14 +5,12 @@ USER_NAME=${USER_NAME:-wineuser}
 USER_UID=${USER_UID:-1010}
 USER_GID=${USER_GID:-"${USER_UID}"}
 USER_HOME=${USER_HOME:-/home/"${USER_NAME}"}
-USER_PASSWD=${USER_PASSWD:-$(openssl passwd "${USER_NAME}")}
+USER_PASSWD=${USER_PASSWD:-$(openssl passwd "${USER_NAME}" 2>/dev/null)}
 RDP_SERVER=${RDP_SERVER:-no}
 RUN_AS_ROOT=${RUN_AS_ROOT:-no}
 
-echo "USER HOME: $USER_HOME"
-
 # Create the user account
-groupadd --gid "${USER_GID}" "${USER_NAME}"
+! grep -q ":${USER_GID}:$" /etc/group && groupadd --gid "${USER_GID}" "${USER_NAME}"
 useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" --password "${USER_PASSWD}" --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
 
 # Create the user's home if it doesn't exist
