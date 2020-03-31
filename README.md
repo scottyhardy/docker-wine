@@ -132,10 +132,10 @@ To build the container, simply run:
 ./build
 ```
 
-To run the your locally built container, use `docker-run` with the `--local` switch:
+To run the your locally built container, use `docker-wine` with the `--local` switch:
 
 ```bash
-./docker-run --local
+./docker-wine --local wine notepad
 ```
 
 ## Volume container winehome
