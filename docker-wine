@@ -108,7 +108,7 @@ while [ $# -gt 0 ]; do
         USER_VOLUME="${1#*=}"
         ;;
     --password=*)
-        add_run_arg --env="USER_PASSWD=$(openssl passwd "${1#*=}")"
+        add_run_arg --env="USER_PASSWD=$(openssl passwd -1 "${1#*=}")"
         ;;
     --workdir=*)
         WORKDIR="${1#*=}"
