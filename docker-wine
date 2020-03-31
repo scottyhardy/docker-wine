@@ -113,7 +113,7 @@ while [ $# -gt 0 ]; do
         add_run_args_for_as_me
         ;;
     --password=*)
-        add_run_arg --env="USER_PASSWD=$(openssl passwd -1 "${1#*=}")"
+        add_run_arg --env=USER_PASSWD="$(openssl passwd -1 -salt "$(openssl rand -base64 6)" "${1#*=}")"
         ;;
     --workdir=*)
         WORKDIR="${1#*=}"
@@ -249,7 +249,7 @@ else
     elif [ "$(uname)" == "Linux" ]; then
 
         # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
-        if [ -z "${XAUTHORITY}" -a -s "${HOME}/.Xauthority" ]; then
+        if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" ]; then
             echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
         fi
