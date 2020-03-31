@@ -7,9 +7,9 @@ print_help () {
     echo "OPTIONS:"
     echo "  --local               Use locally built docker-wine image instead of pulling"
     echo "                          image from DockerHub"
-    echo "  --run-as-root         Run as root"
-    echo "  --run-as-me           Run using your current username, UID and GID (default"
-    echo "                          when alternate --user-home value specified)"
+    echo "  --as-root             Run as root"
+    echo "  --as-me               Run using your current username, UID and GID (default"
+    echo "                          when alternate --home value specified)"
     echo "  --rdp                 Shortcut for --rdp=interactive"
     echo "  --rdp=OPTION          Runs docker-wine container with Remote Desktop Protocol"
     echo "                          server"
@@ -24,30 +24,33 @@ print_help () {
     echo "                          interactive    Start the RDP server and also run an"
     echo "                                           interactive bash session"
     echo "  --rdp-port=VALUE      Bind RDP to a different TCP port (default is 3389)"
-    echo "  --user-home=VALUE     Use an alternate volume to winehome for storing"
+    echo "  --home-volume=VALUE   Use an alternate volume to winehome for storing"
     echo "                          persistent user data (NOTE: Use with caution!)"
     echo "                        Valid values can specify either a docker volume or"
     echo "                          local path"
     echo "                        e.g."
-    echo "                          --user-home=my_new_volume"
-    echo "                          --user-home=/tmp/my_user"
-    echo "  --user-passwd=VALUE   Specify a password for the user in plain text (default"
+    echo "                          --home=my_new_volume"
+    echo "                          --home=/tmp/my_user"
+    echo "  --home=VALUE          Specify an alternate path for the user's home within the"
+    echo "                          container (default is /home/\$USER"
+    echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
     echo "  --volume=VALUE        Specify additional volume(s) to be mounted"
     echo "                        Values are passed to docker run command as-is and use"
     echo "                          standard syntax for specifying volumes and mount"
     echo "                          points. Multiple --volume=value statements can be"
     echo "                          included to mount as many volumes as required"
+    echo "  --workdir=VALUE       Specify alternate WORKDIR (default is \$HOME)"
     echo "  --help                Display this help screen and exit"
     echo
     echo "e.g."
     echo "  $0"
-    echo "  $0 wine notepad.exe"
+    echo "  $0 wine notepad"
     echo "  $0 wineboot --init"
     echo "  $0 --local --volume=my_vol:/some/path:ro"
-    echo "  $0 --local --run-as-me wine notepad"
-    echo "  $0 --run-as-root --rdp"
-    echo "  $0 --rdp=start --user-passwd=pa55w0rd"
+    echo "  $0 --local --as-me wine notepad"
+    echo "  $0 --as-root --rdp"
+    echo "  $0 --rdp=start --password=pa55w0rd"
 }
 
 add_run_arg () {
@@ -65,6 +68,7 @@ USE_RDP_SERVER="no"
 HOST_RDP_PORT="3389"
 USER_HOME="/home/wineuser"
 USER_VOLUME="winehome"
+WORKDIR="${USER_HOME}"
 RUN_ARGS=()
 
 while [ $# -gt 0 ]; do
@@ -72,13 +76,17 @@ while [ $# -gt 0 ]; do
     --local)
         USE_LOCAL_IMAGE="yes"
         ;;
-    --run-as-root)
+    --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
+        WORKDIR="/root"
         ;;
-    --run-as-me)
+    --as-me)
+        USER_HOME="${HOME}"
+        WORKDIR="${USER_HOME}"
         add_run_arg --env="USER_NAME=$(whoami)"
         add_run_arg --env="USER_UID=$(id -u)"
         add_run_arg --env="USER_GID=$(id -g)"
+        add_run_arg --env="USER_HOME=${USER_HOME}"
         ;;
     --rdp)
         USE_RDP_SERVER="interactive"
@@ -89,12 +97,18 @@ while [ $# -gt 0 ]; do
     --rdp-port=*)
         HOST_RDP_PORT="${1#*=}"
         ;;
-    --user-home=*)
+    --home=*)
         USER_HOME="${1#*=}"
         add_run_arg --env="USER_HOME=${USER_HOME}"
         ;;
-    --user-passwd=*)
-        add_run_arg --env="USER_PASSWD=${1#*=}"
+    --home-volume=*)
+        USER_VOLUME="${1#*=}"
+        ;;
+    --password=*)
+        add_run_arg --env="USER_PASSWD=$(openssl passwd "${1#*=}")"
+        ;;
+    --workdir=*)
+        WORKDIR="${1#*=}"
         ;;
     --volume=*)
         add_run_arg "$1"
@@ -153,6 +167,7 @@ add_run_arg --rm
 add_run_arg --hostname="$(hostname)"
 add_run_arg --name="wine"
 add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
+add_run_arg --workdir="${WORKDIR}"
 
 # Run in RDP mode
 if [ "${USE_RDP_SERVER}" != "no" ]; then

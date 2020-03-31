@@ -1,23 +1,25 @@
 #!/usr/bin/env bash
 
 # Set user account and run values
-USER_NAME="${USER_NAME:-wineuser}"
-USER_UID="${USER_UID:-1010}"
-USER_GID="${USER_GID:-$USER_UID}"
-USER_HOME="${USER_HOME:-/home/$USER_NAME}"
-USER_PASSWD="${USER_PASSWD:-$USER_NAME}"
-RDP_SERVER="${RDP_SERVER:-no}"
-RUN_AS_ROOT="${RUN_AS_ROOT:-no}"
+USER_NAME=${USER_NAME:-wineuser}
+USER_UID=${USER_UID:-1010}
+USER_GID=${USER_GID:-"${USER_UID}"}
+USER_HOME=${USER_HOME:-/home/"${USER_NAME}"}
+USER_PASSWD=${USER_PASSWD:-$(openssl passwd "${USER_NAME}")}
+RDP_SERVER=${RDP_SERVER:-no}
+RUN_AS_ROOT=${RUN_AS_ROOT:-no}
+
+echo "USER HOME: $USER_HOME"
 
 # Create the user account
 groupadd --gid "${USER_GID}" "${USER_NAME}"
-useradd --shell /bin/bash --uid 1010 --gid 1010 --password $(openssl passwd "${USER_PASSWD}") --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
+useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" --password "${USER_PASSWD}" --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
 
 # Create the user's home if it doesn't exist
 [ ! -d "${USER_HOME}" ] && mkdir -p "${USER_HOME}"
 
 # Take ownership of user's home directory
-if [ "$(stat -c '%u:%g' ${USER_HOME})" != "${USER_UID}:${USER_GID}" ]; then
+if [ "$(stat -c '%u:%g' "${USER_HOME}")" != "${USER_UID}:${USER_GID}" ]; then
     chown "${USER_UID}":"${USER_GID}" "${USER_HOME}"
 fi
 

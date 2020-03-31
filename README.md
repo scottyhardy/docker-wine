@@ -95,7 +95,7 @@ Password: wineuser
 Run as root:
 
 ```bash
-./docker-wine --run-as-root
+./docker-wine --as-root
 ```
 
 You can attach as many additional volumes as you like, using standard docker syntax:
@@ -107,7 +107,7 @@ You can attach as many additional volumes as you like, using standard docker syn
 You can also combine options:
 
 ```bash
-./docker-wine --run-as-root --volume="myvol:/some/path" --rdp=interactive
+./docker-wine --as-root --volume="myvol:/some/path" --rdp
 ```
 
 See the `docker-wine` help for a full list of options:
@@ -202,11 +202,11 @@ docker run -it \
 To test video, try opening Notepad:
 
 ```bash
-docker-wine wine notepad
+./docker-wine wine notepad
 ```
 
 To test sound, try using `pacat`:
 
 ```bash
-docker-wine pacat -vv /dev/random
+./docker-wine pacat -vv /dev/random
 ```
