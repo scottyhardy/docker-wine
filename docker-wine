@@ -35,11 +35,14 @@ print_help () {
     echo "                          container (default is /home/\$USER"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
-    echo "  --volume=VALUE        Specify additional volume(s) to be mounted"
-    echo "                        Values are passed to docker run command as-is and use"
-    echo "                          standard syntax for specifying volumes and mount"
-    echo "                          points. Multiple --volume=value statements can be"
-    echo "                          included to mount as many volumes as required"
+    echo "  --device=VALUE        Bind device(s) to container.  Uses standard docker"
+    echo "                          syntax and multiple statements are allowed"
+    echo "  --env=VALUE           Specify additional environment variable(s) to be passed"
+    echo "                          to the container.  Uses standard docker syntax and"
+    echo "                          multiple statements are allowed"
+    echo "  --volume=VALUE        Specify additional volume(s) to be mounted.  Uses"
+    echo "                          standard docker syntax and multiple statements are"
+    echo "                          allowed"
     echo "  --workdir=VALUE       Specify alternate WORKDIR (default is \$HOME)"
     echo "  --help                Display this help screen and exit"
     echo
@@ -109,6 +112,12 @@ while [ $# -gt 0 ]; do
         ;;
     --workdir=*)
         WORKDIR="${1#*=}"
+        ;;
+    --device=*)
+        add_run_arg "$1"
+        ;;
+    --env=*)
+        add_run_arg "$1"
         ;;
     --volume=*)
         add_run_arg "$1"
