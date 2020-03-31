@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
 # Set user account and run values
-USER_NAME="${USER_NAME:-wineuser}"
-USER_UID="${USER_UID:-1010}"
-USER_GID="${USER_GID:-"${USER_UID}"}"
-USER_HOME="${USER_HOME:-/home/"${USER_NAME}"}"
-USER_PASSWD="${USER_PASSWD:-$(openssl passwd "${USER_NAME}")}"
-RDP_SERVER="${RDP_SERVER:-no}"
-RUN_AS_ROOT="${RUN_AS_ROOT:-no}"
+USER_NAME=${USER_NAME:-wineuser}
+USER_UID=${USER_UID:-1010}
+USER_GID=${USER_GID:-"${USER_UID}"}
+USER_HOME=${USER_HOME:-/home/"${USER_NAME}"}
+USER_PASSWD=${USER_PASSWD:-$(openssl passwd "${USER_NAME}")}
+RDP_SERVER=${RDP_SERVER:-no}
+RUN_AS_ROOT=${RUN_AS_ROOT:-no}
 
-echo "USERNAME= $USER_NAME"
+echo "USER HOME: $USER_HOME"
 
 # Create the user account
 groupadd --gid "${USER_GID}" "${USER_NAME}"

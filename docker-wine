@@ -78,11 +78,15 @@ while [ $# -gt 0 ]; do
         ;;
     --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
+        WORKDIR="/root"
         ;;
     --as-me)
+        USER_HOME="${HOME}"
+        WORKDIR="${USER_HOME}"
         add_run_arg --env="USER_NAME=$(whoami)"
         add_run_arg --env="USER_UID=$(id -u)"
         add_run_arg --env="USER_GID=$(id -g)"
+        add_run_arg --env="USER_HOME=${USER_HOME}"
         ;;
     --rdp)
         USE_RDP_SERVER="interactive"
