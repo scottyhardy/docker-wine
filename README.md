@@ -92,22 +92,28 @@ Password: wineuser
 
 ## Additional options when running `docker-wine`
 
-Run as root:
+Start the container as root:
 
 ```bash
 ./docker-wine --as-root
 ```
 
-You can attach as many additional volumes as you like, using standard docker syntax:
+Or start the container as yourself with the same username, UID, GID and home path (especially useful when binding to local file system):
 
 ```bash
-./docker-wine --volume="myvol:/some/path:ro" --volume="/tmp/test:/tmp/myscriptdir"
+./docker-wine --as-me
 ```
 
-You can also combine options:
+You can combine options:
 
 ```bash
-./docker-wine --as-root --volume="myvol:/some/path" --rdp
+./docker-wine --as-root --rdp
+```
+
+You can also use standard docker syntax to add as many additional environment variables, devices and volumes as you need:
+
+```bash
+./docker-wine --env="MY_ENV_VAR=some_value" --device=/dev/snd --volume="myvol:/some/path:ro" --volume="/usr/data:data"
 ```
 
 See the `docker-wine` help for a full list of options:
