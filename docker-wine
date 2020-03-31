@@ -1,96 +1,201 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-DOCKER_IMAGE=${DOCKER_IMAGE:-"scottyhardy/docker-wine:latest"}
+print_help () {
+    echo "Usage: $0 [OPTION[=VALUE]]... [COMMAND [ARGS]...]..."
+    echo
+    echo "Run the docker-wine container with behaviour determined by the following"
+    echo "OPTIONS:"
+    echo "  --local               Use locally built docker-wine image instead of pulling"
+    echo "                          image from DockerHub"
+    echo "  --run-as-root         Run as root"
+    echo "  --run-as-me           Run using your current username, UID and GID (default"
+    echo "                          when alternate --user-home value specified)"
+    echo "  --rdp                 Shortcut for --rdp=interactive"
+    echo "  --rdp=OPTION          Runs docker-wine container with Remote Desktop Protocol"
+    echo "                          server"
+    echo "                        Valid values for OPTION are:"
+    echo "                          no             Don't use RDP server (default)"
+    echo "                          start          Start the RDP server as a detached"
+    echo "                                           daemon"
+    echo "                          stop           Stop the detached RDP server by"
+    echo "                                           stopping the container"
+    echo "                          restart        Restart the detached RDP server by"
+    echo "                                           stopping and starting the container"
+    echo "                          interactive    Start the RDP server and also run an"
+    echo "                                           interactive bash session"
+    echo "  --rdp-port=VALUE      Bind RDP to a different TCP port (default is 3389)"
+    echo "  --user-home=VALUE     Use an alternate volume to winehome for storing"
+    echo "                          persistent user data (NOTE: Use with caution!)"
+    echo "                        Valid values can specify either a docker volume or"
+    echo "                          local path"
+    echo "                        e.g."
+    echo "                          --user-home=my_new_volume"
+    echo "                          --user-home=/tmp/my_user"
+    echo "  --user-passwd=VALUE   Specify a password for the user in plain text (default"
+    echo "                          is the user's username)"
+    echo "  --volume=VALUE        Specify additional volume(s) to be mounted"
+    echo "                        Values are passed to docker run command as-is and use"
+    echo "                          standard syntax for specifying volumes and mount"
+    echo "                          points. Multiple --volume=value statements can be"
+    echo "                          included to mount as many volumes as required"
+    echo "  --help                Display this help screen and exit"
+    echo
+    echo "e.g."
+    echo "  $0"
+    echo "  $0 wine notepad.exe"
+    echo "  $0 wineboot --init"
+    echo "  $0 --local --volume=my_vol:/some/path:ro"
+    echo "  $0 --local --run-as-me wine notepad"
+    echo "  $0 --run-as-root --rdp"
+    echo "  $0 --rdp=start --user-passwd=pa55w0rd"
+}
 
-# Run docker with just X11 support
-docker_run () {
-    docker run -it \
-    --rm \
-    --env="DISPLAY" \
-    --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="/etc/localtime:/etc/localtime:ro" \
-    --volume="winehome:/home/wineuser" \
-    --hostname="$(hostname)" \
-    --name="wine" \
-    "${DOCKER_IMAGE}" "$@"
+add_run_arg () {
+    local arg="$1"
+
+    RUN_ARGS+=("${arg}")
 }
 
 
-# Run docker with X11 and audio support
-docker_run_with_audio () {
-    docker run -it \
-    --rm \
-    --env="DISPLAY" \
-    --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
-    --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
-    --volume="/tmp/pulse-socket:/tmp/pulse-socket" \
-    --volume="/etc/localtime:/etc/localtime:ro" \
-    --volume="winehome:/home/wineuser" \
-    --hostname="$(hostname)" \
-    --name="wine" \
-    "${DOCKER_IMAGE}" "$@"
-}
+# Set default values
+DOCKER_IMAGE="scottyhardy/docker-wine:latest"
+LOCAL_IMAGE="docker-wine:latest"
+USE_LOCAL_IMAGE="no"
+USE_RDP_SERVER="no"
+HOST_RDP_PORT="3389"
+USER_HOME="/home/wineuser"
+USER_VOLUME="winehome"
+RUN_ARGS=()
 
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --local)
+        USE_LOCAL_IMAGE="yes"
+        ;;
+    --run-as-root)
+        add_run_arg --env="RUN_AS_ROOT=yes"
+        ;;
+    --run-as-me)
+        add_run_arg --env="USER_NAME=$(whoami)"
+        add_run_arg --env="USER_UID=$(id -u)"
+        add_run_arg --env="USER_GID=$(id -g)"
+        ;;
+    --rdp)
+        USE_RDP_SERVER="interactive"
+        ;;
+    --rdp=*)
+        USE_RDP_SERVER="${1#*=}"
+        ;;
+    --rdp-port=*)
+        HOST_RDP_PORT="${1#*=}"
+        ;;
+    --user-home=*)
+        USER_HOME="${1#*=}"
+        add_run_arg --env="USER_HOME=${USER_HOME}"
+        ;;
+    --user-passwd=*)
+        add_run_arg --env="USER_PASSWD=${1#*=}"
+        ;;
+    --volume=*)
+        add_run_arg "$1"
+        ;;
+    --help)
+        print_help
+        exit 0
+        ;;
+    -*)
+        echo "ERROR: '$1' is not a valid option"
+        echo
+        print_help
+        exit 1
+        ;;
+    *)
+        break
+        ;;
+    esac
+    shift
+done
 
-# Run docker on macOS with X11 over TCP socket
-docker_run_on_mac () {
-    docker run -it \
-    --rm \
-    --env="DISPLAY=host.docker.internal:0" \
-    --volume="winehome:/home/wineuser" \
-    --hostname="$(hostname)" \
-    --name="wine" \
-    "${DOCKER_IMAGE}" "$@"
-}
+# Collect remaining command line args to pass to the container to run
+CMD_ARGS=("$@")
 
+# Sanity checks
+if ! docker -v >/dev/null 2>&1; then
+    echo "ERROR: Docker is not running or not installed, unable to proceed"
+    exit 1
+fi
 
-main () {
-    USE_DOCKER_IMAGE="true"
+if ! echo "${USE_RDP_SERVER}" | grep -q -E '^(no|start|stop|restart|interactive)$'; then
+    echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
+    exit 1
+fi
 
-    case $1 in
-        --local)
-            shift
-            echo "INFO: Running locally built docker-wine image"
-            USE_DOCKER_IMAGE="false"
+if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
+    echo "ERROR: Commands cannot be passed to container when using --rdp option"
+    exit 1
+fi
+
+# Grab the latest image from docker hub or use the locally built version
+if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
+    docker pull "${DOCKER_IMAGE}"
+else
+    DOCKER_IMAGE="${LOCAL_IMAGE}"
+fi
+
+# Create the docker volume to store user's home only if using default winehome
+if [ "${USER_VOLUME}" == "winehome" ] && ! docker volume ls -qf "name=winehome" | grep -q "^winehome$"; then
+    echo "INFO: Creating Docker volume container 'winehome'..."
+    docker volume create winehome
+fi
+
+# Add common docker run args
+add_run_arg --rm
+add_run_arg --hostname="$(hostname)"
+add_run_arg --name="wine"
+add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
+
+# Run in RDP mode
+if [ "${USE_RDP_SERVER}" != "no" ]; then
+
+    add_run_arg --env="RDP_SERVER=yes"
+    add_run_arg --publish="${HOST_RDP_PORT}:3389/tcp"
+
+    case "${USE_RDP_SERVER}" in
+        interactive)
+            docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" /bin/bash
             ;;
-        --help)
-            echo "Usage: $0 [--local] [command] [arguments]..."
-            echo "e.g."
-            echo "    $0"
-            echo "    $0 wine notepad.exe"
-            echo "    $0 wineboot --init"
-            echo "    $0 --local"
-            echo "    $0 --local wine explorer.exe"
-            exit 0
+        start)
+            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            ;;
+        stop)
+            docker kill wine
+            ;;
+        restart)
+            docker kill wine
+            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            ;;
+        *)
+            echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
+            exit 1
             ;;
     esac
 
-    # Grab the latest image from docker hub or use the locally built version
-    if [ "${USE_DOCKER_IMAGE}" == "true" ]; then
-        docker pull "${DOCKER_IMAGE}"
-    else
-        if [ -z "${DOCKER_IMAGE}" ]; then
-            DOCKER_IMAGE="docker-wine:local"
-        fi
-    fi
+# Run in X11 forwarding mode
+else
 
-    if ! docker volume ls -qf "name=winehome" | grep -q "winehome"; then
-        echo "INFO: Creating Docker volume container 'winehome'..."
-        docker volume create winehome
-    else
-        echo "INFO: Using existing Docker volume container 'winehome'..."
-    fi
+    # Set CMD_ARGS to /bin/bash if no commands specified
+    [ -z "${CMD_ARGS[0]}" ] && CMD_ARGS=("/bin/bash")
 
-    # Check if running on a Mac
+    # Run in X11 forwarding mode on macOS
     if [ "$(uname)" == "Darwin" ]; then
+
         # Check XQuartz installed
         if ! command -v xquartz >/dev/null 2>&1; then
             echo "ERROR: XQuartz does not appear to be installed"
             exit 1
         fi
 
-        # Configure XQuartz if required
+        # Configure XQuartz
         if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
             defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
         fi
@@ -99,48 +204,63 @@ main () {
             defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
         fi
 
-        # Allow localhost to access XQuartz if required
-        if ! xhost | grep "INET:localhost" >/dev/null 2>&1; then
+        # Allow localhost to access XQuartz
+        if ! xhost | grep -q "^INET:localhost$"; then
             echo "WARNING: Adding localhost to authorized xhost clients"
             xhost + 127.0.0.1
         fi
 
-        docker_run_on_mac "$@"
-    else
+        # Add macOS run args
+        add_run_arg --env="DISPLAY=host.docker.internal:0"
+
+        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+
+    # Run in X11 forwarding mode on Linux
+    elif [ "$(uname)" == "Linux" ]; then
+
         # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
         if [ -z "${XAUTHORITY}" ] && [ -s "${HOME}/.Xauthority" ]; then
             echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
         fi
 
-        # Use audio if PulseAudio is installed
+        # Use audio if pulseaudio is installed
         if command -v pulseaudio >/dev/null 2>&1; then
-            # One-off setup for creation of UNIX socket for PulseAudio to allow access for other users
+
+            # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
             if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
-                echo "INFO: Creating PulseAudio config file ${HOME}/.config/pulse/default.pa"
+                echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
                 mkdir -p "${HOME}/.config/pulse"
                 echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
             fi
 
+            # Restart pulseaudio daemon to create the UNIX socket
             if [ ! -e "/tmp/pulse-socket" ]; then
-                # Restart PulseAudio daemon to ensure the UNIX socket is created
-                echo "INFO: No socket found for PulseAudio so restarting service..."
+                echo "INFO: No socket found for pulseaudio so restarting service..."
                 pulseaudio -k
                 pulseaudio --start
                 sleep 1
             fi
 
+            # Add the pulseaudio UNIX socket to run args
             if [ -e "/tmp/pulse-socket" ]; then
-                docker_run_with_audio "$@"
+                add_run_arg --volume="/tmp/pulse-socket:/tmp/pulse-socket"
             else
-                echo "INFO: PulseAudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
-                docker_run "$@"
+                echo "INFO: pulseaudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
             fi
         else
-            echo "INFO: PulseAudio not installed so running without sound"
-            docker_run "$@"
+            echo "INFO: pulseaudio not installed so running without sound"
         fi
-    fi
-}
 
-main "$@"
+        # Add Linux run args
+        add_run_arg --env="DISPLAY"
+        add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
+        add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+        add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
+
+        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+    else
+        echo "ERROR: Unknown operating system '$(uname)'"
+        exit 1
+    fi
+fi

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+BUILD_ARGS=("$@")
+BUILD_CMD="docker build"
+
+if ! docker -v >/dev/null 2>&1; then
+    if buildah -v >/dev/null 2>&1; then
+        BUILD_CMD="buildah bud"
+    else
+        echo "ERROR: Docker is not running or not installed, unable to proceed"
+        exit 1
+    fi
+fi
+
+${BUILD_CMD} "${BUILD_ARGS[@]}" -t docker-wine .

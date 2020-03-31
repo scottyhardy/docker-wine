@@ -1,72 +1,120 @@
-# docker-wine ![ ](https://raw.githubusercontent.com/scottyhardy/docker-wine/2.0.0/images/logo_small.png)
+# docker-wine
 
+![Docker Image CI](https://github.com/scottyhardy/docker-wine/workflows/Docker%20Image%20CI/badge.svg)
 ![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg?style=social)
 ![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg?style=social)
 [![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/network)
 [![GitHub stars](https://img.shields.io/github/stars/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/stargazers)
 
-* [About docker-wine](#about-docker-wine)
-* [Getting Started](#getting-started)
-  * [Download the docker-wine script](#download-the-docker-wine-script)
-  * [Run the docker-wine script](#run-the-docker-wine-script)
-  * [Note about running on macOS](#Note-about-running-on-macos)
-* [Build and run locally on your own computer](#build-and-run-locally-on-your-own-computer)
-* [Volume container winehome](#volume-container-winehome)
-* [ENTRYPOINT script explained](#entrypoint-script-explained)
-* [Use docker-wine image in a Dockerfile](#use-docker-wine-image-in-a-Dockerfile)
-* [Troubleshooting](#troubleshooting)
+<img align="right" height="300" width="300" src="https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/logo.png" >
 
-## About docker-wine
+>Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS
 
-The `docker-wine` image was created so I could experiment with [Wine](https://www.winehq.org) while learning the ropes for using Docker containers. The image is based on Ubuntu 19.10 (Eoan Ermine) and includes Wine version 5.0.0 ([stable branch](https://wiki.winehq.org/Wine_User%27s_Guide#Wine_from_WineHQ)) and the latest version of [Winetricks](https://wiki.winehq.org/Winetricks) to help manage your Wine bottles.
+The docker-wine container can either be run with X11 forwarding or as an RDP server to suit your use case.  The default is to use X11 forwarding which utilizes your machine's X server to render graphics directly into your current session and play sounds through pulseaudio (audio redirection on Linux only).
 
-Included below are instructions for running the `docker-wine` container that allows you to use the Docker host's X11 session to display graphics and its PulseAudio server for sound through the use of UNIX sockets (See [Note about running on macOS](#Note-about-running-on-macos)).
+Using docker-wine with an RDP server allows the container to be run on a headless machine or a machine that may not be running an X server. You can then use a Remote Desktop client to connect to the container which may be located either on your local or a remote machine.  This is currently the only solution if you require sound on macOS.
 
-The source code is freely available from the [scottyhardy/docker-wine GitHub repository](https://github.com/scottyhardy/docker-wine) for you to build the image yourself and contributions are welcome.
+---
 
 ## Getting Started
 
 Using the `docker-wine` script is the easiest way to get started and should be all you need for Linux and macOS.
 
-### Download the docker-wine script
+### Download the `docker-wine` script
 
 On Linux:
 
 ```bash
-sudo wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -O /usr/local/bin/docker-wine
-sudo chmod +x /usr/local/bin/docker-wine
+wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -O docker-wine
+chmod +x docker-wine
 ```
 
 On macOS:
 
 ```bash
-curl https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -o /usr/local/bin/docker-wine
-chmod +x /usr/local/bin/docker-wine
+curl https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -o docker-wine
+chmod +x docker-wine
 ```
 
-### Run the docker-wine script
+## Run `docker-wine` with X11 forwarding
 
-When the container is run with the `docker-wine` script, you can override the default interactive bash session by adding `wine`, `winetricks`, `winecfg` or any other valid commands with their associated arguments:
+Running the script with no other arguments will start an interactive bash session:
 
 ```bash
-docker-wine wine notepad.exe
+./docker-wine
 ```
+
+You can override the default interactive bash session by adding `wine`, `winetricks`, `winecfg` or any other valid commands with their associated arguments:
 
 ```bash
-docker-wine winecfg
+./docker-wine wine notepad
 ```
+
+![Screenshot of Notepad](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_1.png)
+
+## Run `docker-wine` with RDP server
+
+Run with the `--rdp` option to start the RDP server with an interactive bash session:
 
 ```bash
-docker-wine winetricks msxml3 dotnet40 win7
+./docker-wine --rdp
 ```
 
-### Note about running on macOS
+Or, you can run the container as a detached daemon that runs in the background.  To start the daemon:
 
-Unfortunately there's a lot of additional barriers when attempting to run containers on macOS.  At time of writing, it is not possible to directly mount UNIX sockets like you can do in Linux. There's a few different ways this problem can be solved, but essentially it comes down to using TCP sockets or a remote desktop protocol such as VNC.
+```bash
+./docker-wine --rdp=start
+```
 
-The `docker-wine` script uses TCP sockets on macOS but unfortunately performance is way slower than with UNIX sockets on Linux, plus I haven't managed to get audio working yet. If you're serious about using a Windows application on macOS then this is probably not the best solution. If you'd just like to give it a go for shits and giggles, then this should be enough to get you started.
+Then to stop the daemon:
 
-To use the docker-wine container on macOS, jump back up to [Download the docker-wine script](#download-the-docker-wine-script) and continue from there.
+```bash
+./docker-wine --rdp=stop
+```
+
+## Connecting with an RDP client
+
+All Windows desktops and servers come with the Remote Desktop Connection client pre-installed and macOS users can download the Microsoft Remote Desktop application for free from the App Store. For Linux users, I'd suggest using the Remmina Remote Desktop client.
+
+For the hostname, use `localhost` if the container is hosted on the same machine you're running your Remote Desktop client on and for remote connections just use the name or IP address of the machine you are connecting to.
+NOTE: To connect to a remote machine, it will require TCP port 3389 to be exposed through the firewall.
+
+To log in, use the following default user account details:
+
+```bash
+Username: wineuser
+Password: wineuser
+```
+
+![Screenshot of login prompt](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_2.png)
+
+![Screenshot of XFCE desktop](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_3.png)
+
+## Additional options when running `docker-wine`
+
+Run as root:
+
+```bash
+./docker-wine --run-as-root
+```
+
+You can attach as many additional volumes as you like, using standard docker syntax:
+
+```bash
+./docker-wine --volume="myvol:/some/path:ro" --volume="/tmp/test:/tmp/myscriptdir"
+```
+
+You can also combine options:
+
+```bash
+./docker-wine --run-as-root --volume="myvol:/some/path" --rdp=interactive
+```
+
+See the `docker-wine` help for a full list of options:
+
+```bash
+./docker-wine --help
+```
 
 ## Build and run locally on your own computer
 
@@ -74,31 +122,25 @@ First, clone the repository from GitHub:
 
 ```bash
 git clone https://github.com/scottyhardy/docker-wine.git
+
+cd docker-wine
 ```
 
 To build the container, simply run:
 
 ```bash
-make
+./build
 ```
 
-To run the container and start an interactive session with `/bin/bash` run:
+To run the your locally built container, use `docker-run` with the `--local` switch:
 
 ```bash
-make run
-```
-
-or use the `docker-wine` script with the `--local` switch.:
-
-```bash
-docker-wine --local wine notepad
+./docker-run --local
 ```
 
 ## Volume container winehome
 
-When the docker-wine image is instantiated with `docker-wine` script, the contents of the `/home/wineuser` folder is copied to the `winehome` volume container on instantiation of the `wine` container.
-
-Using a volume container allows the `wine` container to remain unchanged and safely removed after every execution with `docker run --rm ...`.  Any user environments created with `docker-wine` will be stored separately and user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
+When the docker-wine container is instantiated with the `docker-wine` script, a volume container named `winehome` is created and is mapped to the user's home within the container.  Using a volume container allows the docker-wine container to be safely removed after every execution as user data will persist as long as the `winehome` volume is not removed.  This effectively allows the `docker-wine` image to be swapped out for a newer version at anytime.
 
 You can manually create the `winehome` volume container by running:
 
@@ -112,23 +154,9 @@ If you don't want the volume container, you can delete it by using:
 docker volume rm winehome
 ```
 
-## ENTRYPOINT script explained
-
-The `ENTRYPOINT` set for the docker-wine image is simply `/usr/bin/entrypoint`. This script is key to ensuring the user's `.Xauthority` file is copied from `/root/.Xauthority` to `/home/wineuser/.Xauthority` and ownership of the file is set to `wineuser` each time the container is instantiated.
-
-Arguments specified after `docker-wine` are also passed to this script to ensure it is executed as `wineuser`.
-
-For example:
-
-```bash
-docker-wine wine notepad.exe
-```
-
-The arguments `wine notepad.exe` are interpreted by the `wine` container to override the `CMD` directive, which otherwise simply runs `/bin/bash` to give you an interactive bash session as `wineuser` within the container.
-
 ## Use docker-wine image in a Dockerfile
 
-If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same entrypoint to ensure you run as `wineuser` and X11 graphics continue to function by adding the following to your `Dockerfile`:
+If you plan to use `scottyhardy/docker-wine` as a base for another Docker image, you should set up the same `ENTRYPOINT` to enable X11 forwarding and RDP server modes to continue operating:
 
 ```dockerfile
 FROM scottyhardy/docker-wine:latest
@@ -136,17 +164,37 @@ FROM scottyhardy/docker-wine:latest
 ENTRYPOINT ["/usr/bin/entrypoint"]
 ```
 
-Or if you prefer to run a program by default you could use:
+## Manually running with `docker run` commands
 
-```dockerfile
-ENTRYPOINT ["/usr/bin/entrypoint", "wine", "notepad.exe"]
+There's a number of prerequisites to getting pulseaudio redirection working on Linux and for X11 redirection to work on macOS.  I plan to document these in a wiki in the near future but this should be enough to get you started.
+
+First, pull the latest image from DockerHub:
+
+```bash
+docker pull scottyhardy/docker-wine
 ```
 
-Or if you want to be able to run a program by default but still be able to override it easily you could use:
+Here is a basic `docker run` command for X11 redirection on Linux that will start an interactive bash session:
 
-```dockerfile
-ENTRYPOINT ["/usr/bin/entrypoint"]
-CMD ["wine", "notepad.exe"]
+```bash
+docker run -it \
+  --rm \
+  --hostname="$(hostname)" \
+  --env="DISPLAY" \
+  --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
+  --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
+  scottyhardy/docker-wine /bin/bash
+```
+
+Here is a basic `docker run` command for starting the RDP server on both macOS and Linux with an interactive bash session:
+
+```bash
+docker run -it \
+  --rm \
+  --hostname="$(hostname)" \
+  --env="RDP_SERVER=yes" \
+  --publish="3389:3389/tcp" \
+  scottyhardy/docker-wine /bin/bash
 ```
 
 ## Troubleshooting
@@ -157,7 +205,7 @@ To test video, try opening Notepad:
 docker-wine wine notepad
 ```
 
-To test sound, try using `pacat` just to confirm PulseAudio is working:
+To test sound, try using `pacat`:
 
 ```bash
 docker-wine pacat -vv /dev/random
