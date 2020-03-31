@@ -6,7 +6,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/network)
 [![GitHub stars](https://img.shields.io/github/stars/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/stargazers)
 
-<img align="right" height="300" width="300" src="images/logo.png" >
+<img align="right" height="300" width="300" src="https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/logo.png" >
 
 >Docker image that includes Wine and Winetricks for running Windows applications on Linux and macOS
 
@@ -50,7 +50,7 @@ You can override the default interactive bash session by adding `wine`, `winetri
 ./docker-wine wine notepad
 ```
 
-![Screenshot of Notepad](images/screenshot_1.png)
+![Screenshot of Notepad](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_1.png)
 
 ## Run `docker-wine` with RDP server
 
@@ -86,9 +86,9 @@ Username: wineuser
 Password: wineuser
 ```
 
-![Screenshot of login prompt](images/screenshot_2.png)
+![Screenshot of login prompt](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_2.png)
 
-![Screenshot of XFCE desktop](images/screenshot_3.png)
+![Screenshot of XFCE desktop](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_3.png)
 
 ## Additional options when running `docker-wine`
 
