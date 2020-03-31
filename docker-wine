@@ -177,6 +177,7 @@ add_run_arg --hostname="$(hostname)"
 add_run_arg --name="wine"
 add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
 add_run_arg --workdir="${WORKDIR}"
+[ "$(uname)" == "Linux" ] && add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
 
 # Run in RDP mode
 if [ "${USE_RDP_SERVER}" != "no" ]; then
@@ -280,7 +281,6 @@ else
         add_run_arg --env="DISPLAY"
         add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
-        add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
 
         docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
     else
