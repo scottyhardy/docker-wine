@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Run container and extract wine version
+VER=$(docker run -it "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-stable\s+([0-9]+(\.[0-9]+)*).*$/\1/p'")
+
+# Generate tags
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
+
+# Login to Docker Hub
+echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+
+# Push the image and tags
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"

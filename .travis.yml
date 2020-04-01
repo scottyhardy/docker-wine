@@ -7,11 +7,10 @@ services:
 
 script:
   - docker build -t $DOCKER_REPO .
-  - docker tag $DOCKER_REPO $DOCKER_USERNAME/$DOCKER_REPO
 
 deploy:
   provider: script
-  script: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin && docker push $DOCKER_USERNAME/$DOCKER_REPO
+  script: bash deploy
   on:
     branch: master
     condition: $TRAVIS_EVENT_TYPE = cron
