@@ -9,6 +9,7 @@ print_help () {
     echo "                          image from Docker Hub"
     echo "  --cache               Use the cached image and don't pull latest version from"
     echo "                          Docker Hub"
+    echo "  --tag=VALUE           Select an image tag to use (default is latest)"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
@@ -103,9 +104,9 @@ run_container () {
 
     # Grab the latest image from docker hub or use the locally built version
     if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
-        [ "${DOCKER_PULL_IMAGE}" == "yes" ] && docker pull "${DOCKER_IMAGE}"
+        [ "${DOCKER_PULL_IMAGE}" == "yes" ] && docker pull "${DOCKER_IMAGE}:${IMAGE_TAG}"
     else
-        DOCKER_IMAGE="${LOCAL_IMAGE}"
+        DOCKER_IMAGE="${LOCAL_IMAGE}:${IMAGE_TAG}"
     fi
 
     # Create the docker volume to store user's home only if using default winehome
@@ -119,10 +120,11 @@ run_container () {
 
 
 # Set default values
-DOCKER_IMAGE="scottyhardy/docker-wine:latest"
-LOCAL_IMAGE="docker-wine:latest"
+DOCKER_IMAGE="scottyhardy/docker-wine"
+LOCAL_IMAGE="docker-wine"
 USE_LOCAL_IMAGE="no"
 DOCKER_PULL_IMAGE="yes"
+IMAGE_TAG="latest"
 USE_RDP_SERVER="no"
 HOST_RDP_PORT="3389"
 USER_HOME="/home/wineuser"
@@ -137,6 +139,9 @@ while [ $# -gt 0 ]; do
         ;;
     --cache)
         DOCKER_PULL_IMAGE="no"
+        ;;
+    --tag=*)
+        IMAGE_TAG="${1#*=}"
         ;;
     --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
