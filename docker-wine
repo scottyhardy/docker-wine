@@ -69,6 +69,42 @@ add_run_args_for_as_me () {
     add_run_arg --env="USER_HOME=${USER_HOME}"
 }
 
+run_container () {
+    local mode="$1"
+
+    if [ "${mode}" == "interactive" ]; then
+        mode="-it"
+    elif [ "${mode}" == "detached" ]; then
+        mode="--detach"
+    else
+        echo "ERROR: '${mode}' is not a valid container run mode"
+        exit 1
+    fi
+
+    # Add common docker run args
+    add_run_arg --rm
+    add_run_arg --hostname="$(hostname)"
+    add_run_arg --name="wine"
+    add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
+    add_run_arg --workdir="${WORKDIR}"
+    [ "$(uname)" == "Linux" ] && add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
+
+    # Grab the latest image from docker hub or use the locally built version
+    if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
+        docker pull "${DOCKER_IMAGE}"
+    else
+        DOCKER_IMAGE="${LOCAL_IMAGE}"
+    fi
+
+    # Create the docker volume to store user's home only if using default winehome
+    if [ "${USER_VOLUME}" == "winehome" ] && ! docker volume ls -qf "name=winehome" | grep -q "^winehome$"; then
+        echo "INFO: Creating Docker volume container 'winehome'..."
+        docker volume create winehome
+    fi
+
+    docker run "${mode}" "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+}
+
 
 # Set default values
 DOCKER_IMAGE="scottyhardy/docker-wine:latest"
@@ -163,27 +199,6 @@ if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     exit 1
 fi
 
-# Grab the latest image from docker hub or use the locally built version
-if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
-    docker pull "${DOCKER_IMAGE}"
-else
-    DOCKER_IMAGE="${LOCAL_IMAGE}"
-fi
-
-# Create the docker volume to store user's home only if using default winehome
-if [ "${USER_VOLUME}" == "winehome" ] && ! docker volume ls -qf "name=winehome" | grep -q "^winehome$"; then
-    echo "INFO: Creating Docker volume container 'winehome'..."
-    docker volume create winehome
-fi
-
-# Add common docker run args
-add_run_arg --rm
-add_run_arg --hostname="$(hostname)"
-add_run_arg --name="wine"
-add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
-add_run_arg --workdir="${WORKDIR}"
-[ "$(uname)" == "Linux" ] && add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
-
 # Run in RDP mode
 if [ "${USE_RDP_SERVER}" != "no" ]; then
 
@@ -192,17 +207,17 @@ if [ "${USE_RDP_SERVER}" != "no" ]; then
 
     case "${USE_RDP_SERVER}" in
         interactive)
-            docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" /bin/bash
+            run_container "interactive"
             ;;
         start)
-            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            run_container "detached"
             ;;
         stop)
             docker kill wine
             ;;
         restart)
             docker kill wine
-            docker run --detach "${RUN_ARGS[@]}" "${DOCKER_IMAGE}"
+            run_container "detached"
             ;;
         *)
             echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
@@ -243,7 +258,7 @@ else
         # Add macOS run args
         add_run_arg --env="DISPLAY=host.docker.internal:0"
 
-        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        run_container "interactive"
 
     # Run in X11 forwarding mode on Linux
     elif [ "$(uname)" == "Linux" ]; then
@@ -287,7 +302,7 @@ else
         add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
 
-        docker run -it "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        run_container "interactive"
     else
         echo "ERROR: Unknown operating system '$(uname)'"
         exit 1
