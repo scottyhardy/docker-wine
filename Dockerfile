@@ -28,8 +28,7 @@ RUN wget -nv https://dl.winehq.org/wine-builds/winehq.key \
     && rm winehq.key
 
 # Install winetricks
-RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
-        -O /usr/bin/winetricks \
+RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks -O /usr/bin/winetricks \
     && chmod +x /usr/bin/winetricks
 
 # Download gecko and mono installers

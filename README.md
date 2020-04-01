@@ -128,7 +128,6 @@ First, clone the repository from GitHub:
 
 ```bash
 git clone https://github.com/scottyhardy/docker-wine.git
-
 cd docker-wine
 ```
 
