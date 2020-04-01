@@ -1,6 +1,6 @@
 # docker-wine
 
-![Docker Image CI](https://github.com/scottyhardy/docker-wine/workflows/Docker%20Image%20CI/badge.svg)
+![Docker Build](https://img.shields.io/docker/build/scottyhardy/docker-wine.svg)
 ![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg?style=social)
 ![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg?style=social)
 [![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/network)
