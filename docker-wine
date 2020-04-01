@@ -6,7 +6,9 @@ print_help () {
     echo "Run the docker-wine container with behaviour determined by the following"
     echo "OPTIONS:"
     echo "  --local               Use locally built docker-wine image instead of pulling"
-    echo "                          image from DockerHub"
+    echo "                          image from Docker Hub"
+    echo "  --cache               Use the cached image and don't pull latest version from"
+    echo "                          Docker Hub"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
@@ -101,7 +103,7 @@ run_container () {
 
     # Grab the latest image from docker hub or use the locally built version
     if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
-        docker pull "${DOCKER_IMAGE}"
+        [ "${DOCKER_PULL_IMAGE}" == "yes" ] && docker pull "${DOCKER_IMAGE}"
     else
         DOCKER_IMAGE="${LOCAL_IMAGE}"
     fi
@@ -120,6 +122,7 @@ run_container () {
 DOCKER_IMAGE="scottyhardy/docker-wine:latest"
 LOCAL_IMAGE="docker-wine:latest"
 USE_LOCAL_IMAGE="no"
+DOCKER_PULL_IMAGE="yes"
 USE_RDP_SERVER="no"
 HOST_RDP_PORT="3389"
 USER_HOME="/home/wineuser"
@@ -131,6 +134,9 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --local)
         USE_LOCAL_IMAGE="yes"
+        ;;
+    --cache)
+        DOCKER_PULL_IMAGE="no"
         ;;
     --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
