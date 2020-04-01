@@ -6,7 +6,6 @@ RUN apt-get update \
         apt-transport-https \
         ca-certificates \
         cabextract \
-        dos2unix \
         gosu \
         gpg-agent \
         p7zip \
@@ -31,7 +30,7 @@ RUN wget -nv https://dl.winehq.org/wine-builds/winehq.key \
 # Install winetricks
 RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
         -O /usr/bin/winetricks \
-    && chmod +rx /usr/bin/winetricks
+    && chmod +x /usr/bin/winetricks
 
 # Download gecko and mono installers
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
