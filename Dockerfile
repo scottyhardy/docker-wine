@@ -6,6 +6,7 @@ RUN apt-get update \
         apt-transport-https \
         ca-certificates \
         cabextract \
+        dos2unix \
         gosu \
         gpg-agent \
         p7zip \
