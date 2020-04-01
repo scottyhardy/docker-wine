@@ -12,4 +12,4 @@ echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdi
 
 # Push the image and tags
 docker push "${DOCKER_USERNAME}/${DOCKER_REPO}"
-docker push "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
