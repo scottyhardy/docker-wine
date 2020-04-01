@@ -70,16 +70,26 @@ add_run_args_for_as_me () {
 }
 
 run_container () {
-    local mode="$1"
+    local mode
 
-    if [ "${mode}" == "interactive" ]; then
-        mode="-it"
-    elif [ "${mode}" == "detached" ]; then
-        mode="--detach"
-    else
-        echo "ERROR: '${mode}' is not a valid container run mode"
-        exit 1
-    fi
+    case "$1" in
+        interactive)
+            mode="-it"
+            ;;
+        detached)
+            mode="--detach"
+            ;;
+        -it)
+            mode="$1"
+            ;;
+        --detach)
+            mode="$1"
+            ;;
+        *)
+            echo "ERROR: '${mode}' is not a valid container run mode"
+            exit 1
+            ;;
+    esac
 
     # Add common docker run args
     add_run_arg --rm
@@ -207,6 +217,7 @@ if [ "${USE_RDP_SERVER}" != "no" ]; then
 
     case "${USE_RDP_SERVER}" in
         interactive)
+            CMD_ARGS=("/bin/bash")
             run_container "interactive"
             ;;
         start)
@@ -263,7 +274,7 @@ else
     # Run in X11 forwarding mode on Linux
     elif [ "$(uname)" == "Linux" ]; then
 
-        # Check for .Xauthority command -v is required for authenticating as the current user on the host's X11 server
+        # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
         if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" ]; then
             echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
@@ -304,7 +315,7 @@ else
 
         run_container "interactive"
     else
-        echo "ERROR: Unknown operating system '$(uname)'"
+        echo "ERROR: '$(uname)' OS is not supported"
         exit 1
     fi
 fi
