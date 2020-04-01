@@ -38,6 +38,8 @@ print_help () {
     echo "                          container (default is /home/\$USER"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
+    echo "  --secure-password=VALUE   Supply an encrypted password for the user to prevent"
+    echo "                          password sniffing"
     echo "  --device=VALUE        Bind device(s) to container.  Uses standard docker"
     echo "                          syntax and multiple statements are allowed"
     echo "  --env=VALUE           Specify additional environment variable(s) to be passed"
@@ -171,6 +173,9 @@ while [ $# -gt 0 ]; do
         ;;
     --password=*)
         add_run_arg --env=USER_PASSWD="$(openssl passwd -1 -salt "$(openssl rand -base64 6)" "${1#*=}")"
+        ;;
+    --secure-password=*)
+        add_run_arg --env="USER_PASSWD=${1#*=}"
         ;;
     --workdir=*)
         WORKDIR="${1#*=}"
