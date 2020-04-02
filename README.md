@@ -122,6 +122,29 @@ See the `docker-wine` help for a full list of options:
 ./docker-wine --help
 ```
 
+## Securing your password
+
+The default password is `wineuser` and it will change to your own username by default if you use the `--as-me` argument.  You can override the default password by using `--password="your_password"` but even though this password is encrypted before passing it to the container, your password still appears in plain text in the process list for any other user connected to the same host machine.
+
+The solution is to encrypt your password _before_ passing it to the `docker-wine` script, using `openssl`.  This command will produce an MD5 encrypted hash of your password with a random salt which means each run will produce a different hash:
+
+```bash
+openssl passwd -1 -salt $(openssl rand -base64 6) "your_password"
+
+```
+
+One method of using this secure string would be to store it to disk:
+
+```bash
+echo $(openssl passwd -1 -salt $(openssl rand -base64 6) "your_password") > ~/.docker-wine
+```
+
+Then simply `cat` the file when using the `docker-wine` script:
+
+```bash
+./docker-wine --rdp --as-me --secure-password="$(cat ~/.docker-wine)"
+```
+
 ## Build and run locally on your own computer
 
 First, clone the repository from GitHub:
