@@ -38,8 +38,8 @@ print_help () {
     echo "                          container (default is /home/\$USER"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
-    echo "  --secure-password=VALUE   Supply an encrypted password for the user to prevent"
-    echo "                          password sniffing"
+    echo "  --password-prompt     Prompt to set a password for the user"
+    echo "  --secure-password=VALUE   Provide an encrypted password for the user"
     echo "  --device=VALUE        Bind device(s) to container.  Uses standard docker"
     echo "                          syntax and multiple statements are allowed"
     echo "  --env=VALUE           Specify additional environment variable(s) to be passed"
@@ -190,7 +190,6 @@ while [ $# -gt 0 ]; do
         encrypt_password "${1#*=}"
         ;;
     --password-prompt)
-        PASSWD=""
         read -r -s -p "Password: " PASSWD
         echo
         encrypt_password "${PASSWD}"
