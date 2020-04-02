@@ -124,7 +124,7 @@ See the `docker-wine` help for a full list of options:
 
 ## Securing your password
 
-The default password is `wineuser` and it will change to your own username by default if you use the `--as-me` argument.  You can override the default password by using `--password="your_password"` but even though this password is encrypted before passing it to the container, your password still appears in plain text in the process list for any other user connected to the same host machine.
+The default password is `wineuser` and it will change to your own username by default if you use the `--as-me` argument.  You can override the default password by using `--password="your_password"` but even though this password is encrypted before passing it to the container, your password still appears in plain text in the process list for any other user connected to the same host machine. Depending on your use case, this could be a problem.
 
 The solution is to encrypt your password _before_ passing it to the `docker-wine` script, using `openssl`.  This command will produce an MD5 encrypted hash of your password with a random salt which means each run will produce a different hash:
 
