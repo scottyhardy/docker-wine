@@ -74,6 +74,21 @@ add_run_args_for_as_me () {
     add_run_arg --env="USER_HOME=${USER_HOME}"
 }
 
+encrypt_password () {
+    local password="$1"
+    local encrypted_password
+
+    if [ -z "${password}" ]; then
+        echo "ERROR: Password cannot be left blank"
+        exit 1
+    fi
+
+    encrypted_password="$(openssl passwd -1 -salt "$(openssl rand -base64 6)" "${password}")"
+
+    # Add encrypted password to run args
+    add_run_arg --env="USER_PASSWD=${encrypted_password}"
+}
+
 run_container () {
     local mode
 
@@ -172,7 +187,13 @@ while [ $# -gt 0 ]; do
         add_run_args_for_as_me
         ;;
     --password=*)
-        add_run_arg --env=USER_PASSWD="$(openssl passwd -1 -salt "$(openssl rand -base64 6)" "${1#*=}")"
+        encrypt_password "${1#*=}"
+        ;;
+    --password-prompt)
+        PASSWD=""
+        read -r -s -p "Password: " PASSWD
+        echo
+        encrypt_password "${PASSWD}"
         ;;
     --secure-password=*)
         add_run_arg --env="USER_PASSWD=${1#*=}"
