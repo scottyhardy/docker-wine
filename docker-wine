@@ -28,14 +28,15 @@ print_help () {
     echo "                                           interactive bash session"
     echo "  --rdp-port=VALUE      Bind RDP to a different TCP port (default is 3389)"
     echo "  --home-volume=VALUE   Use an alternate volume to winehome for storing"
-    echo "                          persistent user data (NOTE: Use with caution!)"
-    echo "                        Valid values can specify either a docker volume or"
-    echo "                          local path"
+    echo "                          persistent user data. Valid values can specify either"
+    echo "                          a docker volume or local path"
     echo "                        e.g."
     echo "                          --home=my_new_volume"
     echo "                          --home=/tmp/my_user"
     echo "  --home=VALUE          Specify an alternate path for the user's home within the"
     echo "                          container (default is /home/\$USER"
+    echo "  --force-owner         Allow the user to take ownership of a home volume that"
+    echo "                          belongs to another user (NOTE: Use with caution!)"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
     echo "  --password-prompt     Prompt to set a password for the user"
@@ -185,6 +186,9 @@ while [ $# -gt 0 ]; do
 
         # Start container as self to prevent unintentionally changing ownership of a user's local filesystem by wineuser
         add_run_args_for_as_me
+        ;;
+    --force-owner)
+        add_run_arg --env="FORCED_OWNERSHIP=yes"
         ;;
     --password=*)
         encrypt_password "${1#*=}"
