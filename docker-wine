@@ -163,6 +163,7 @@ while [ $# -gt 0 ]; do
     --local=*)
         USE_LOCAL_IMAGE="yes"
         LOCAL_IMAGE="${1#*=}"
+        ;;
     --tag=*)
         IMAGE_TAG="${1#*=}"
         ;;
