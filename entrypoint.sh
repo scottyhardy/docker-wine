@@ -5,10 +5,11 @@ USER_NAME=${USER_NAME:-wineuser}
 USER_UID=${USER_UID:-1010}
 USER_GID=${USER_GID:-"${USER_UID}"}
 USER_HOME=${USER_HOME:-/home/"${USER_NAME}"}
-USER_PASSWD=${USER_PASSWD:-$(openssl passwd -1 -salt $(openssl rand -base64 6) "${USER_NAME}")}
+USER_PASSWD=${USER_PASSWD:-"$(openssl passwd -1 -salt "$(openssl rand -base64 6)" "${USER_NAME}")"}
 RDP_SERVER=${RDP_SERVER:-no}
 RUN_AS_ROOT=${RUN_AS_ROOT:-no}
 FORCED_OWNERSHIP=${FORCED_OWNERSHIP:-no}
+TZ="${TZ:-UTC}"
 
 # Create the user account
 ! grep -q ":${USER_GID}:$" /etc/group && groupadd --gid "${USER_GID}" "${USER_NAME}"
@@ -28,6 +29,9 @@ if [ "${OWNER_IDS}" != "${USER_UID}:${USER_GID}" ]; then
         exit 1
     fi
 fi
+
+# Configure timezone
+ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezone
 
 # Run in X11 redirection mode (default)
 if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then

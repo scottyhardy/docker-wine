@@ -11,6 +11,7 @@ RUN apt-get update \
         p7zip \
         pulseaudio-utils \
         software-properties-common \
+        tzdata \
         unzip \
         wget \
         winbind \

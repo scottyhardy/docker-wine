@@ -92,6 +92,20 @@ encrypt_password () {
     add_run_arg --env="USER_PASSWD=${encrypted_password}"
 }
 
+add_run_arg_timezone () {
+    local tz
+
+    if [ -f "/etc/timezone" ]; then
+        tz="$(cat /etc/timezone)"
+    elif [ -f "/etc/localtime" ]; then
+        tz="$(readlink /etc/localtime | awk -F/ '{print $(NF-1)"/"$NF}')"
+    else
+        tz="UTC"
+    fi
+
+    add_run_arg --env="TZ=${tz}"
+}
+
 run_container () {
     local mode
 
@@ -120,7 +134,7 @@ run_container () {
     add_run_arg --name="wine"
     add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
     add_run_arg --workdir="${WORKDIR}"
-    [ "$(uname)" == "Linux" ] && add_run_arg --volume="/etc/localtime:/etc/localtime:ro"
+    add_run_arg_timezone
 
     # Grab the latest image from docker hub or use the locally built version
     if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
