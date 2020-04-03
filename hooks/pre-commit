@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # This file should be copied to <repo root>/.git/hooks/pre-commit to enable pre-commit checks
 
@@ -7,15 +7,15 @@ exec 1>&2
 
 # Check shellcheck available
 if ! command -v shellcheck >/dev/null 2>&1; then
-	echo "ERROR: shellcheck does not appear to be installed"
-	exit 1
+    echo "ERROR: shellcheck does not appear to be installed"
+    exit 1
 fi
 
 # Run shellcheck on all shell files
 for FILE in $(git diff --cached --name-only); do
-	if head -1 "${FILE}" | grep -q -E "^#!.*sh$"; then
-		if ! shellcheck "${FILE}"; then
-			exit 1
-		fi
-	fi
+    if head -1 "${FILE}" | grep -q -E "^#!.*sh$"; then
+        if ! shellcheck "${FILE}"; then
+            exit 1
+        fi
+    fi
 done
