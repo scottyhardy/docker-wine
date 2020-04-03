@@ -14,8 +14,6 @@ fi
 # Run shellcheck on all shell files
 for FILE in $(git diff --cached --name-only); do
     if head -1 "${FILE}" | grep -q -E "^#!.*sh$"; then
-        if ! shellcheck "${FILE}"; then
-            exit 1
-        fi
+        shellcheck "${FILE}" || exit 1
     fi
 done
