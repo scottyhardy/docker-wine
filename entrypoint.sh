@@ -19,12 +19,12 @@ useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" --password "${
 [ ! -d "${USER_HOME}" ] && mkdir -p "${USER_HOME}"
 
 # Take ownership of user's home directory if owned by root or if FORCED_OWNERSHIP is enabled
-OWNER_IDS="$(stat -c '%u:%g' "${USER_HOME}")"
+OWNER_IDS="$(stat -c "%u:%g" "${USER_HOME}")"
 if [ "${OWNER_IDS}" != "${USER_UID}:${USER_GID}" ]; then
     if [ "${OWNER_IDS}" == "0:0" ] || [ "${FORCED_OWNERSHIP}" == "yes" ]; then
         chown -R "${USER_UID}":"${USER_GID}" "${USER_HOME}"
     else
-        echo "ERROR: User's home '${USER_HOME}' is currently owned by $(stat -c '%U:%G' "${USER_HOME}")"
+        echo "ERROR: User's home '${USER_HOME}' is currently owned by $(stat -c "%U:%G" "${USER_HOME}")"
         echo "Use option --force-owner to enable user ${USER_NAME} to take ownership"
         exit 1
     fi
@@ -34,13 +34,13 @@ fi
 ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezone
 
 # Run in X11 redirection mode (default)
-if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
+if echo "${RDP_SERVER}" | grep -q -i -E "^(no|off|false|0)$"; then
 
     # Set up pulseaudio for redirection to UNIX socket
     [ -f /root/pulse/client.conf ] && cp /root/pulse/client.conf /etc/pulse/client.conf
 
     # Run in X11 redirection mode as $USER_NAME (default)
-    if echo "${RUN_AS_ROOT}" | grep -q -i -E '^(no|off|false|0)$'; then
+    if echo "${RUN_AS_ROOT}" | grep -q -i -E "^(no|off|false|0)$"; then
 
         # Copy and take ownership of .Xauthority for X11 redirection
         if [ -f /root/.Xauthority ]; then
@@ -52,7 +52,7 @@ if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
         exec gosu "${USER_NAME}" "$@"
 
     # Run in X11 redirection mode as root
-    elif echo "${RUN_AS_ROOT}" | grep -q -i -E '^(yes|on|true|1)$'; then
+    elif echo "${RUN_AS_ROOT}" | grep -q -i -E "^(yes|on|true|1)$"; then
         exec "$@"
     else
         echo "ERROR: '${RUN_AS_ROOT}' is not a valid value for RUN_AS_ROOT"
@@ -60,7 +60,7 @@ if echo "${RDP_SERVER}" | grep -q -i -E '^(no|off|false|0)$'; then
     fi
 
 # Run in RDP server mode
-elif echo "${RDP_SERVER}" | grep -q -i -E '^(yes|on|true|1)$'; then
+elif echo "${RDP_SERVER}" | grep -q -i -E "^(yes|on|true|1)$"; then
 
     # Start xrdp sesman service
     /usr/sbin/xrdp-sesman
@@ -71,9 +71,9 @@ elif echo "${RDP_SERVER}" | grep -q -i -E '^(yes|on|true|1)$'; then
     else
         /usr/sbin/xrdp
 
-        if echo "${RUN_AS_ROOT}" | grep -q -i -E '^(no|off|false|0)$'; then
+        if echo "${RUN_AS_ROOT}" | grep -q -i -E "^(no|off|false|0)$"; then
             exec gosu "${USER_NAME}" "$@"
-        elif echo "${RUN_AS_ROOT}" | grep -q -i -E '^(yes|on|true|1)$'; then
+        elif echo "${RUN_AS_ROOT}" | grep -q -i -E "^(yes|on|true|1)$"; then
             exec "$@"
         else
             echo "ERROR: '${RUN_AS_ROOT}' is not a valid value for RUN_AS_ROOT"
@@ -81,5 +81,5 @@ elif echo "${RDP_SERVER}" | grep -q -i -E '^(yes|on|true|1)$'; then
         fi
     fi
 else
-    echo "ERROR: '${RDP_SERVER} is not a valid value for RDP_SERVER'"
+    echo "ERROR: '${RDP_SERVER}' is not a valid value for RDP_SERVER"
 fi

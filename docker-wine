@@ -259,7 +259,7 @@ if ! docker -v >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! echo "${USE_RDP_SERVER}" | grep -q -E '^(no|start|stop|restart|interactive)$'; then
+if ! echo "${USE_RDP_SERVER}" | grep -q -E "^(no|start|stop|restart|interactive)$"; then
     echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
     exit 1
 fi
