@@ -36,7 +36,7 @@ print_help () {
     echo "                          --home=my_new_volume"
     echo "                          --home=/tmp/my_user"
     echo "  --home=VALUE          Specify an alternate path for the user's home within the"
-    echo "                          container (default is /home/\$USER"
+    echo "                          container (default is /home/\$USER)"
     echo "  --force-owner         Allow the user to take ownership of a home volume that"
     echo "                          belongs to another user (NOTE: Use with caution!)"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
