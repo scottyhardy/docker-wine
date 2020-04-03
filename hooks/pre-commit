@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# This file should be copied to <repo root>/.git/hooks/pre-commit to enable pre-commit checks
+
 # Redirect output to stderr
 exec 1>&2
 
