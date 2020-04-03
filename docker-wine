@@ -5,11 +5,13 @@ print_help () {
     echo
     echo "Run the docker-wine container with behaviour determined by the following"
     echo "OPTIONS:"
+    echo "  --cache               Use the cached image pulled from Docker Hub and don't"
+    echo "                           attempt to pull the latest version"
     echo "  --local               Use locally built docker-wine image instead of pulling"
     echo "                          image from Docker Hub"
-    echo "  --cache               Use the cached image and don't pull latest version from"
-    echo "                          Docker Hub"
-    echo "  --tag=VALUE           Select an image tag to use (default is latest)"
+    echo "  --local=VALUE         Specify an alternate locally built image and use instead"
+    echo "                           of pulling image from Docker Hub"
+    echo "  --tag=VALUE           Specify an image tag to use (default is latest)"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
@@ -152,12 +154,15 @@ RUN_ARGS=()
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --local)
-        USE_LOCAL_IMAGE="yes"
-        ;;
     --cache)
         DOCKER_PULL_IMAGE="no"
         ;;
+    --local)
+        USE_LOCAL_IMAGE="yes"
+        ;;
+    --local=*)
+        USE_LOCAL_IMAGE="yes"
+        LOCAL_IMAGE="${1#*=}"
     --tag=*)
         IMAGE_TAG="${1#*=}"
         ;;
@@ -177,15 +182,15 @@ while [ $# -gt 0 ]; do
     --rdp-port=*)
         HOST_RDP_PORT="${1#*=}"
         ;;
-    --home=*)
-        USER_HOME="${1#*=}"
-        add_run_arg --env="USER_HOME=${USER_HOME}"
-        ;;
     --home-volume=*)
         USER_VOLUME="${1#*=}"
 
         # Start container as self to prevent unintentionally changing ownership of a user's local filesystem by wineuser
         add_run_args_for_as_me
+        ;;
+    --home=*)
+        USER_HOME="${1#*=}"
+        add_run_arg --env="USER_HOME=${USER_HOME}"
         ;;
     --force-owner)
         add_run_arg --env="FORCED_OWNERSHIP=yes"
@@ -201,9 +206,6 @@ while [ $# -gt 0 ]; do
     --secure-password=*)
         add_run_arg --env="USER_PASSWD=${1#*=}"
         ;;
-    --workdir=*)
-        WORKDIR="${1#*=}"
-        ;;
     --device=*)
         add_run_arg "$1"
         ;;
@@ -212,6 +214,9 @@ while [ $# -gt 0 ]; do
         ;;
     --volume=*)
         add_run_arg "$1"
+        ;;
+    --workdir=*)
+        WORKDIR="${1#*=}"
         ;;
     --help)
         print_help
