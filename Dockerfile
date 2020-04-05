@@ -1,4 +1,5 @@
-FROM scottyhardy/docker-remote-desktop:latest
+ARG TAG=latest
+FROM scottyhardy/docker-remote-desktop:$TAG
 
 # Install prerequisites
 RUN apt-get update \

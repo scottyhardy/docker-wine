@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
 
+get_hrefs () {
+    local url="$1"
+    local regexp="$2"
+
+    wget -q -O- "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
+}
+
 BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
+URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
+
+# Get the latest Ubuntu version codename that Wine is available on
+UBUNTU_CODENAME=$(get_hrefs "${URL}" "[^:]+/" | sed -E "s|/$||" | uniq | grep -v -E "^([p-z]|/)" | sort -r | head -1)
+
+# Just use latest tag if unable to be determined
+if [ -n "${UBUNTU_CODENAME}" ]; then
+    echo "Found Wine is available on Ubuntu ${UBUNTU_CODENAME}"
+    TAG="ubuntu-${UBUNTU_CODENAME}"
+else
+    echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
+    TAG="latest"
+fi
 
 if ! docker -v >/dev/null 2>&1; then
     if buildah -v >/dev/null 2>&1; then
@@ -12,4 +32,4 @@ if ! docker -v >/dev/null 2>&1; then
     fi
 fi
 
-${BUILD_CMD} "${BUILD_ARGS[@]}" -t docker-wine .
+${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" -t docker-wine .

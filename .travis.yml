@@ -6,7 +6,7 @@ services:
   - docker
 
 script:
-  - docker build -t $DOCKER_REPO .
+  - bash build
 
 deploy:
   provider: script
