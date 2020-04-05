@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Run container and extract wine version
-VER="$(docker run -it "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-stable\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
+VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-stable\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
 
 if [ -n "${VER}" ]; then
     echo "Found wine version '${VER}'"
