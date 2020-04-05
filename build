@@ -3,8 +3,18 @@
 get_hrefs () {
     local url="$1"
     local regexp="$2"
+    local download_cmd
 
-    wget -q -O- "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
+    if command -v wget; then
+        download_cmd="wget -q -O-"
+    elif command -v curl; then
+        download_cmd="curl -s -o-"
+    else
+        echo "ERROR: Neither wget or curl is available, unable to perform download"
+        exit 1
+    fi
+
+    $download_cmd "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
 }
 
 BUILD_ARGS=("$@")
