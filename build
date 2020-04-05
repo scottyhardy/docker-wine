@@ -5,9 +5,9 @@ get_hrefs () {
     local regexp="$2"
     local download_cmd
 
-    if command -v wget; then
+    if command -v wget >/dev/null 2>&1; then
         download_cmd="wget -q -O-"
-    elif command -v curl; then
+    elif command -v curl >/dev/null 2>&1; then
         download_cmd="curl -s -o-"
     else
         echo "ERROR: Neither wget or curl is available, unable to perform download"
