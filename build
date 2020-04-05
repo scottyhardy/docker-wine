@@ -22,7 +22,7 @@ BUILD_CMD="docker build"
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 
 # Get the latest Ubuntu version codename that Wine is available on
-UBUNTU_CODENAME=$(get_hrefs "${URL}" "[^:]+/" | sed -E "s|/$||" | uniq | grep -v -E "^([p-z]|/)" | sort -r | head -1)
+UBUNTU_CODENAME=$(get_hrefs "${URL}" "[^:]+/" | sed -E "s|/$||" | grep -v -E "^([p-z]|/)" | sort -r | head -1)
 
 # Just use latest tag if unable to be determined
 if [ -n "${UBUNTU_CODENAME}" ]; then
