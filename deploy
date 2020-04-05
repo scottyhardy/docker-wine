@@ -11,12 +11,12 @@ else
 fi
 
 # Generate tags
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
 docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
 
 # Login to Docker Hub
 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 # Push the image and tags
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
 docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
