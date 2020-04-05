@@ -19,6 +19,7 @@ get_hrefs () {
 
 BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
+DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 
 # Get the latest Ubuntu version codename that Wine is available on
@@ -42,4 +43,4 @@ if ! docker -v >/dev/null 2>&1; then
     fi
 fi
 
-${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" -t docker-wine .
+${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" -t "${DOCKER_REPO}" .
