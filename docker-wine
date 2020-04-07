@@ -199,10 +199,7 @@ run_container () {
         detached)
             mode="--detach"
             ;;
-        -it)
-            mode="$1"
-            ;;
-        --detach)
+        -it|--detach)
             mode="$1"
             ;;
         *)
@@ -304,13 +301,7 @@ while [ $# -gt 0 ]; do
     --secure-password=*)
         add_run_arg --env="USER_PASSWD=${1#*=}"
         ;;
-    --device=*)
-        add_run_arg "$1"
-        ;;
-    --env=*)
-        add_run_arg "$1"
-        ;;
-    --volume=*)
+    --device=*|--env=*|--volume=*)
         add_run_arg "$1"
         ;;
     --workdir=*)
