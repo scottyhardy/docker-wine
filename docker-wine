@@ -106,6 +106,89 @@ add_run_arg_timezone () {
     add_run_arg --env="TZ=${tz}"
 }
 
+configure_xquartz () {
+
+    # Return 0 (true) if this function makes any changes
+    local changes_made=1
+
+    # Check XQuartz installed
+    if ! command -v xquartz >/dev/null 2>&1; then
+        local answer
+        local attempts
+
+        # Prompt to allow install
+        echo "XQuartz needs to be installed for X11 forwarding to operate. If necessary, Homebrew will also be installed to perform the installation of XQuartz."
+        for (( attempts = 0; attempts < 5; attempts++ )); do
+
+            read -r -p "Do you want to continue? [y/N] " answer
+
+            # Default is No
+            [ -z "${answer}" ] && answer="n"
+
+            case "${answer}" in
+                [Yy]|[Yy][Ee][Ss])
+                    install_xquartz || exit 1
+                    changes_made=0
+                    break
+                    ;;
+                [Nn]|[Nn][Oo])
+                    echo "Unable to start container with X11 forwarding. Please install XQuartz or alternatively use Remote Desktop. e.g. $0 --rdp"
+                    exit 0
+                    ;;
+                *)
+                    echo "Invalid response.  Please use y or n"
+                    ;;
+            esac
+        done
+
+        # Fail after too many attempts
+        if [ "${attempts}" -ge 5 ]; then
+            echo "ERROR: Too many invalid responses"
+            exit 1
+        fi
+    fi
+
+    # Configure XQuartz
+    if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
+        defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+        changes_made=0
+    fi
+
+    if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
+        defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+        changes_made=0
+    fi
+
+    return $changes_made
+}
+
+install_xquartz() {
+
+    # Return 0 if XQuartz is successfully installed
+    local installed=1
+
+    # Install Homebrew
+    if ! command -v brew >/dev/null 2>&1; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+        # Confirm installed
+        if ! command -v brew >/dev/null 2>&1; then
+            echo "ERROR: Failed to install Homebrew, unable to proceed with XQuartz installation"
+            exit 1
+        fi
+    fi
+
+    # Install XQuartz
+    if ! command -v xquartz >/dev/null 2>&1; then
+        brew cask install xquartz
+
+        # Confirm installed
+        command -v xquartz >/dev/null 2>&1 && installed=0
+    fi
+
+    return $installed
+}
+
 run_container () {
     local mode
 
@@ -305,19 +388,10 @@ else
     # Run in X11 forwarding mode on macOS
     if [ "$(uname)" == "Darwin" ]; then
 
-        # Check XQuartz installed
-        if ! command -v xquartz >/dev/null 2>&1; then
-            echo "ERROR: XQuartz does not appear to be installed"
-            exit 1
-        fi
-
-        # Configure XQuartz
-        if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
-            defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
-        fi
-
-        if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
-            defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+        # Advise to reboot if need to configure XQuartz
+        if configure_xquartz; then
+            echo "INFO: XQuartz configuration updated.  Please reboot to enable X11 forwarding to operate."
+            exit 0
         fi
 
         # Allow localhost to access XQuartz
