@@ -115,10 +115,11 @@ configure_xquartz () {
     if ! command -v xquartz >/dev/null 2>&1; then
         local answer
         local attempts
+        local max_attempts=5
 
         # Prompt to allow install
         echo "XQuartz needs to be installed for X11 forwarding to operate. If necessary, Homebrew will also be installed to perform the installation of XQuartz."
-        for (( attempts = 0; attempts < 5; attempts++ )); do
+        for (( attempts = 0; attempts < max_attempts; attempts++ )); do
 
             read -r -p "Do you want to continue? [y/N] " answer
 
@@ -142,7 +143,7 @@ configure_xquartz () {
         done
 
         # Fail after too many attempts
-        if [ "${attempts}" -ge 5 ]; then
+        if [ "${attempts}" -ge "${max_attempts}" ]; then
             echo "ERROR: Too many invalid responses"
             exit 1
         fi
