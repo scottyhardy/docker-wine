@@ -254,7 +254,7 @@ done
 CMD_ARGS=("$@")
 
 # Sanity checks
-if ! docker -v >/dev/null 2>&1; then
+if ! docker system info >/dev/null 2>&1; then
     echo "ERROR: Docker is not running or not installed, unable to proceed"
     exit 1
 fi

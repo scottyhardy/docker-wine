@@ -34,7 +34,7 @@ else
     TAG="latest"
 fi
 
-if ! docker -v >/dev/null 2>&1; then
+if ! docker system info >/dev/null 2>&1; then
     if buildah -v >/dev/null 2>&1; then
         BUILD_CMD="buildah bud"
     else
