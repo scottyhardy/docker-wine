@@ -48,6 +48,8 @@ print_help () {
     echo "  --env=VALUE           Specify additional environment variable(s) to be passed"
     echo "                          to the container.  Uses standard docker syntax and"
     echo "                          multiple statements are allowed"
+    echo "  --network=VALUE       Specify the network to connect the container to.  Uses"
+    echo "                          standard docker syntax"
     echo "  --volume=VALUE        Specify additional volume(s) to be mounted.  Uses"
     echo "                          standard docker syntax and multiple statements are"
     echo "                          allowed"
@@ -302,7 +304,7 @@ while [ $# -gt 0 ]; do
     --secure-password=*)
         add_run_arg --env="USER_PASSWD=${1#*=}"
         ;;
-    --device=*|--env=*|--volume=*)
+    --device=*|--env=*|--network=*|--volume=*)
         add_run_arg "$1"
         ;;
     --workdir=*)
