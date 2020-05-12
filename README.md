@@ -52,6 +52,27 @@ You can override the default interactive bash session by adding `wine`, `winetri
 
 ![Screenshot of Notepad](https://raw.githubusercontent.com/scottyhardy/docker-wine/master/images/screenshot_1.png)
 
+## Run `docker-wine` with Xvfb
+
+Starts up a frame buffer display defaulting to: Xvfb :95 -screen 0 320x200x8
+Exports DISPLAY to the server number :95
+
+```bash
+./docker-wine --xvfb
+```
+
+### Customizable options
+
+```bash
+./docker-wine --xvfb=:95,0,320x200x8
+```
+
+## Run `docker-wine` attached with notty
+
+```bash
+./docker-wine --notty
+```
+
 ## Run `docker-wine` with RDP server
 
 Run with the `--rdp` option to start the RDP server with an interactive bash session:
