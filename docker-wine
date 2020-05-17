@@ -35,7 +35,7 @@ print_help () {
     echo "                          SERVER_NR      Server number to use, eg. :1"
     echo "                          SCREEN         Screen number to use, eg. 0"
     echo "                          RESOLUTION     Screen resolution, eg. 320x240x8"
-    echo "                          if OPTIONAL is left blank, defaults to:"
+    echo "                        If OPTIONAL is left blank, defaults to:"
     echo "                          :95,0,320x240x8"
     echo "  --home-volume=VALUE   Use an alternate volume to winehome for storing"
     echo "                          persistent user data. Valid values can specify either"
@@ -239,11 +239,9 @@ run_container () {
 
     # NOTTY rules them all
     if [ "${NOTTY}" == "yes" ] ; then
-	#echo "docker run ${RUN_ARGS[@]} ${DOCKER_IMAGE} ${CMD_ARGS[@]}"
-	docker run "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
     else
-	#echo "docker run ${mode} ${RUN_ARGS[@]} ${DOCKER_IMAGE} ${CMD_ARGS[@]}"
-	docker run "${mode}" "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run "${mode}" "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
     fi
 }
 
@@ -289,7 +287,7 @@ while [ $# -gt 0 ]; do
         add_run_args_for_as_me
         ;;
     --notty)
-	NOTTY="yes"
+        NOTTY="yes"
         ;;
     --rdp)
         USE_RDP_SERVER="interactive"
@@ -305,7 +303,7 @@ while [ $# -gt 0 ]; do
         ;;
     --xvfb=*)
         XVFB="yes"
-        IFS=, read XVFB_SERVER XVFB_SCREEN XVFB_RESOLUTION <<< "${1#*=}"
+        IFS=, read -r XVFB_SERVER XVFB_SCREEN XVFB_RESOLUTION <<< "${1#*=}"
         ;;
     --home-volume=*)
         USER_VOLUME="${1#*=}"
@@ -373,8 +371,19 @@ if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     exit 1
 fi
 
+
+# Run xvfb and send everything into the void
+if [ "${XVFB}" == "yes" ] ; then
+    add_run_arg --env="XVFB=yes"
+    add_run_arg --env="XVFB_SERVER=${XVFB_SERVER}"
+    add_run_arg --env="XVFB_SCREEN=${XVFB_SCREEN}"
+    add_run_arg --env="XVFB_RESOLUTION=${XVFB_RESOLUTION}"
+    add_run_arg --env="DISPLAY=${XVFB_SERVER}"
+
+    run_container "interactive"
+
 # Run in RDP mode
-if [ "${USE_RDP_SERVER}" != "no" ]; then
+elif [ "${USE_RDP_SERVER}" != "no" ]; then
 
     add_run_arg --env="RDP_SERVER=yes"
     add_run_arg --publish="${HOST_RDP_PORT}:3389/tcp"
@@ -430,7 +439,7 @@ else
     elif [ "$(uname)" == "Linux" ]; then
 
         # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
-        if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" -a "${XVFB}" == "no" ]; then
+        if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" ] && [ "${XVFB}" == "no" ]; then
             echo "ERROR: No valid .Xauthority file found for X11"
             exit 1
         fi
@@ -463,23 +472,13 @@ else
             echo "INFO: pulseaudio not installed so running without sound"
         fi
 
-        # Run xvfb and send everything into the void
-        if [ "${XVFB}" == "yes" ] ; then
-            add_run_arg --env="XVFB=yes"
-            add_run_arg --env="XVFB_SERVER=${XVFB_SERVER}"
-            add_run_arg --env="XVFB_SCREEN=${XVFB_SCREEN}"
-            add_run_arg --env="XVFB_RESOLUTION=${XVFB_RESOLUTION}"
-            add_run_arg --env="DISPLAY=${XVFB_SERVER}"
+        # Add Linux run args
+        add_run_arg --env="DISPLAY"
+        add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
+        add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
 
-            run_container "interactive"
-        else
-            # Add Linux run args
-            add_run_arg --env="DISPLAY"
-            add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
-            add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
+        run_container "interactive"
 
-            run_container "interactive"
-        fi
     else
         echo "ERROR: '$(uname)' OS is not supported"
         exit 1
