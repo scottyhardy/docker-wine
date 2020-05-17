@@ -16,8 +16,8 @@ RUN apt-get update \
         unzip \
         wget \
         winbind \
-        zenity \
         xvfb \
+        zenity \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
