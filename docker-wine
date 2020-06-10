@@ -248,20 +248,22 @@ run_container () {
 
 # Set default values
 DOCKER_IMAGE="scottyhardy/docker-wine"
-LOCAL_IMAGE="docker-wine"
-USE_LOCAL_IMAGE="no"
 DOCKER_PULL_IMAGE="yes"
-IMAGE_TAG="latest"
-USE_RDP_SERVER="no"
 HOST_RDP_PORT="3389"
+IMAGE_TAG="latest"
+LOCAL_IMAGE="docker-wine"
 NOTTY="no"
-XVFB="no"
-XVFB_SERVER=":95"
-XVFB_SCREEN="0"
-XVFB_RESOLUTION="320x240x8"
+USE_LOCAL_IMAGE="no"
+USE_RDP_SERVER="no"
 USER_HOME="/home/wineuser"
 USER_VOLUME="winehome"
 WORKDIR="${USER_HOME}"
+XVFB="no"
+XVFB_RESOLUTION="320x240x8"
+XVFB_SCREEN="0"
+XVFB_SERVER=":95"
+
+# Array to store all of the `docker run` arguments
 RUN_ARGS=()
 
 while [ $# -gt 0 ]; do
