@@ -30,7 +30,8 @@ print_help () {
     echo "                          interactive    Start the RDP server and also run an"
     echo "                                           interactive bash session"
     echo "  --rdp-port=VALUE      Bind RDP to a different TCP port (default is 3389)"
-    echo "  --xvfb[=OPTIONAL]     start xvfb"
+    echo "  --shm-size=VALUE      Set the shared memory size (default is '1g' for 1 GB)"
+    echo "  --xvfb[=OPTIONAL]     Start xvfb"
     echo "                        OPTIONAL consists of comma separated values of:"
     echo "                          SERVER_NR      Server number to use, eg. :1"
     echo "                          SCREEN         Screen number to use, eg. 0"
@@ -220,6 +221,7 @@ run_container () {
     add_run_arg --rm
     add_run_arg --hostname="$(hostname)"
     add_run_arg --name="wine"
+    add_run_arg --shm-size="${SHM_SIZE}"
     add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
     add_run_arg --workdir="${WORKDIR}"
     add_run_arg_timezone
@@ -253,6 +255,7 @@ HOST_RDP_PORT="3389"
 IMAGE_TAG="latest"
 LOCAL_IMAGE="docker-wine"
 NOTTY="no"
+SHM_SIZE="1g"
 USE_LOCAL_IMAGE="no"
 USE_RDP_SERVER="no"
 USER_HOME="/home/wineuser"
@@ -299,6 +302,9 @@ while [ $# -gt 0 ]; do
         ;;
     --rdp-port=*)
         HOST_RDP_PORT="${1#*=}"
+        ;;
+    --shm-size=*)
+        SHM_SIZE="${1#*=}"
         ;;
     --xvfb)
         XVFB="yes"
