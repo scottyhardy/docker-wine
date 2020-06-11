@@ -12,6 +12,8 @@ print_help () {
     echo "  --local=VALUE         Specify an alternate locally built image and use instead"
     echo "                           of pulling image from Docker Hub"
     echo "  --tag=VALUE           Specify an image tag to use (default is latest)"
+    echo "  --name=VALUE          Name of the docker container instantiated"
+    echo "                          (default is 'wine')"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
@@ -220,7 +222,7 @@ run_container () {
     # Add common docker run args
     add_run_arg --rm
     add_run_arg --hostname="$(hostname)"
-    add_run_arg --name="wine"
+    add_run_arg --name="${CONTAINER_NAME}"
     add_run_arg --shm-size="${SHM_SIZE}"
     add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
     add_run_arg --workdir="${WORKDIR}"
@@ -249,6 +251,7 @@ run_container () {
 
 
 # Set default values
+CONTAINER_NAME="wine"
 DOCKER_IMAGE="scottyhardy/docker-wine"
 DOCKER_PULL_IMAGE="yes"
 HOST_RDP_PORT="3389"
@@ -283,6 +286,9 @@ while [ $# -gt 0 ]; do
         ;;
     --tag=*)
         IMAGE_TAG="${1#*=}"
+        ;;
+    --name=*)
+        CONTAINER_NAME="${1#*=}"
         ;;
     --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
