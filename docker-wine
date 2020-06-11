@@ -122,7 +122,7 @@ configure_xquartz () {
     local changes_made=1
 
     # Check XQuartz installed
-    if ! command -v xquartz >/dev/null 2>&1; then
+    if ! [ -f /opt/X11/bin/xquartz ]; then
         local answer
         local attempts
         local max_attempts=5
@@ -190,11 +190,11 @@ install_xquartz() {
     fi
 
     # Install XQuartz
-    if ! command -v xquartz >/dev/null 2>&1; then
+    if ! [ -f /opt/X11/bin/xquartz ]; then
         brew cask install xquartz
 
         # Confirm installed
-        command -v xquartz >/dev/null 2>&1 && installed=0
+        [ -f /opt/X11/bin/xquartz ] && installed=0
     fi
 
     return $installed
