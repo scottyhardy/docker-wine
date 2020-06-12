@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
+WINE_BRANCH="${WINE_BRANCH:-devel}"
+
 # Run container and extract wine version
-VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-stable\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
+VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-${WINE_BRANCH}\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
 
 if [ -n "${VER}" ]; then
     echo "Found wine version '${VER}'"
@@ -11,12 +13,18 @@ else
 fi
 
 # Generate tags
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-latest"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
 
 # Login to Docker Hub
 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 # Push the image and tags
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-stable-${VER}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-latest"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
+
+# Push the wine-devel image as latest tag
+if [ "${WINE_BRANCH}" == "devel" ]; then
+    docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
+    docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
+fi
