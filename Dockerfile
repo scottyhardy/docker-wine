@@ -36,7 +36,7 @@ RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/
 
 # Download gecko and mono installers
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
-RUN /root/download_gecko_and_mono.sh "$(dpkg -s wine-stable | grep "^Version:\s" | awk '{print $2}' | sed -E 's/~.*$//')"
+RUN /root/download_gecko_and_mono.sh "$(dpkg -s wine-${WINE_BRANCH} | grep "^Version:\s" | awk '{print $2}' | sed -E 's/~.*$//')"
 
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
