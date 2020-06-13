@@ -79,4 +79,4 @@ if ! docker system info >/dev/null 2>&1; then
     fi
 fi
 
-${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" -t "${DOCKER_REPO}" .
+${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" --build-arg="WINE_BRANCH=${WINE_BRANCH}" -t "${DOCKER_REPO}" .
