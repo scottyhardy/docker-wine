@@ -56,7 +56,7 @@ BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
 DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
-WINE_BRANCH="${WINE_BRANCH:-devel}"
+WINE_BRANCH="${WINE_BRANCH:-stable}"
 
 # Get the codename for latest version of wine-${WINE-BRANCH}
 UBUNTU_CODENAME="$(get_os_codename "${URL}")"

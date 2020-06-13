@@ -22,7 +22,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
-ARG WINE_BRANCH=devel
+ARG WINE_BRANCH=stable
 RUN wget -O- -nv https://dl.winehq.org/wine-builds/winehq.key | apt-key add - \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" \
     && dpkg --add-architecture i386 \

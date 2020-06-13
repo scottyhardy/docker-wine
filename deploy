@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-WINE_BRANCH="${WINE_BRANCH:-devel}"
+WINE_BRANCH="${WINE_BRANCH:-stable}"
 
 # Run container and extract wine version
 VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-${WINE_BRANCH}\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
@@ -23,8 +23,8 @@ echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdi
 docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}"
 docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
 
-# Push the wine-devel image as latest tag
-if [ "${WINE_BRANCH}" == "devel" ]; then
+# Push the wine-stable image as latest tag
+if [ "${WINE_BRANCH}" == "stable" ]; then
     docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
     docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:latest"
 fi
