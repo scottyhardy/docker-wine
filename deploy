@@ -13,14 +13,14 @@ else
 fi
 
 # Generate tags
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-latest"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}"
 docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
 
 # Login to Docker Hub
 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 # Push the image and tags
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-latest"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}"
 docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
 
 # Push the wine-devel image as latest tag
