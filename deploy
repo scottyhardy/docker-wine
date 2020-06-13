@@ -3,7 +3,7 @@
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 
 # Run container and extract wine version
-VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -l | sed -n -E 's/^ii\s+wine-${WINE_BRANCH}\s+([0-9]+(\.[0-9]+)*).*$/\1/p'" | tr -d "\r")"
+VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -s wine-${WINE_BRANCH} | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
 
 if [ -n "${VER}" ]; then
     echo "Found wine version '${VER}'"
