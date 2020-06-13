@@ -31,7 +31,7 @@ get_os_codename () {
     local wine_versions=()
     for codename in "${os_codenames[@]}"; do
         local version
-        version=$(get_hrefs "${url}${codename}/main/binary-amd64/" "wine-stable_.*\.deb" | sed -n -E 's/^wine-stable_([0-9]+(\.[0-9]+)*).*$/\1/p' | sort -rV | head -1)
+        version=$(get_hrefs "${url}${codename}/main/binary-amd64/" "wine-${WINE_BRANCH}_.*\.deb" | sed -n -E "s/^wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*$/\1/p" | sort -rV | head -1)
         wine_versions[${index}]="${version}"
         index+=1
     done
@@ -56,11 +56,14 @@ BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
 DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
+WINE_BRANCH="${WINE_BRANCH:-stable}"
+
+# Get the codename for latest version of wine-${WINE-BRANCH}
 UBUNTU_CODENAME="$(get_os_codename "${URL}")"
 
 # Just use latest tag if unable to be determined
 if [ -n "${UBUNTU_CODENAME}" ]; then
-    echo "Found latest version of Wine is available on Ubuntu ${UBUNTU_CODENAME}"
+    echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
     TAG="ubuntu-${UBUNTU_CODENAME}"
 else
     echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"

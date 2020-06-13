@@ -5,6 +5,10 @@ dist: bionic
 services:
   - docker
 
+env:
+  - WINE_BRANCH=devel
+  - WINE_BRANCH=stable
+
 script:
   - bash build
 
