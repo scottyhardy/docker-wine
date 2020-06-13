@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Scrapes the WineHQ download pages for latest versions of mono and gecko to download
+# Scrapes the wine source code for versions of mono and gecko to download
 
 get_hrefs () {
     local url="$1"
@@ -9,20 +9,36 @@ get_hrefs () {
     wget -q -O- "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
 }
 
+get_app_ver () {
+    local app="${1^^}"  # Convert to uppercase
+    local url="https://raw.githubusercontent.com/wine-mirror/wine/wine-${WINE_VER}/dlls/appwiz.cpl/addons.c"
+
+    wget -q -O- "${url}" | grep -E "^#define ${app}_VERSION\s" | awk -F\" '{print $2}'
+}
+
+
+WINE_VER="$1"
+
+if [ -z "${WINE_VER}" ]; then
+    echo "Please specify the version of wine that requires gecko and mono installers"
+    echo "e.g."
+    echo "  $0 5.0.1"
+    exit 1
+fi
+
 for APP in "gecko" "mono"; do
 
-    URL="http://dl.winehq.org/wine/wine-${APP}/"
-
-    # Get the latest version
-    VER=$(get_hrefs "${URL}" "[0-9]+(\.[0-9]+)*/" | sed -E "s|/$||" | sort -rV | head -1)
+    # Get the app version required from wine source code
+    APP_VER=$(get_app_ver "${APP}")
 
     # Get the list of files to download
-    mapfile -t FILES < <(get_hrefs "${URL}${VER}/" ".*\.msi")
+    APP_URL="http://dl.winehq.org/wine/wine-${APP}/"
+    mapfile -t FILES < <(get_hrefs "${APP_URL}${APP_VER}/" ".*\.msi")
 
     # Download the files
     [ ! -d "/usr/share/wine/${APP}" ] && mkdir -p "/usr/share/wine/${APP}"
     for FILE in "${FILES[@]}"; do
         echo "Downloading '${FILE}'"
-        wget -nv "${URL}${VER}/${FILE}" -O "/usr/share/wine/${APP}/${FILE}"
+        wget -nv "${APP_URL}${APP_VER}/${FILE}" -O "/usr/share/wine/${APP}/${FILE}"
     done
 done
