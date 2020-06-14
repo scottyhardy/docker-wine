@@ -232,7 +232,7 @@ run_container () {
     if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
         [ "${DOCKER_PULL_IMAGE}" == "yes" ] && docker pull "${DOCKER_IMAGE}:${IMAGE_TAG}"
     else
-        DOCKER_IMAGE="${LOCAL_IMAGE}:${IMAGE_TAG}"
+        DOCKER_IMAGE="${LOCAL_IMAGE}"
     fi
 
     # Create the docker volume to store user's home only if using default winehome
@@ -243,9 +243,9 @@ run_container () {
 
     # NOTTY rules them all
     if [ "${NOTTY}" == "yes" ] ; then
-        docker run "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run "${RUN_ARGS[@]}" "${DOCKER_IMAGE}:${IMAGE_TAG}" "${CMD_ARGS[@]}"
     else
-        docker run "${mode}" "${RUN_ARGS[@]}" "${DOCKER_IMAGE}" "${CMD_ARGS[@]}"
+        docker run "${mode}" "${RUN_ARGS[@]}" "${DOCKER_IMAGE}:${IMAGE_TAG}" "${CMD_ARGS[@]}"
     fi
 }
 
