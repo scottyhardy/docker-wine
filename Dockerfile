@@ -18,7 +18,6 @@ RUN apt-get update \
         winbind \
         xvfb \
         zenity \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
