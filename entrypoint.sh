@@ -41,14 +41,14 @@ if echo "${RDP_SERVER}" | grep -q -i -E "^(no|off|false|0)$"; then
 
     # Run xvfb
     if echo "${XVFB}" | grep -q -i -E "^(yes|on|true|1)$"; then
-        nohup /usr/bin/Xvfb ${XVFB_SERVER} -screen ${XVFB_SCREEN} ${XVFB_RESOLUTION} >/dev/null 2>&1 &
+        nohup /usr/bin/Xvfb "${XVFB_SERVER}" -screen "${XVFB_SCREEN}" "${XVFB_RESOLUTION}" >/dev/null 2>&1 &
     fi
 
     # Run in X11 redirection mode as $USER_NAME (default)
     if echo "${RUN_AS_ROOT}" | grep -q -i -E "^(no|off|false|0)$"; then
 
         # Copy and take ownership of .Xauthority for X11 redirection
-        if [ -f /root/.Xauthority -a "${XVFB}" == "no" ]; then
+        if [ -f /root/.Xauthority ] && [ "${XVFB}" == "no" ]; then
             cp /root/.Xauthority "${USER_HOME}"
             chown "${USER_UID}":"${USER_GID}" "${USER_HOME}/.Xauthority"
         fi
