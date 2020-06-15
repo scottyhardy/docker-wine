@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 WINE_BRANCH="${WINE_BRANCH:-stable}"
+TIMESTAMP="$(date +"%Y%m%d")"
 
 # Run container and extract wine version
 VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -s wine-${WINE_BRANCH} | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
@@ -13,15 +14,17 @@ else
 fi
 
 # Generate tags
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}"
-docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}-${VER}"
+docker tag "${DOCKER_REPO}" "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}-${VER}-${TIMESTAMP}"
 
 # Login to Docker Hub
 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 # Push the image and tags
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}"
-docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:wine-${WINE_BRANCH}-${VER}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}-${VER}"
+docker push "${DOCKER_USERNAME}/${DOCKER_REPO}:${WINE_BRANCH}-${VER}-${TIMESTAMP}"
 
 # Push the wine-stable image as latest tag
 if [ "${WINE_BRANCH}" == "stable" ]; then
