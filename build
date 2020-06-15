@@ -52,22 +52,34 @@ get_os_codename () {
 }
 
 
+# Array of command line args to be passed to the build command
 BUILD_ARGS=("$@")
+
+# Default values
 BUILD_CMD="docker build"
 DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
+NO_RDP="${NO_RDP:-no}"
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 
 # Get the codename for latest version of wine-${WINE-BRANCH}
 UBUNTU_CODENAME="$(get_os_codename "${URL}")"
 
-# Just use latest tag if unable to be determined
+# Just use latest if codename unable to be determined
 if [ -n "${UBUNTU_CODENAME}" ]; then
     echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
-    TAG="ubuntu-${UBUNTU_CODENAME}"
 else
     echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
-    TAG="latest"
+    UBUNTU_CODENAME="latest"
+fi
+
+# Use standard Ubuntu image if using NO_RDP
+if echo "${NO_RDP}" | grep -q -i -E "^(yes|on|true|1)$"; then
+    BASE_IMAGE="ubuntu"
+    TAG="${UBUNTU_CODENAME}"
+else
+    BASE_IMAGE="scottyhardy/docker-remote-desktop"
+    TAG="ubuntu-${UBUNTU_CODENAME}"
 fi
 
 if ! docker system info >/dev/null 2>&1; then
@@ -79,4 +91,8 @@ if ! docker system info >/dev/null 2>&1; then
     fi
 fi
 
-${BUILD_CMD} "${BUILD_ARGS[@]}" --build-arg="TAG=${TAG}" --build-arg="WINE_BRANCH=${WINE_BRANCH}" -t "${DOCKER_REPO}" .
+${BUILD_CMD} "${BUILD_ARGS[@]}" \
+    --build-arg="BASE_IMAGE=${BASE_IMAGE}" \
+    --build-arg="TAG=${TAG}" \
+    --build-arg="WINE_BRANCH=${WINE_BRANCH}" \
+    -t "${DOCKER_REPO}" .
