@@ -1,5 +1,6 @@
-ARG TAG=latest
-FROM scottyhardy/docker-remote-desktop:$TAG
+ARG BASE_IMAGE="scottyhardy/docker-remote-desktop"
+ARG TAG="latest"
+FROM ${BASE_IMAGE}:${TAG}
 
 # Install prerequisites
 RUN apt-get update \
@@ -7,6 +8,7 @@ RUN apt-get update \
         apt-transport-https \
         ca-certificates \
         cabextract \
+        git \
         gosu \
         gpg-agent \
         p7zip \
@@ -21,7 +23,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
-ARG WINE_BRANCH=stable
+ARG WINE_BRANCH="stable"
 RUN wget -O- -nv https://dl.winehq.org/wine-builds/winehq.key | apt-key add - \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" \
     && dpkg --add-architecture i386 \
