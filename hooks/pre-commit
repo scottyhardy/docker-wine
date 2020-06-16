@@ -1,19 +1,38 @@
 #!/usr/bin/env bash
 
-# This file should be copied to <repo root>/.git/hooks/pre-commit to enable pre-commit checks
+# Enable this hook by editing the project specific "hooksPath" config variable:
+# git config core.hooksPath "${REPO_ROOT}/hooks/"
+
+set -eu
 
 # Redirect output to stderr
 exec 1>&2
 
-# Check shellcheck available
-if ! command -v shellcheck >/dev/null 2>&1; then
-    echo "ERROR: shellcheck does not appear to be installed"
-    exit 1
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+    against=HEAD
+else
+    # Initial commit: diff against an empty tree object
+    against=$(git hash-object -t tree /dev/null)
 fi
 
 # Run shellcheck on all shell files
-for FILE in $(git diff --cached --name-only); do
-    if head -1 "${FILE}" | grep -q -E "^#!.*sh$"; then
-        shellcheck "${FILE}" || exit 1
+SHELL_SCRIPTS=()
+for FILE in $(git diff-index --cached --diff-filter=d --name-only "$against"); do
+    if head -n 1 "${FILE}" | grep -q -e '^#![[:print:]]*[^c]sh$'; then
+        SHELL_SCRIPTS+=("$FILE")
     fi
 done
+
+if [ -n "${SHELL_SCRIPTS[0]}" ]; then
+    if ! shellcheck "${SHELL_SCRIPTS[@]}"; then
+        echo "Shellcheck errors, or not installed, commit rejected"
+        exit 1
+    fi
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+if ! git diff-index --check --cached "$against" --; then
+    echo "Whitespace errors, commit rejected"
+    exit 1
+fi
