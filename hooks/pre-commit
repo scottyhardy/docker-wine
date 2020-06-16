@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Enable this hook by editing the project specific "hooksPath" config variable:
-# git config core.hooksPath "${REPO_ROOT}/hooks/"
+# git config core.hooksPath "${REPO_ROOT}/hooks"
 
 set -eu
 
@@ -24,7 +24,7 @@ for FILE in $(git diff-index --cached --diff-filter=d --name-only "$against"); d
     fi
 done
 
-if [ -n "${SHELL_SCRIPTS[0]}" ]; then
+if (( ${#SHELL_SCRIPTS[@]} )); then
     if ! shellcheck "${SHELL_SCRIPTS[@]}"; then
         echo "Shellcheck errors, or not installed, commit rejected"
         exit 1
