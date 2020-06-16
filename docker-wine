@@ -399,6 +399,10 @@ if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     exit 1
 fi
 
+if [ "${USE_RDP_SERVER}" != "no" ] && [ "${NO_RDP}" != "no" ]; then
+    echo "ERROR: Cannot combine conflicting options --rdp and --nordp"
+    exit 1
+fi
 
 # Run xvfb and send everything into the void
 if [ "${XVFB}" == "yes" ] ; then
