@@ -18,6 +18,8 @@ print_help () {
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
     echo "  --notty               Start container attached with no tty"
+    echo "  --nordp               Use a version of the docker-wine image that does not"
+    echo "                          include RDP server packages for a reduced image size"
     echo "  --rdp                 Shortcut for --rdp=interactive"
     echo "  --rdp=OPTION          Runs docker-wine container with Remote Desktop Protocol"
     echo "                          server"
@@ -228,6 +230,15 @@ run_container () {
     add_run_arg --workdir="${WORKDIR}"
     add_run_arg_timezone
 
+    # Append -nordp to image tag if NO_RDP is set to 'yes'
+    if [ "${NO_RDP}" == "yes" ]; then
+
+        # Only append if image tag specified does not already end in -nordp
+        if ! echo "${IMAGE_TAG}" | grep -q -E "\-nordp$"; then
+            IMAGE_TAG="${IMAGE_TAG}-nordp"
+        fi
+    fi
+
     # Grab the latest image from docker hub or use the locally built version
     if [ "${USE_LOCAL_IMAGE}" == "no" ]; then
         [ "${DOCKER_PULL_IMAGE}" == "yes" ] && docker pull "${DOCKER_IMAGE}:${IMAGE_TAG}"
@@ -299,6 +310,9 @@ while [ $# -gt 0 ]; do
         ;;
     --notty)
         NOTTY="yes"
+        ;;
+    --nordp)
+        NO_RDP="yes"
         ;;
     --rdp)
         USE_RDP_SERVER="interactive"
@@ -385,6 +399,10 @@ if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     exit 1
 fi
 
+if [ "${USE_RDP_SERVER}" != "no" ] && [ "${NO_RDP}" != "no" ]; then
+    echo "ERROR: Cannot combine conflicting options --rdp and --nordp"
+    exit 1
+fi
 
 # Run xvfb and send everything into the void
 if [ "${XVFB}" == "yes" ] ; then

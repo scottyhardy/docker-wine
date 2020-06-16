@@ -6,8 +6,10 @@ services:
   - docker
 
 env:
-  - WINE_BRANCH=devel
-  - WINE_BRANCH=stable
+  - WINE_BRANCH=devel NO_RDP=no
+  - WINE_BRANCH=devel NO_RDP=yes
+  - WINE_BRANCH=stable NO_RDP=no
+  - WINE_BRANCH=stable NO_RDP=yes
 
 script:
   - bash build

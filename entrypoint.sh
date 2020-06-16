@@ -67,6 +67,12 @@ if echo "${RDP_SERVER}" | grep -q -i -E "^(no|off|false|0)$"; then
 # Run in RDP server mode
 elif echo "${RDP_SERVER}" | grep -q -i -E "^(yes|on|true|1)$"; then
 
+    # Exit if using nordp image
+    if ! [ -f /usr/sbin/xrdp ]; then
+        echo "ERROR: Unable to start RDP server as it is not included in this version of the docker-wine image"
+        exit 1
+    fi
+
     # Start xrdp sesman service
     /usr/sbin/xrdp-sesman
 
