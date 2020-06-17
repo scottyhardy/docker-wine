@@ -8,8 +8,7 @@ set -eu
 # Redirect output to stderr
 exec 1>&2
 
-if git rev-parse --verify HEAD >/dev/null 2>&1
-then
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
     against=HEAD
 else
     # Initial commit: diff against an empty tree object
@@ -24,14 +23,14 @@ for FILE in $(git diff-index --cached --diff-filter=d --name-only "$against"); d
     fi
 done
 
-if (( ${#SHELL_SCRIPTS[@]} )); then
+if [ ${#SHELL_SCRIPTS[@]} -gt 0 ]; then
     if ! shellcheck "${SHELL_SCRIPTS[@]}"; then
         echo "Shellcheck errors, or not installed, commit rejected"
         exit 1
     fi
 fi
 
-# If there are whitespace errors, print the offending file names and fail.
+# If there are whitespace errors, print the offending file names and fail
 if ! git diff-index --check --cached "$against" --; then
     echo "Whitespace errors, commit rejected"
     exit 1
