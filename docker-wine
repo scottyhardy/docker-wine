@@ -216,7 +216,7 @@ run_container () {
             mode="--detach"
             ;;
         *)
-            echo "ERROR: '${mode}' is not a valid container run mode"
+            echo "ERROR: '$1' is not a valid container run mode"
             exit 1
             ;;
     esac
