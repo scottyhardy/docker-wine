@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# Used by Docker Hub to replace the normal autobuild build script
+
+export WINE_BRANCH=stable
+export NO_RDP=no
+
+bash +x build
