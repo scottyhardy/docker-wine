@@ -5,4 +5,5 @@
 export WINE_BRANCH=stable
 export NO_RDP=no
 
+# Assume that current directory is repo root, so build script being called is not this same file
 bash +x build
