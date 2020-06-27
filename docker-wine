@@ -429,10 +429,10 @@ elif [ "${USE_RDP_SERVER}" != "no" ]; then
             run_container "detached"
             ;;
         stop)
-            docker kill wine
+            docker kill "${CONTAINER_NAME}"
             ;;
         restart)
-            docker kill wine
+            docker kill "${CONTAINER_NAME}"
             run_container "detached"
             ;;
         *)
