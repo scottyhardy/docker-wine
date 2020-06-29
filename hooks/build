@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
 # Used by Docker Hub to replace the normal autobuild build script
-
-export WINE_BRANCH=stable
-export NO_RDP=no
-
-# Assume that current directory is repo root, so build script being called is not this same file
-bash +x build
+# Docker Hub runs this script from the repo root, so the command below runs the build script in the parent directory
+bash -x build
