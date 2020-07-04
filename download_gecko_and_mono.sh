@@ -6,14 +6,14 @@ get_hrefs () {
     local url="$1"
     local regexp="$2"
 
-    wget -q -O- "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
+    wget -nv -O- "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
 }
 
 get_app_ver () {
     local app="${1^^}"  # Convert to uppercase
     local url="https://raw.githubusercontent.com/wine-mirror/wine/wine-${WINE_VER}/dlls/appwiz.cpl/addons.c"
 
-    wget -q -O- "${url}" | grep -E "^#define ${app}_VERSION\s" | awk -F\" '{print $2}'
+    wget -nv -O- "${url}" | grep -E "^#define ${app}_VERSION\s" | awk -F\" '{print $2}'
 }
 
 
@@ -39,6 +39,6 @@ for APP in "gecko" "mono"; do
     [ ! -d "/usr/share/wine/${APP}" ] && mkdir -p "/usr/share/wine/${APP}"
     for FILE in "${FILES[@]}"; do
         echo "Downloading '${FILE}'"
-        wget -nv "${APP_URL}${APP_VER}/${FILE}" -O "/usr/share/wine/${APP}/${FILE}"
+        wget -nv -O "/usr/share/wine/${APP}/${FILE}" "${APP_URL}${APP_VER}/${FILE}"
     done
 done
