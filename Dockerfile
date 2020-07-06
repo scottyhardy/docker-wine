@@ -8,6 +8,7 @@ RUN apt-get update \
         apt-transport-https \
         ca-certificates \
         cabextract \
+        git \
         gosu \
         gpg-agent \
         p7zip \
