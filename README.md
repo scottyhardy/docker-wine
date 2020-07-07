@@ -25,14 +25,14 @@ Using the `docker-wine` script is the easiest way to get started and should be a
 On Linux:
 
 ```bash
-wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -O docker-wine
+wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine
 chmod +x docker-wine
 ```
 
 On macOS:
 
 ```bash
-curl https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine -o docker-wine
+curl -O https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-wine
 chmod +x docker-wine
 ```
 

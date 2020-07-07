@@ -24,7 +24,7 @@ RUN apt-get update \
 
 # Install wine
 ARG WINE_BRANCH="stable"
-RUN wget -O- -nv https://dl.winehq.org/wine-builds/winehq.key | apt-key add - \
+RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - \
     && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" \
     && dpkg --add-architecture i386 \
     && apt-get update \
@@ -32,7 +32,7 @@ RUN wget -O- -nv https://dl.winehq.org/wine-builds/winehq.key | apt-key add - \
     && rm -rf /var/lib/apt/lists/*
 
 # Install winetricks
-RUN wget -nv https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks -O /usr/bin/winetricks \
+RUN wget -nv -O /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
     && chmod +x /usr/bin/winetricks
 
 # Download gecko and mono installers
