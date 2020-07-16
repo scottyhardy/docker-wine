@@ -44,7 +44,7 @@ fi
 ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezone
 
 # Run in X11 redirection mode (default) or with xvfb
-if echo is_disabled "${RDP_SERVER}"; then
+if is_disabled "${RDP_SERVER}"; then
 
     # Set up pulseaudio for redirection to UNIX socket
     [ -f /root/pulse/client.conf ] && cp /root/pulse/client.conf /etc/pulse/client.conf
