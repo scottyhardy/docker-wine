@@ -457,14 +457,18 @@ else
             exit 0
         fi
 
-        # Allow localhost to access XQuartz
-        if ! xhost | grep -q "^INET:localhost$"; then
-            echo "WARNING: Adding localhost to authorized xhost clients"
-            xhost + 127.0.0.1
+        # Ensure XQuartz is running
+        if ! ps -e | awk '{print $4}' | grep -q "/opt/X11/bin/Xquartz"; then
+            open -a xquartz
         fi
+
+        # Get the hex key for the display from our .Xauthority file and store in ~/.docker-wine/.Xkey
+        [ ! -d ~/.docker-wine ] && mkdir ~/.docker-wine
+        xauth list "$(ipconfig getifaddr en0):0" | awk '{print $3}' > ~/.docker-wine/.Xkey
 
         # Add macOS run args
         add_run_arg --env="DISPLAY=host.docker.internal:0"
+        add_run_arg --volume="${HOME}/.docker-wine/.Xkey:/root/.Xkey:ro"
 
         run_container "interactive"
 
