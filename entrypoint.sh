@@ -86,7 +86,7 @@ elif is_enabled "${RDP_SERVER}"; then
     # If the pid for sesman is there we need to remove it
     # or sesman won't start and connections will fail
     if [ -f /var/run/xrdp/xrdp-sesman.pid ]; then
-	rm /var/run/xrdp/xrdp-sesman.pid
+        rm /var/run/xrdp/xrdp-sesman.pid
     fi
 
     # Start xrdp sesman service
