@@ -109,4 +109,5 @@ elif is_enabled "${RDP_SERVER}"; then
     fi
 else
     echo "ERROR: '${RDP_SERVER}' is not a valid value for RDP_SERVER"
+    exit 1
 fi
