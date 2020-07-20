@@ -205,6 +205,22 @@ install_xquartz() {
     return $installed
 }
 
+add_x11_key () {
+    local display="$1"
+
+    # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
+    if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" ]; then
+        echo "ERROR: No valid .Xauthority file found for X11"
+        exit 1
+    fi
+
+    # Get the hex key for the display from host user's .Xauthority file and store in ~/.docker-wine.Xkey
+    xauth list "${display}" | head -n1 | awk '{print $3}' > ~/.docker-wine.Xkey
+
+    # Add .Xkey to the run args
+    add_run_arg --volume="${HOME}/.docker-wine.Xkey:/root/.Xkey:ro"
+}
+
 run_container () {
     local mode
 
@@ -457,29 +473,24 @@ else
             exit 0
         fi
 
-        # Ensure XQuartz is running
+        # Ensure XQuartz is running so ~/.Xauthority file is updated with new X11 key
         if ! ps -e | awk '{print $4}' | grep -q "/opt/X11/bin/Xquartz"; then
             open -a xquartz
         fi
 
-        # Get the hex key for the display from our .Xauthority file and store in ~/.docker-wine/.Xkey
-        [ ! -d ~/.docker-wine ] && mkdir ~/.docker-wine
-        xauth list "$(ipconfig getifaddr en0):0" | awk '{print $3}' > ~/.docker-wine/.Xkey
+        # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
+        add_x11_key ":0"
 
         # Add macOS run args
         add_run_arg --env="DISPLAY=host.docker.internal:0"
-        add_run_arg --volume="${HOME}/.docker-wine/.Xkey:/root/.Xkey:ro"
 
         run_container "interactive"
 
     # Run in X11 forwarding mode on Linux
     elif [ "$(uname)" == "Linux" ]; then
 
-        # Check for .Xauthority which is required for authenticating as the current user on the host's X11 server
-        if [ -z "${XAUTHORITY:-${HOME}/.Xauthority}" ] && [ "${USE_XVFB}" == "no" ]; then
-            echo "ERROR: No valid .Xauthority file found for X11"
-            exit 1
-        fi
+        # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
+        add_x11_key "$DISPLAY"
 
         # Use audio if pulseaudio is installed
         if command -v pulseaudio >/dev/null 2>&1; then
@@ -511,7 +522,6 @@ else
 
         # Add Linux run args
         add_run_arg --env="DISPLAY"
-        add_run_arg --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
 
         run_container "interactive"
