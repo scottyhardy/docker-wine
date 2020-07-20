@@ -54,6 +54,12 @@ if is_disabled "${RDP_SERVER}"; then
         nohup /usr/bin/Xvfb "${XVFB_SERVER}" -screen "${XVFB_SCREEN}" "${XVFB_RESOLUTION}" >/dev/null 2>&1 &
     fi
 
+    # Generate .Xauthority using xauth with .Xkey sourced from host
+    if [ -f /root/.Xkey ]; then
+        [ ! -f /root/.Xauthority ] && touch /root/.Xauthority
+        xauth add "$DISPLAY" . "$(cat /root/.Xkey)"
+    fi
+
     # Run in X11 redirection mode as $USER_NAME (default)
     if is_disabled "${RUN_AS_ROOT}"; then
 
