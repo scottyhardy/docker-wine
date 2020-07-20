@@ -12,6 +12,7 @@ RUN apt-get update \
         gosu \
         gpg-agent \
         p7zip \
+        pulseaudio \
         pulseaudio-utils \
         software-properties-common \
         tzdata \
