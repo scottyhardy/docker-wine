@@ -42,6 +42,17 @@ print_help () {
     echo "                          RESOLUTION     Screen resolution, eg. 320x240x8"
     echo "                        If OPTIONAL is left blank, defaults to:"
     echo "                          :95,0,320x240x8"
+    echo "  --sound=OPTION        Select a pulseaudio configuration for sound output when"
+    echo "                          running in X11 forwarding mode"
+    echo "                        Valid values for OPTION are:"
+    echo "                          default        Use the default pulseaudio config for"
+    echo "                                           host OS (unix is default for Linux,"
+    echo "                                           dummy is default for macOS)"
+    echo "                          unix           Use UNIX socket '/tmp/pulse-socket' to"
+    echo "                                           connect to the host machine's"
+    echo "                                           pulseaudio server (Linux only)"
+    echo "                          dummy          Run pulseaudio server in container with"
+    echo "                                           dummy output"
     echo "  --home-volume=VALUE   Use an alternate volume to winehome for storing"
     echo "                          persistent user data. Valid values can specify either"
     echo "                          a docker volume or local path"
@@ -224,6 +235,71 @@ add_x11_key () {
     add_run_arg --volume="${HOME}/.docker-wine.Xkey:/root/.Xkey:ro"
 }
 
+configure_sound () {
+    local os="$1"
+
+    case "${os}" in
+        linux)
+            if [ "${SOUND}" == "default" ]; then
+                SOUND="unix"
+            fi
+            ;;
+        macos)
+            if [ "${SOUND}" == "default" ]; then
+                SOUND="dummy"
+            fi
+            ;;
+        *)
+            echo "ERROR: '${os}' is not a valid OS string for configuring sound"
+            exit 1
+            ;;
+    esac
+
+    case "${SOUND}" in
+        unix)
+            configure_pulseaudio_unix_socket
+            ;;
+        dummy)
+            add_run_arg --env="DUMMY_PULSEAUDIO=yes"
+            ;;
+        *)
+            echo "ERROR: '${SOUND}' is not a valid option for configuring sound"
+            exit 1
+            ;;
+    esac
+}
+
+configure_pulseaudio_unix_socket () {
+
+    # Use audio if pulseaudio is installed
+    if command -v pulseaudio >/dev/null 2>&1; then
+
+        # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
+        if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+            echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
+            mkdir -p "${HOME}/.config/pulse"
+            echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
+        fi
+
+        # Restart pulseaudio daemon to create the UNIX socket
+        if [ ! -e "/tmp/pulse-socket" ]; then
+            echo "INFO: No socket found for pulseaudio so restarting service..."
+            pulseaudio -k
+            pulseaudio --start
+            sleep 1
+        fi
+
+        # Add the pulseaudio UNIX socket to run args
+        if [ -e "/tmp/pulse-socket" ]; then
+            add_run_arg --volume="/tmp/pulse-socket:/tmp/pulse-socket"
+        else
+            echo "INFO: pulseaudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+        fi
+    else
+        echo "INFO: pulseaudio not installed so running without sound"
+    fi
+}
+
 run_container () {
     local mode
 
@@ -290,6 +366,7 @@ LOCAL_IMAGE="docker-wine"
 NO_RDP="no"
 NOTTY="no"
 SHM_SIZE="1g"
+SOUND="default"
 USE_LOCAL_IMAGE="no"
 USE_RDP_SERVER="no"
 USER_HOME="/home/wineuser"
@@ -352,6 +429,9 @@ while [ $# -gt 0 ]; do
     --xvfb=*)
         USE_XVFB="yes"
         IFS=, read -r XVFB_SERVER XVFB_SCREEN XVFB_RESOLUTION <<< "${1#*=}"
+        ;;
+    --sound=*)
+        SOUND="${1#*=}"
         ;;
     --home-volume=*)
         USER_VOLUME="${1#*=}"
@@ -484,6 +564,9 @@ else
         # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
         add_x11_key ":0"
 
+        # Configure sound output
+        configure_sound "macos"
+
         # Add macOS run args
         add_run_arg --env="DISPLAY=host.docker.internal:0"
 
@@ -495,33 +578,8 @@ else
         # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
         add_x11_key "$DISPLAY"
 
-        # Use audio if pulseaudio is installed
-        if command -v pulseaudio >/dev/null 2>&1; then
-
-            # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
-            if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
-                echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
-                mkdir -p "${HOME}/.config/pulse"
-                echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
-            fi
-
-            # Restart pulseaudio daemon to create the UNIX socket
-            if [ ! -e "/tmp/pulse-socket" ]; then
-                echo "INFO: No socket found for pulseaudio so restarting service..."
-                pulseaudio -k
-                pulseaudio --start
-                sleep 1
-            fi
-
-            # Add the pulseaudio UNIX socket to run args
-            if [ -e "/tmp/pulse-socket" ]; then
-                add_run_arg --volume="/tmp/pulse-socket:/tmp/pulse-socket"
-            else
-                echo "INFO: pulseaudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
-            fi
-        else
-            echo "INFO: pulseaudio not installed so running without sound"
-        fi
+        # Configure sound output
+        configure_sound "linux"
 
         # Add Linux run args
         add_run_arg --env="DISPLAY"

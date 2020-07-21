@@ -20,6 +20,7 @@ RUN_AS_ROOT=${RUN_AS_ROOT:-no}
 FORCED_OWNERSHIP=${FORCED_OWNERSHIP:-no}
 TZ=${TZ:-UTC}
 USE_XVFB=${USE_XVFB:-no}
+DUMMY_PULSEAUDIO=${DUMMY_PULSEAUDIO:-no}
 
 # Create the user account
 ! grep -q ":${USER_GID}:$" /etc/group && groupadd --gid "${USER_GID}" "${USER_NAME}"
@@ -47,7 +48,9 @@ ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezo
 if is_disabled "${RDP_SERVER}"; then
 
     # Set up pulseaudio for redirection to UNIX socket
-    [ -f /root/pulse/client.conf ] && cp /root/pulse/client.conf /etc/pulse/client.conf
+    if is_disabled "${DUMMY_PULSEAUDIO}"; then
+        [ -f /root/pulse/client.conf ] && cp /root/pulse/client.conf /etc/pulse/client.conf
+    fi
 
     # Run xvfb
     if is_enabled "${USE_XVFB}"; then
