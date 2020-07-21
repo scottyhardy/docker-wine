@@ -259,5 +259,5 @@ To test video, try opening Notepad:
 To test sound, try using `pacat`:
 
 ```bash
-./docker-wine pacat -vv /dev/random
+./docker-wine pacat -vv /dev/urandom
 ```
