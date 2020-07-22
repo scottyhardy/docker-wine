@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
 
+is_enabled () {
+    echo "$1" | grep -q -i -E "^(yes|on|true|1)$"
+}
+
+is_disabled () {
+    echo "$1" | grep -q -i -E "^(no|off|false|0)$"
+}
+
+
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 TIMESTAMP="$(date +"%Y%m%d")"
 NO_RDP="${NO_RDP:-no}"
 
 # Run container and extract wine version
-WINE_VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -s wine-${WINE_BRANCH} | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
+WINE_VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
+    | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
 
 if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
     echo "Found wine version '${WINE_VER}'"
@@ -15,9 +25,9 @@ else
 fi
 
 # Append '-nordp' to the image tag only if NO_RDP is true
-if echo "${NO_RDP}" | grep -q -i -E "^(yes|on|true|1)$"; then
+if is_enabled "${NO_RDP}"; then
     SUFFIX="-nordp"
-elif echo "${NO_RDP}" | grep -q -i -E "^(no|off|false|0)$"; then
+elif is_disabled "${NO_RDP}"; then
     SUFFIX=""
 else
     echo "ERROR: Invalid value '${NO_RDP}' used for NO_RDP"

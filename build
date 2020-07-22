@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+is_enabled () {
+    echo "$1" | grep -q -i -E "^(yes|on|true|1)$"
+}
+
+is_disabled () {
+    echo "$1" | grep -q -i -E "^(no|off|false|0)$"
+}
+
 get_hrefs () {
     local url="$1"
     local regexp="$2"
@@ -18,7 +26,6 @@ get_hrefs () {
 }
 
 get_os_codename () {
-
     local url="$1"
     local codename
 
@@ -74,12 +81,15 @@ else
 fi
 
 # Use standard Ubuntu image if using NO_RDP
-if echo "${NO_RDP}" | grep -q -i -E "^(yes|on|true|1)$"; then
+if is_enabled "${NO_RDP}"; then
     BASE_IMAGE="ubuntu"
     TAG="${UBUNTU_CODENAME}"
-else
+elif is_disabled "${NO_RDP}"; then
     BASE_IMAGE="scottyhardy/docker-remote-desktop"
     TAG="ubuntu-${UBUNTU_CODENAME}"
+else
+    echo "ERROR: Invalid value '${NO_RDP}' used for NO_RDP"
+    exit 1
 fi
 
 if ! docker system info >/dev/null 2>&1; then
