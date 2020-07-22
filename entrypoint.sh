@@ -92,6 +92,11 @@ elif is_enabled "${RDP_SERVER}"; then
         exit 1
     fi
 
+    # Remove xrdp pulseaudio source and sink modules if using dummy sound option
+    if is_enabled "${DUMMY_PULSEAUDIO}"; then
+        rm -f /var/lib/xrdp-pulseaudio-installer/module-xrdp-{sink,source}.so
+    fi
+
     # If the pid for sesman is there we need to remove it
     # or sesman won't start and connections will fail
     if [ -f /var/run/xrdp/xrdp-sesman.pid ]; then
@@ -103,7 +108,7 @@ elif is_enabled "${RDP_SERVER}"; then
 
     # Run xrdp in foreground if no commands specified
     if [ -z "$1" ]; then
-        /usr/sbin/xrdp --nodaemon
+        exec /usr/sbin/xrdp --nodaemon
     else
         /usr/sbin/xrdp
 
