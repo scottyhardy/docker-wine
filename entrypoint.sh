@@ -48,7 +48,7 @@ ln -snf "/usr/share/zoneinfo/${TZ}" /etc/localtime && echo "${TZ}" > /etc/timezo
 if is_disabled "${RDP_SERVER}"; then
 
     # Set up pulseaudio for redirection to UNIX socket
-    if is_disabled "${DUMMY_PULSEAUDIO}"; then
+    if is_disabled "${DUMMY_PULSEAUDIO}" && [ -e /tmp/pulse-socket ]; then
         [ -f /root/pulse/client.conf ] && cp /root/pulse/client.conf /etc/pulse/client.conf
     fi
 
