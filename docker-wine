@@ -52,7 +52,8 @@ print_help () {
     echo "                                           connect to the host machine's"
     echo "                                           pulseaudio server (Linux only)"
     echo "                          dummy          Run pulseaudio server in container with"
-    echo "                                           dummy output"
+    echo "                                           dummy (null) output"
+    echo "                          none           Alias for dummy"
     echo "  --home-volume=VALUE   Use an alternate volume to winehome for storing"
     echo "                          persistent user data. Valid values can specify either"
     echo "                          a docker volume or local path"
@@ -259,7 +260,7 @@ configure_sound () {
         unix)
             configure_pulseaudio_unix_socket
             ;;
-        dummy)
+        dummy|none)
             add_run_arg --env="DUMMY_PULSEAUDIO=yes"
             ;;
         *)
