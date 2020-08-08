@@ -66,19 +66,26 @@ BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
 DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 NO_RDP="${NO_RDP:-no}"
+# shellcheck disable=SC2034
 URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 
-# Get the codename for latest version of wine-${WINE-BRANCH}
-UBUNTU_CODENAME="$(get_os_codename "${URL}")"
+# Currently various installs fail using Ubuntu Focal, but work with Eoan
+UBUNTU_CODENAME="eoan"
 
-# Just use latest if codename unable to be determined
-if [ -n "${UBUNTU_CODENAME}" ]; then
-    echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
-else
-    echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
-    UBUNTU_CODENAME="latest"
-fi
+# The following will be reinstated once issues with Focal resolved
+# Refer to https://github.com/scottyhardy/docker-wine/issues/92
+#
+# # Get the codename for latest version of wine-${WINE-BRANCH}
+# UBUNTU_CODENAME="$(get_os_codename "${URL}")"
+
+# # Just use latest if codename unable to be determined
+# if [ -n "${UBUNTU_CODENAME}" ]; then
+#     echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
+# else
+#     echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
+#     UBUNTU_CODENAME="latest"
+# fi
 
 # Use standard Ubuntu image if using NO_RDP
 if is_enabled "${NO_RDP}"; then
