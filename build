@@ -26,19 +26,20 @@ get_hrefs () {
 }
 
 get_os_codename () {
-    local url="$1"
-    local codename
+    local branch="$1"
+    local url="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 
     # Get the latest two Ubuntu version codenames that Wine is available on
     local os_codenames=()
     while IFS='' read -r line; do os_codenames+=("$line"); done < <(get_hrefs "${url}" "[^:]+/" | sed -E "s|/$||" | grep -v -E "^([p-z]|/)" | sort -r | head -2)
 
     # Get the latest version of Wine available for each OS codename
+    local codename
     local index=0
     local wine_versions=()
     for codename in "${os_codenames[@]}"; do
         local version
-        version=$(get_hrefs "${url}${codename}/main/binary-amd64/" "wine-${WINE_BRANCH}_.*\.deb" | sed -n -E "s/^wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*$/\1/p" | sort -rV | head -1)
+        version=$(get_hrefs "${url}${codename}/main/binary-amd64/" "wine-${branch}_.*\.deb" | sed -n -E "s/^wine-${branch}_([0-9]+(\.[0-9]+)*).*$/\1/p" | sort -rV | head -1)
         wine_versions[${index}]="${version}"
         index+=1
     done
@@ -54,6 +55,14 @@ get_os_codename () {
         retval=${os_codenames[1]}     # previous Ubuntu version
     fi
 
+    # Just use latest if codename unable to be determined
+    if [ -n "${retval}" ]; then
+        echo "Found latest version of wine-${branch} is available on Ubuntu ${retval}"
+    else
+        echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
+        retval="latest"
+    fi
+
     # Return the OS codename to use
     echo "${retval}"
 }
@@ -66,26 +75,14 @@ BUILD_ARGS=("$@")
 BUILD_CMD="docker build"
 DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 NO_RDP="${NO_RDP:-no}"
-# shellcheck disable=SC2034
-URL="https://dl.winehq.org/wine-builds/ubuntu/dists/"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
-
-# Currently various installs fail using Ubuntu Focal, but work with Eoan
-UBUNTU_CODENAME="eoan"
 
 # The following will be reinstated once issues with Focal resolved
 # Refer to https://github.com/scottyhardy/docker-wine/issues/92
 #
 # # Get the codename for latest version of wine-${WINE-BRANCH}
-# UBUNTU_CODENAME="$(get_os_codename "${URL}")"
-
-# # Just use latest if codename unable to be determined
-# if [ -n "${UBUNTU_CODENAME}" ]; then
-#     echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
-# else
-#     echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
-#     UBUNTU_CODENAME="latest"
-# fi
+# UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
+UBUNTU_CODENAME="eoan"
 
 # Use standard Ubuntu image if using NO_RDP
 if is_enabled "${NO_RDP}"; then
