@@ -44,23 +44,16 @@ get_os_codename () {
         index+=1
     done
 
-    # Determine which OS codename has the latest version of Wine or use the newer OS if both the same
+    # Determine which OS codename has the latest version of Wine or use the _older_ OS if both the same
+    # as many issues when using latest OS. Refer to https://github.com/scottyhardy/docker-wine/issues/92
     local latest_wine_ver
     latest_wine_ver=$(printf '%s\n' "${wine_versions[@]}" | sort -rV | head -1)
 
     local retval
-    if [ "${wine_versions[0]}" == "${latest_wine_ver}" ]; then
-        retval=${os_codenames[0]}     # latest Ubuntu version
-    else
+    if [ "${wine_versions[1]}" == "${latest_wine_ver}" ]; then
         retval=${os_codenames[1]}     # previous Ubuntu version
-    fi
-
-    # Just use latest if codename unable to be determined
-    if [ -n "${retval}" ]; then
-        echo "Found latest version of wine-${branch} is available on Ubuntu ${retval}"
     else
-        echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
-        retval="latest"
+        retval=${os_codenames[0]}     # latest Ubuntu version
     fi
 
     # Return the OS codename to use
@@ -77,12 +70,16 @@ DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
 NO_RDP="${NO_RDP:-no}"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 
-# The following will be reinstated once issues with Focal resolved
-# Refer to https://github.com/scottyhardy/docker-wine/issues/92
-#
-# # Get the codename for latest version of wine-${WINE-BRANCH}
-# UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
-UBUNTU_CODENAME="eoan"
+# Get the codename for latest version of wine-${WINE-BRANCH}
+UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
+
+# Just use latest if codename unable to be determined
+if [ -n "${UBUNTU_CODENAME}" ]; then
+    echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
+else
+    echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
+    UBUNTU_CODENAME="latest"
+fi
 
 # Use standard Ubuntu image if using NO_RDP
 if is_enabled "${NO_RDP}"; then
