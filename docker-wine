@@ -190,6 +190,13 @@ configure_xquartz () {
         changes_made=0
     fi
 
+    if [ "$(defaults read org.macosforge.xquartz.X11 enable_iglx)" != "1" ]; then
+
+        # Enable GLX (OpenGL)
+        defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
+        changes_made=0
+    fi
+
     return $changes_made
 }
 
