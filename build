@@ -56,6 +56,10 @@ get_os_codename () {
         retval=${os_codenames[0]}     # latest Ubuntu version
     fi
 
+    # TEMPORARY WORKAROUND - use 'eoan' as issues with installs using 'focal'
+    # and 'groovy' fails to install wine
+    retval="eoan"
+
     # Return the OS codename to use
     echo "${retval}"
 }
