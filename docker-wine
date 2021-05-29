@@ -218,7 +218,7 @@ install_xquartz() {
 
     # Install XQuartz
     if ! [ -f /opt/X11/bin/xquartz ]; then
-        brew cask install xquartz
+        brew install --cask xquartz
 
         # Confirm installed
         [ -f /opt/X11/bin/xquartz ] && installed=0
