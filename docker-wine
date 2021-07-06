@@ -180,20 +180,23 @@ configure_xquartz () {
     fi
 
     # Configure XQuartz
-    if [ "$(defaults read org.macosforge.xquartz.X11 app_to_run)" != "/usr/bin/true" ]; then
-        defaults write org.macosforge.xquartz.X11 app_to_run /usr/bin/true
+    if [ -e ~/Library/Preferences/org.xquartz.X11.plist ] ; then
+       xquartz_properties=org.xquartz.X11
+    else xquartz_properties=org.macosforge.xquartz.X11; fi
+    if [ "$(defaults read $xquartz_properties app_to_run)" != "/usr/bin/true" ]; then
+        defaults write $xquartz_properties app_to_run /usr/bin/true
         changes_made=0
     fi
 
-    if [ "$(defaults read org.macosforge.xquartz.X11 nolisten_tcp)" != "0" ]; then
-        defaults write org.macosforge.xquartz.X11 nolisten_tcp 0
+    if [ "$(defaults read $xquartz_properties nolisten_tcp)" != "0" ]; then
+        defaults write $xquartz_properties nolisten_tcp 0
         changes_made=0
     fi
 
-    if [ "$(defaults read org.macosforge.xquartz.X11 enable_iglx)" != "1" ]; then
+    if [ "$(defaults read $xquartz_properties enable_iglx)" != "1" ]; then
 
         # Enable GLX (OpenGL)
-        defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
+        defaults write $xquartz_properties enable_iglx -bool true
         changes_made=0
     fi
 
