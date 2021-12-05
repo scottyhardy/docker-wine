@@ -26,7 +26,7 @@ jobs:
       -
         name: Test
         run: |
-          ./docker-wine --local --rm --xvfb winetricks -q dotnet40
+          ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
       -
         name: Build
         id: docker_build
