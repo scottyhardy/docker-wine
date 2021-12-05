@@ -27,7 +27,3 @@ jobs:
         name: Test
         run: |
           ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
-      -
-        name: Build
-        id: docker_build
-        uses: docker/build-push-action@v2
