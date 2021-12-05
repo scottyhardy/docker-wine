@@ -23,6 +23,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           load: true
+          tags: docker-wine:latest
       -
         name: Test
         run: |
