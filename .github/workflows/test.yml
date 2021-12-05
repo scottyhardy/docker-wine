@@ -19,6 +19,15 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
+        name: Build and export to local Docker instance
+        uses: docker/build-push-action@v2
+        with:
+          load: true
+      -
+        name: Test
+        run: |
+          ./docker-wine --local --rm --xvfb winetricks -q dotnet40
+      -
         name: Build
         id: docker_build
         uses: docker/build-push-action@v2
