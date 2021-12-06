@@ -45,11 +45,11 @@ jobs:
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
-          WINE_VER="$(docker run -it --rm "${DOCKER_REPO}" /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
+          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
           | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
               echo "Found wine version '${WINE_VER}'"
-              echo "WINE_VER=${WINE_VER}" >> $GITHUB_ENV
+              echo "wine_ver=${WINE_VER}" >> $GITHUB_ENV
           else
               echo "ERROR: Unable to determine wine version"
               exit 1
@@ -62,7 +62,7 @@ jobs:
           push: true
           tags: scottyhardy/docker-wine:latest,
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.WINE_VER }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v2
