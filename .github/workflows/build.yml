@@ -55,6 +55,12 @@ jobs:
               exit 1
           fi
       -
+        name: Generate timestamp
+        run: |
+          TIMESTAMP="$(date +"%Y%m%d")"
+          echo "Timestamp: ${TIMESTAMP}"
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_ENV
+      -
         name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
@@ -62,7 +68,8 @@ jobs:
           push: true
           tags: scottyhardy/docker-wine:latest,
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v2
