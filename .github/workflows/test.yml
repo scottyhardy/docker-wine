@@ -12,6 +12,7 @@ jobs:
       matrix:
         wine_branch:
           - stable
+          - devel
     steps:
       -
         name: Checkout
@@ -26,6 +27,8 @@ jobs:
         name: Build and export to local Docker instance
         uses: docker/build-push-action@v2
         with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
           load: true
           tags: docker-wine:latest
       -

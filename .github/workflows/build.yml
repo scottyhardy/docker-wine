@@ -14,6 +14,7 @@ jobs:
       matrix:
         wine_branch:
           - stable
+          - devel
     steps:
       -
         name: Checkout
@@ -28,6 +29,8 @@ jobs:
         name: Build and export to local Docker instance
         uses: docker/build-push-action@v2
         with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
           load: true
           tags: docker-wine:latest
       -
@@ -61,15 +64,29 @@ jobs:
           echo "Timestamp: ${TIMESTAMP}"
           echo "timestamp=${TIMESTAMP}" >> $GITHUB_ENV
       -
+        name: Determine tags
+        uses: haya14busa/action-cond@v1
+        id: tags
+        with:
+          cond: ${{ matrix.wine_branch == 'stable' }}
+          if_true:
+            scottyhardy/docker-wine:latest,
+            scottyhardy/docker-wine:${{ matrix.wine_branch }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
+          if_false:
+            scottyhardy/docker-wine:${{ matrix.wine_branch }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
+      -
         name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
           push: true
-          tags: scottyhardy/docker-wine:latest,
-            scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
+          tags: ${{ steps.tags.outputs.value }}
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v2
