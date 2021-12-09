@@ -87,9 +87,6 @@ jobs:
             WINE_BRANCH=${{ matrix.wine_branch }}
           push: true
           tags: ${{ steps.tags.outputs.value }}
-          platforms:
-            linux/amd64,
-            linux/arm64
       -
         name: Update repo description
         uses: peter-evans/dockerhub-description@v2
