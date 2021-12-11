@@ -1,0 +1,55 @@
+# Build Wine from source in builder container
+# See https://wiki.winehq.org/Building_Wine
+ARG IMAGE_TAG=latest
+FROM ubuntu:$IMAGE_TAG as builder
+
+RUN sed -i -E 's/^# deb-src /deb-src /g' /etc/apt/sources.list \
+    && apt-get update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y git
+
+RUN mkdir -p /wine-dirs/wine-build \
+    && git clone --depth=1 --shallow-submodules git://source.winehq.org/git/wine.git /wine-dirs/wine-source
+
+RUN DEBIAN_FRONTEND="noninteractive" apt-get build-dep -y wine
+
+ENV CC=clang
+ENV CXX=clang
+ENV CFLAGS="-I/usr/local/include"
+ENV LDFLAGS="-L/usr/local/lib"
+
+WORKDIR /wine-dirs/wine-build
+
+RUN ../wine-source/configure
+RUN make
+RUN mkdir -p /wine-dirs/wine-install \
+    && make install DESTDIR=/wine-dirs/wine-install
+
+
+# Build the final image
+FROM scottyhardy/docker-remote-desktop:latest
+
+# Install prerequisites
+RUN apt-get update \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        ca-certificates \
+        cabextract \
+        git \
+        gosu \
+        gpg-agent \
+        p7zip \
+        pulseaudio \
+        pulseaudio-utils \
+        software-properties-common \
+        tzdata \
+        unzip \
+        wget \
+        winbind \
+        xvfb \
+        zenity \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /wine-dirs/wine-install/ /
+COPY pulse-client.conf /root/pulse/client.conf
+COPY entrypoint.sh /usr/bin/entrypoint
+ENTRYPOINT ["/usr/bin/entrypoint"]
