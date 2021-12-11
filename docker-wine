@@ -17,6 +17,8 @@ print_help () {
     echo "  --tag=VALUE           Specify an image tag to use (default is latest)"
     echo "  --name=VALUE          Name of the docker container instantiated"
     echo "                          (default is 'wine')"
+    echo "  --arm64               Start the containter using linux/arm64 platform for ARM"
+    echo "                          and Apple Silicon (M1) native image"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
@@ -422,6 +424,10 @@ while [ $# -gt 0 ]; do
         ;;
     --name=*)
         CONTAINER_NAME="${1#*=}"
+        ;;
+    --arm64)
+        add_run_arg --platform="linux/arm64"
+        IMAGE_TAG="arm64"
         ;;
     --as-root)
         add_run_arg --env="RUN_AS_ROOT=yes"
