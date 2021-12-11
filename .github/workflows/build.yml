@@ -50,7 +50,7 @@ jobs:
         run: |
           WINE_VER="$(docker run --rm docker-wine /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
           | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
-          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
+          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
               echo "Found wine version '${WINE_VER}'"
               echo "wine_ver=${WINE_VER}" >> $GITHUB_ENV
           else
