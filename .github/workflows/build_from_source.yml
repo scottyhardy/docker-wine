@@ -40,7 +40,7 @@ jobs:
           tags: ci-builder
           target: ci-builder
       -
-        name: Cache checkpoint and output files
+        name: Restore checkpoint cache
         id: cache
         uses: actions/cache@v2
         with:
@@ -69,6 +69,13 @@ jobs:
         name: Save checkpoint image to file
         if: matrix.stage < 3
         run: docker save ci-builder -o wine-build/checkpoint.tar.gz
+      -
+        name: Cache checkpoint
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: /wine-build
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ hashFiles('**/lockfiles') }}
       -
         name: Login to DockerHub
         if: matrix.stage == 3
