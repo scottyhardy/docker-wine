@@ -112,7 +112,6 @@ jobs:
           echo "timestamp=${TIMESTAMP}" >> $GITHUB_ENV
       -
         name: Build final image and push
-        id: docker_build
         if: matrix.stage == 3
         uses: docker/build-push-action@v2
         with:
@@ -123,4 +122,4 @@ jobs:
             scottyhardy/docker-wine:${{ matrix.platform }},
             scottyhardy/docker-wine:devel-${{ env.wine_ver }}-${{ matrix.platform }},
             scottyhardy/docker-wine:devel-${{ env.wine_ver }}-${{ matrix.platform }}-${{ env.timestamp }}
-          target: ci_final
+          target: ci-final
