@@ -2,7 +2,7 @@
 # See https://wiki.winehq.org/Building_Wine
 
 ARG IMAGE_TAG=latest
-FROM ubuntu:$IMAGE_TAG as build-dep
+FROM ubuntu:$IMAGE_TAG as build-config
 
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN sed -i -E 's/^# deb-src /deb-src /g' /etc/apt/sources.list \
