@@ -59,13 +59,15 @@ jobs:
         run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=wine-build/output:/output ci-builder
       -
         name: Create checkpoint image
+        if: matrix.stage < 3
         run: docker commit ci-builder ci-builder
       -
         name: Delete old checkpoint
-        if: matrix.stage > 1
+        if: matrix.stage == 2
         run: rm -f wine-build/checkpoint.tar.gz
       -
         name: Save checkpoint image to file
+        if: matrix.stage < 3
         run: docker save ci-builder -o wine-build/checkpoint.tar.gz
       -
         name: Login to DockerHub
