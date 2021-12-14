@@ -56,7 +56,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: wine-build
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ env.prev_stage }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ github.run_id }}-${{ matrix.platform }}-${{ env.prev_stage }}-${{ hashFiles('**/lockfiles') }}
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
@@ -82,7 +82,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: wine-build
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.stage }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ github.run_id }}-${{ matrix.platform }}-${{ matrix.stage }}-${{ hashFiles('**/lockfiles') }}
       -
         name: Login to DockerHub
         if: matrix.stage == 3
