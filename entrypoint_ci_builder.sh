@@ -33,7 +33,7 @@ checkpoint_build () {
 }
 
 
-export TIMEOUT=${TIMEOUT:-5h}
+export TIMEOUT=${TIMEOUT:-1m}
 export MAKE_FLAG=/make_done
 export INSTALL_FLAG=/install_done
 export OUTPUT_FLAG=/output_done
