@@ -56,7 +56,7 @@ jobs:
         run: docker load -i wine-build/checkpoint.tar.gz
       -
         name: Run CI builder container
-        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=wine-build/output:/output ci-builder
+        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=$(pwd)/wine-build/output:/output ci-builder
       -
         name: Create checkpoint image
         if: matrix.stage < 3
