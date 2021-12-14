@@ -44,13 +44,19 @@ jobs:
         if: matrix.stage == 1
         run: mkdir -p wine-build/output
       -
+        name: Calculate previous stage number
+        if: matrix.stage > 1
+        run: |
+          PREV_STAGE=$(expr ${{ matrix.stage }} - 1)
+          echo "Previous stage number: '${PREV_STAGE}'"
+          echo "prev_stage=${PREV_STAGE}" >> $GITHUB_ENV
+      -
         name: Restore checkpoint cache
         if: matrix.stage > 1
-        id: cache
         uses: actions/cache@v2
         with:
           path: wine-build
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.stage - 1 }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ env.prev_stage }}-${{ hashFiles('**/lockfiles') }}
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
