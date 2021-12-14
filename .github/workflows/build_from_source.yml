@@ -49,24 +49,24 @@ jobs:
       -
         name: Create output directory
         if: steps.cache.outputs.cache-hit != 'true'
-        run: mkdir -p /wine-build/output
+        run: mkdir -p wine-build/output
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
-        run: docker load -i /wine-build/checkpoint.tar.gz
+        run: docker load -i wine-build/checkpoint.tar.gz
       -
         name: Run CI builder container
-        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=/wine-build/output:/output ci-builder
+        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=wine-build/output:/output ci-builder
       -
         name: Create checkpoint image
         run: docker commit ci-builder ci-builder
       -
         name: Delete old checkpoint
         if: matrix.stage > 1
-        run: rm -f /wine-build/checkpoint.tar.gz
+        run: rm -f wine-build/checkpoint.tar.gz
       -
         name: Save checkpoint image to file
-        run: docker save ci-builder -o /wine-build/checkpoint-${{ matrix.platform }}.tar.gz
+        run: docker save ci-builder -o wine-build/checkpoint.tar.gz
       -
         name: Login to DockerHub
         if: matrix.stage == 3
