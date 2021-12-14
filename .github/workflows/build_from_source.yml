@@ -40,16 +40,17 @@ jobs:
           tags: ci-builder
           target: ci-builder
       -
+        name: Create output directory
+        if: matrix.stage == 1
+        run: mkdir -p wine-build/output
+      -
         name: Restore checkpoint cache
+        if: matrix.stage > 1
         id: cache
         uses: actions/cache@v2
         with:
           path: /wine-build
           key: ${{ runner.os }}-${{ matrix.platform }}-${{ hashFiles('**/lockfiles') }}
-      -
-        name: Create output directory
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: mkdir -p wine-build/output
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
@@ -72,7 +73,6 @@ jobs:
       -
         name: Cache checkpoint
         if: matrix.stage < 3
-        id: cache
         uses: actions/cache@v2
         with:
           path: /wine-build
