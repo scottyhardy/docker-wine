@@ -37,7 +37,7 @@ jobs:
           file: Dockerfile.build_from_source
           platforms: linux/${{ matrix.platform }}
           load: true
-          tags: ci-builder-${{ matrix.platform }}
+          tags: ci-builder
           target: ci-builder
       -
         name: Cache checkpoint and output files
