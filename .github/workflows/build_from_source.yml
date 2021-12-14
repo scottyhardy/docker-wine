@@ -71,6 +71,7 @@ jobs:
         run: docker save ci-builder -o wine-build/checkpoint.tar.gz
       -
         name: Cache checkpoint
+        if: matrix.stage < 3
         id: cache
         uses: actions/cache@v2
         with:
