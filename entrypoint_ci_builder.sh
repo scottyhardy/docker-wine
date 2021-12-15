@@ -11,7 +11,6 @@ checkpoint_build () {
     fi
 
     if [ ! -f "${INSTALL_FLAG}" ]; then
-        INSTALL_DIR=/wine-dirs/wine-install
         [ ! -d "${INSTALL_DIR}" ] && mkdir -p "${INSTALL_DIR}"
         make install DESTDIR="${INSTALL_DIR}"
         touch "${INSTALL_FLAG}"
@@ -21,7 +20,6 @@ checkpoint_build () {
 
         # Confirm there's data in the install dir
         if [ "$(ls -A "${INSTALL_DIR}")" ]; then
-            OUTPUT_DIR=/output
             [ ! -d "${OUTPUT_DIR}" ] && mkdir -p "${OUTPUT_DIR}"
             tar -C "${INSTALL_DIR}" -cvzf "${OUTPUT_DIR}/wine.tar.gz" .
         else
@@ -37,6 +35,8 @@ export TIMEOUT=${TIMEOUT:-5h}
 export MAKE_FLAG=/make_done
 export INSTALL_FLAG=/install_done
 export OUTPUT_FLAG=/output_done
+export INSTALL_DIR=/wine-dirs/wine-install
+export OUTPUT_DIR=/output
 export -f checkpoint_build
 
 if [ ! -f "${MAKE_FLAG}" ] || [ ! -f "${INSTALL_FLAG}" ] || [ ! -f "${OUTPUT_FLAG}" ]; then
