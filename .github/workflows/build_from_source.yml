@@ -1,0 +1,132 @@
+name: build from source
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 3 * * MON'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - arm64
+        stage:
+          - 1
+          - 2
+          - 3
+      max-parallel: 1
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build CI builder image
+        if: matrix.stage == 1
+        uses: docker/build-push-action@v2
+        with:
+          file: Dockerfile.build_from_source
+          platforms: linux/${{ matrix.platform }}
+          load: true
+          tags: ci-builder
+          target: ci-builder
+      -
+        name: Create output directory
+        if: matrix.stage == 1
+        run: mkdir -p wine-build/wine-install
+      -
+        name: Calculate previous stage number
+        id: previous_stage
+        if: matrix.stage > 1
+        run: |
+          PREV_STAGE=$(expr ${{ matrix.stage }} - 1)
+          echo "Previous stage number: '${PREV_STAGE}'"
+          echo "::set-output name=value::${PREV_STAGE}"
+      -
+        name: Restore checkpoint cache
+        if: matrix.stage > 1
+        uses: actions/cache@v2
+        with:
+          path: wine-build
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ steps.previous_stage.outputs.value }}-${{ github.run_id }}-${{ hashFiles('**/lockfiles') }}
+      -
+        name: Load CI builder image checkpoint
+        if: matrix.stage > 1
+        run: docker load -i wine-build/checkpoint.tar.gz
+      -
+        name: Run CI builder container
+        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=$(pwd)/wine-build/wine-install:/wine-dirs/wine-install ci-builder
+      -
+        name: Create checkpoint image
+        if: matrix.stage < 3
+        run: docker commit ci-builder ci-builder
+      -
+        name: Delete old checkpoint
+        if: matrix.stage == 2
+        run: rm -f wine-build/checkpoint.tar.gz
+      -
+        name: Save checkpoint image to file
+        if: matrix.stage < 3
+        run: docker save ci-builder -o wine-build/checkpoint.tar.gz
+      -
+        name: List files in build cache
+        run: ls -laR wine-build
+      -
+        name: Cache checkpoint
+        if: matrix.stage < 3
+        uses: actions/cache@v2
+        with:
+          path: wine-build
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.stage }}-${{ github.run_id }}-${{ hashFiles('**/lockfiles') }}
+      -
+        name: Login to DockerHub
+        if: matrix.stage == 3
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Extract wine version
+        id: wine_ver
+        if: matrix.stage == 3
+        run: |
+          git clone --depth=1 --shallow-submodules git://source.winehq.org/git/wine.git
+          WINE_VER="$(awk '{print $3}' wine/VERSION)"
+          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
+              echo "Found wine version '${WINE_VER}'"
+              echo "::set-output name=value::${WINE_VER}"
+          else
+              echo "ERROR: Unable to determine wine version"
+              exit 1
+          fi
+      -
+        name: Generate timestamp
+        id: timestamp
+        if: matrix.stage == 3
+        run: |
+          TIMESTAMP="$(date +"%Y%m%d")"
+          echo "Timestamp: ${TIMESTAMP}"
+          echo "::set-output name=value::${TIMESTAMP}"
+      -
+        name: Build final image and push
+        if: matrix.stage == 3
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile.build_from_source
+          platforms: linux/${{ matrix.platform }}
+          push: true
+          tags:
+            scottyhardy/docker-wine:${{ matrix.platform }},
+            scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }},
+            scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }}-${{ steps.timestamp.outputs.value }}
+          target: ci-final
