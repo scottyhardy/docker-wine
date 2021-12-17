@@ -45,6 +45,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Extract wine version
+        id: wine_ver
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
@@ -52,17 +53,18 @@ jobs:
           | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
               echo "Found wine version '${WINE_VER}'"
-              echo "wine_ver=${WINE_VER}" >> $GITHUB_ENV
+              echo "::set-output name=value::${WINE_VER}"
           else
               echo "ERROR: Unable to determine wine version"
               exit 1
           fi
       -
         name: Generate timestamp
+        id: timestamp
         run: |
           TIMESTAMP="$(date +"%Y%m%d")"
           echo "Timestamp: ${TIMESTAMP}"
-          echo "timestamp=${TIMESTAMP}" >> $GITHUB_ENV
+          echo "::set-output name=value::${TIMESTAMP}"
       -
         name: Determine tags
         uses: haya14busa/action-cond@v1
@@ -72,12 +74,12 @@ jobs:
           if_true:
             scottyhardy/docker-wine:latest,
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
           if_false:
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ env.wine_ver }}-${{ env.timestamp }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
       -
         name: Build and push
         id: docker_build

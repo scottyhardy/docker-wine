@@ -33,6 +33,7 @@ jobs:
           tags: docker-wine:latest
       -
         name: Extract wine version
+        id: wine_ver
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
@@ -40,7 +41,7 @@ jobs:
           | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
               echo "Found wine version '${WINE_VER}'"
-              echo "WINE_VER=${WINE_VER}" >> $GITHUB_ENV
+              echo "::set-output name=value::${WINE_VER}"
           else
               echo "ERROR: Unable to determine wine version"
               exit 1

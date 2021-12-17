@@ -45,18 +45,19 @@ jobs:
         run: mkdir -p wine-build/wine-install
       -
         name: Calculate previous stage number
+        id: previous_stage
         if: matrix.stage > 1
         run: |
           PREV_STAGE=$(expr ${{ matrix.stage }} - 1)
           echo "Previous stage number: '${PREV_STAGE}'"
-          echo "prev_stage=${PREV_STAGE}" >> $GITHUB_ENV
+          echo "::set-output name=value::${PREV_STAGE}"
       -
         name: Restore checkpoint cache
         if: matrix.stage > 1
         uses: actions/cache@v2
         with:
           path: wine-build
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ env.prev_stage }}-${{ github.run_id }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ steps.previous_stage.outputs.value }}-${{ github.run_id }}-${{ hashFiles('**/lockfiles') }}
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
@@ -95,24 +96,26 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Extract wine version
+        id: wine_ver
         if: matrix.stage == 3
         run: |
           git clone --depth=1 --shallow-submodules git://source.winehq.org/git/wine.git
           WINE_VER="$(awk '{print $3}' wine/VERSION)"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
               echo "Found wine version '${WINE_VER}'"
-              echo "wine_ver=${WINE_VER}" >> $GITHUB_ENV
+              echo "::set-output name=value::${WINE_VER}"
           else
               echo "ERROR: Unable to determine wine version"
               exit 1
           fi
       -
         name: Generate timestamp
+        id: timestamp
         if: matrix.stage == 3
         run: |
           TIMESTAMP="$(date +"%Y%m%d")"
           echo "Timestamp: ${TIMESTAMP}"
-          echo "timestamp=${TIMESTAMP}" >> $GITHUB_ENV
+          echo "::set-output name=value::${TIMESTAMP}"
       -
         name: Build final image and push
         if: matrix.stage == 3
@@ -123,6 +126,6 @@ jobs:
           push: true
           tags:
             scottyhardy/docker-wine:${{ matrix.platform }},
-            scottyhardy/docker-wine:devel-${{ env.wine_ver }}-${{ matrix.platform }},
-            scottyhardy/docker-wine:devel-${{ env.wine_ver }}-${{ matrix.platform }}-${{ env.timestamp }}
+            scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }},
+            scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }}-${{ steps.timestamp.outputs.value }}
           target: ci-final
