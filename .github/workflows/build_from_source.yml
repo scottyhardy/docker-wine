@@ -42,7 +42,7 @@ jobs:
       -
         name: Create output directory
         if: matrix.stage == 1
-        run: mkdir -p wine-build/output
+        run: mkdir -p wine-build/wine-install
       -
         name: Calculate previous stage number
         if: matrix.stage > 1
@@ -63,7 +63,7 @@ jobs:
         run: docker load -i wine-build/checkpoint.tar.gz
       -
         name: Run CI builder container
-        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=$(pwd)/wine-build/output:/output ci-builder
+        run: docker run --name=ci-builder --platform=linux/${{ matrix.platform }} --volume=$(pwd)/wine-build/wine-install:/wine-dirs/wine-install ci-builder
       -
         name: Create checkpoint image
         if: matrix.stage < 3
@@ -76,6 +76,9 @@ jobs:
         name: Save checkpoint image to file
         if: matrix.stage < 3
         run: docker save ci-builder -o wine-build/checkpoint.tar.gz
+      -
+        name: List files in build cache
+        run: ls -laR wine-build
       -
         name: Cache checkpoint
         if: matrix.stage < 3

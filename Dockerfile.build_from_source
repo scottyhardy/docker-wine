@@ -71,5 +71,5 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 # Final image for CI
 FROM main-base as ci-final
 
-ADD wine-build/output/wine.tar.gz /
+COPY wine-build/wine-install /
 ENTRYPOINT ["/usr/bin/entrypoint"]
