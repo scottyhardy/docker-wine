@@ -11,6 +11,7 @@ RUN apt-get update \
         git \
         gosu \
         gpg-agent \
+        locales \
         p7zip \
         pulseaudio \
         pulseaudio-utils \
@@ -40,6 +41,10 @@ RUN wget -nv -O /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
 RUN chmod +x /root/download_gecko_and_mono.sh \
     && /root/download_gecko_and_mono.sh "$(dpkg -s wine-${WINE_BRANCH} | grep "^Version:\s" | awk '{print $2}' | sed -E 's/~.*$//')"
+
+# Configure locale for unicode
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
 
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
