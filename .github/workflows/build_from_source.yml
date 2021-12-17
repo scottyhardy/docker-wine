@@ -53,11 +53,13 @@ jobs:
           echo "::set-output name=value::${PREV_STAGE}"
       -
         name: Restore checkpoint cache
-        if: matrix.stage > 1
+#        if: matrix.stage > 1
         uses: actions/cache@v2
         with:
           path: wine-build
           key: ${{ runner.os }}-${{ matrix.platform }}-${{ steps.previous_stage.outputs.value }}-${{ github.run_id }}-${{ hashFiles('**/lockfiles') }}
+          restore-keys: |
+            ${{ runner.os }}-
       -
         name: Load CI builder image checkpoint
         if: matrix.stage > 1
@@ -121,6 +123,7 @@ jobs:
         if: matrix.stage == 3
         uses: docker/build-push-action@v2
         with:
+          context: .
           file: Dockerfile.build_from_source
           platforms: linux/${{ matrix.platform }}
           push: true
