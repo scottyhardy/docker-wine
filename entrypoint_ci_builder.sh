@@ -7,7 +7,6 @@
 build () {
         make
         make install DESTDIR=/wine-dirs/wine-install
-        touch "${BUILD_FLAG}"
 }
 
 
@@ -21,6 +20,7 @@ if [ ! -f "${BUILD_FLAG}" ]; then
     e=$?
 
     if [ $e -eq 0 ]; then
+        touch "${BUILD_FLAG}"
         echo "Build completed successfully"
         exit 0
     elif [ $e -eq 124 ]; then
