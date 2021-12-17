@@ -39,6 +39,7 @@ RUN apt-get update \
         git \
         gosu \
         gpg-agent \
+        locales \
         p7zip \
         pulseaudio \
         pulseaudio-utils \
@@ -50,6 +51,9 @@ RUN apt-get update \
         xvfb \
         zenity \
     && rm -rf /var/lib/apt/lists/*
+
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
 
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
@@ -71,5 +75,5 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 # Final image for CI
 FROM main-base as ci-final
 
-COPY wine-build/wine-install /
+COPY wine-build/wine-install/ /
 ENTRYPOINT ["/usr/bin/entrypoint"]
