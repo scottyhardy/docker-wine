@@ -40,7 +40,7 @@ RUN wget -nv -O /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks
 # Download gecko and mono installers
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
 RUN chmod +x /root/download_gecko_and_mono.sh \
-    && /root/download_gecko_and_mono.sh "$(dpkg -s wine-${WINE_BRANCH} | grep "^Version:\s" | awk '{print $2}' | sed -E 's/~.*$//')"
+    && /root/download_gecko_and_mono.sh "$(wine --version | sed -E 's/^wine-//')"
 
 # Configure locale for unicode
 RUN locale-gen en_US.UTF-8
