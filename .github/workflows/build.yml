@@ -49,8 +49,7 @@ jobs:
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
-          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
-          | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
+          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
               echo "Found wine version '${WINE_VER}'"
               echo "::set-output name=value::${WINE_VER}"
