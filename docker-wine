@@ -69,6 +69,7 @@ print_help () {
     echo "                          container (default is /home/\$USER)"
     echo "  --force-owner         Allow the user to take ownership of a home volume that"
     echo "                          belongs to another user (NOTE: Use with caution!)"
+    echo "  --nosudo              Disable sudo for the user"
     echo "  --password=VALUE      Specify a password for the user in plain text (default"
     echo "                          is the user's username)"
     echo "  --password-prompt     Prompt to set a password for the user"
@@ -476,6 +477,9 @@ while [ $# -gt 0 ]; do
         ;;
     --force-owner)
         add_run_arg --env="FORCED_OWNERSHIP=yes"
+        ;;
+    --nosudo)
+        add_run_arg --env="USER_SUDO=no"
         ;;
     --password=*)
         encrypt_password "${1#*=}"

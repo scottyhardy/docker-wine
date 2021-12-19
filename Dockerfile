@@ -16,6 +16,7 @@ RUN apt-get update \
         pulseaudio \
         pulseaudio-utils \
         software-properties-common \
+        sudo \
         tzdata \
         unzip \
         wget \
