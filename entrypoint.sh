@@ -115,11 +115,10 @@ elif is_enabled "${RDP_SERVER}"; then
         rm -f /var/lib/xrdp-pulseaudio-installer/module-xrdp-{sink,source}.so
     fi
 
-    # If the pid for sesman is there we need to remove it
-    # or sesman won't start and connections will fail
-    if [ -f /var/run/xrdp/xrdp-sesman.pid ]; then
-        rm /var/run/xrdp/xrdp-sesman.pid
-    fi
+    # If the pid for sesman or xrdp is there they need to be removed
+    # or else sesman/xrdp won't start and connections will fail
+    [ ! -f /var/run/xrdp/xrdp-sesman.pid ] || rm -f /var/run/xrdp/xrdp-sesman.pid
+    [ ! -f /var/run/xrdp/xrdp.pid ] || rm -f /var/run/xrdp/xrdp.pid
 
     # Start xrdp sesman service
     /usr/sbin/xrdp-sesman
