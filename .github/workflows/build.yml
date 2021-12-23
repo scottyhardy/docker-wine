@@ -46,8 +46,6 @@ jobs:
       -
         name: Extract wine version
         id: wine_ver
-        env:
-          WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
           WINE_VER="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
