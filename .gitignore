@@ -103,3 +103,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,vim,windows,macos,linux
+
+# Hangover repository and build artefact
+hangover
+hangover.tar.gz

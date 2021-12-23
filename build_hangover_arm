@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Checkout hangover repository
+if [ ! -d hangover ]; then
+    git clone  --depth=1 git@github.com:AndreRH/hangover.git
+    cd hangover
+    git submodule update --init --depth=1
+    cd ..
+else
+    cd hangover
+    git fetch && git pull origin master
+    git submodule update --depth=1
+    cd ..
+fi
+
+# Build hangover
+docker build \
+    -f hangover/Dockerfile.cross_arm64 \
+    -t "hangover-builder" \
+    hangover
+
+# Extract the build files from the hangover-builder image
+docker run --rm hangover-builder tar -C /root/hangover/ --exclude-vcs -czf - . > hangover.tar.gz
+
+docker build \
+    --platform="linux/arm64" \
+    -f Dockerfile.build_from_source \
+    --target="hangover"
+    -t "docker-wine:hangover" \
+    .

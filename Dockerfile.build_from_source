@@ -2,7 +2,7 @@
 # See https://wiki.winehq.org/Building_Wine
 
 ARG IMAGE_TAG=latest
-FROM ubuntu:$IMAGE_TAG as build-config
+FROM ubuntu:$IMAGE_TAG AS build-config
 
 ENV DEBIAN_FRONTEND="noninteractive"
 RUN sed -i -E 's/^# deb-src /deb-src /g' /etc/apt/sources.list \
@@ -29,7 +29,7 @@ RUN mkdir -p /wine-dirs/wine-install \
    && make install DESTDIR=/wine-dirs/wine-install
 
 
-FROM scottyhardy/docker-remote-desktop:latest as main-base
+FROM scottyhardy/docker-remote-desktop:latest AS main-base
 
 RUN apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
@@ -66,9 +66,18 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 
 
 # Final image for CI
-FROM main-base as ci-final
+FROM main-base AS ci-final
 
 COPY wine-build/wine-install/ /
+ENTRYPOINT ["/usr/bin/entrypoint"]
+
+
+# Final image with Hangover built for ARM (https://github.com/AndreRH/hangover)
+FROM main-base AS hangover
+
+ADD hangover.tar.gz /usr/local/lib/hangover
+ENV HOQEMU="/usr/local/lib/hangover/build/qemu/x86_64-windows-user/qemu-x86_64.exe.so"
+ENV PATH="${PATH}:/usr/local/lib/hangover/build/wine-host/loader"
 ENTRYPOINT ["/usr/bin/entrypoint"]
 
 
