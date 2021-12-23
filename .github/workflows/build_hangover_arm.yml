@@ -48,7 +48,7 @@ jobs:
         name: Extract wine version
         id: wine_ver
         run: |
-          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
+          WINE_VER="$(awk '{print $3}' hangover/wine/VERSION)"
           if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
               echo "Found wine version '${WINE_VER}'"
               echo "::set-output name=value::${WINE_VER}"
