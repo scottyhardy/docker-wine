@@ -5,7 +5,7 @@
 # workflows
 
 build () {
-        make
+        make -j "$(nproc)"
         make install DESTDIR=/wine-dirs/wine-install
 }
 

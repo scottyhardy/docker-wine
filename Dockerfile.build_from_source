@@ -24,7 +24,7 @@ RUN ../wine-source/configure
 
 FROM build-config AS builder
 
-RUN make
+RUN make -j "$(nproc)"
 RUN mkdir -p /wine-dirs/wine-install \
    && make install DESTDIR=/wine-dirs/wine-install
 
