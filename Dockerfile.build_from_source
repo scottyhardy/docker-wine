@@ -24,7 +24,7 @@ RUN ../wine-source/configure
 
 FROM build-config AS builder
 
-RUN make
+RUN make -j "$(nproc)"
 RUN mkdir -p /wine-dirs/wine-install \
    && make install DESTDIR=/wine-dirs/wine-install
 
@@ -43,7 +43,6 @@ RUN apt-get update \
         p7zip \
         pulseaudio \
         pulseaudio-utils \
-        software-properties-common \
         sudo \
         tzdata \
         unzip \
@@ -60,13 +59,6 @@ COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
 
 
-# Build the final image
-FROM main-base
-
-COPY --from=builder /wine-dirs/wine-install/ /
-ENTRYPOINT ["/usr/bin/entrypoint"]
-
-
 # Checkpoint builds are used in CI to circumvent 6hr time-out on Github workflow jobs
 FROM build-config AS ci-builder
 COPY entrypoint_ci_builder.sh /usr/bin/entrypoint
@@ -77,4 +69,11 @@ ENTRYPOINT ["/usr/bin/entrypoint"]
 FROM main-base as ci-final
 
 COPY wine-build/wine-install/ /
+ENTRYPOINT ["/usr/bin/entrypoint"]
+
+
+# Build the final image
+FROM main-base
+
+COPY --from=builder /wine-dirs/wine-install/ /
 ENTRYPOINT ["/usr/bin/entrypoint"]
