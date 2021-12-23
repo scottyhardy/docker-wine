@@ -9,6 +9,7 @@ RUN apt-get update \
         ca-certificates \
         cabextract \
         git \
+        gnupg \
         gosu \
         gpg-agent \
         locales \
@@ -26,11 +27,9 @@ RUN apt-get update \
 
 # Install wine
 ARG WINE_BRANCH="stable"
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends software-properties-common \
-    && wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - \
-    && apt-add-repository "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" \
+RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - \
+    && echo "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list \
     && dpkg --add-architecture i386 \
-    && apt-get remove -y software-properties-common systemd* \
     && apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} \
     && rm -rf /var/lib/apt/lists/*
