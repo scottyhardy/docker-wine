@@ -25,6 +25,6 @@ docker run --rm hangover-builder tar -C /root/hangover/ --exclude-vcs -czf - . >
 docker build \
     --platform="linux/arm64" \
     -f Dockerfile.build_from_source \
-    --target="hangover"
+    --target="hangover" \
     -t "docker-wine:hangover" \
     .
