@@ -51,7 +51,7 @@ jobs:
           echo "Timestamp: ${TIMESTAMP}"
           echo "::set-output name=value::${TIMESTAMP}"
       -
-        name: Build final image and push
+        name: Build image and push
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -62,4 +62,3 @@ jobs:
             scottyhardy/docker-wine:${{ matrix.platform }},
             scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }},
             scottyhardy/docker-wine:devel-${{ steps.wine_ver.outputs.value }}-${{ matrix.platform }}-${{ steps.timestamp.outputs.value }}
-          target: ci-final
