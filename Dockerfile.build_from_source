@@ -59,8 +59,9 @@ COPY entrypoint.sh /usr/bin/entrypoint
 FROM main-base AS hangover
 
 ADD hangover.tar.gz /usr/local/lib/hangover
-ENV HOQEMU="/usr/local/lib/hangover/build/qemu/x86_64-windows-user/qemu-x86_64.exe.so"
-ENV PATH="${PATH}:/usr/local/lib/hangover/build/wine-host/loader"
+RUN sed -E 's|PATH="(.*)"|PATH="\1:/usr/local/lib/hangover/build/wine-host/loader"|' -i /etc/environment \
+    && echo 'HOQEMU="/usr/local/lib/hangover/build/qemu/x86_64-windows-user/qemu-x86_64.exe.so"' >> /etc/environment \
+    && sed -E 's|(Defaults\s+secure_path=".*)"|\1:/usr/local/lib/hangover/build/wine-host/loader"|' -i /etc/sudoers
 ENTRYPOINT ["/usr/bin/entrypoint"]
 
 
