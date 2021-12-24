@@ -54,6 +54,8 @@ jobs:
         name: Build image and push
         uses: docker/build-push-action@v2
         with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           context: .
           file: Dockerfile.build_from_source
           platforms: linux/${{ matrix.platform }}
