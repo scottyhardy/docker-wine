@@ -47,15 +47,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Extract wine version
-        id: wine_ver
+        name: Extract versions for tags
+        id: version
         run: |
-          WINE_VER="$(awk '{print $3}' hangover/wine/VERSION)"
-          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
-              echo "Found wine version '${WINE_VER}'"
-              echo "::set-output name=value::${WINE_VER}"
+          cd hangover
+          WINE_VER="$(awk '{print $3}' wine/VERSION)"
+          HANGOVER_VER="$(git ls-remote --tags origin | sed -E 's/^.*hangover-(.*)$/\1/' | sort -Vr | head -1)"
+          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$" && [ -n "${HANGOVER_VER}" ]; then
+              echo "Wine version: ${WINE_VER}"
+              echo "Hangover version: ${HANGOVER_VER}"
+              echo "::set-output name=wine::${WINE_VER}"
+              echo "::set-output name=hangover::${HANGOVER_VER}"
           else
-              echo "ERROR: Unable to determine wine version"
+              echo "ERROR: Unable to determine versions for tags"
               exit 1
           fi
       -
@@ -75,7 +79,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags:
+            scottyhardy/docker-wine:hangover,
             scottyhardy/docker-wine:hangover-arm64,
-            scottyhardy/docker-wine:hangover-wine-${{ steps.wine_ver.outputs.value }}-arm64,
-            scottyhardy/docker-wine:hangover-wine-${{ steps.wine_ver.outputs.value }}-arm64-${{ steps.timestamp.outputs.value }},
+            scottyhardy/docker-wine:hangover-${{ steps.version.outputs.hangover }}-wine-${{ steps.version.outputs.wine }}-arm64,
+            scottyhardy/docker-wine:hangover-${{ steps.version.outputs.hangover }}-wine-${{ steps.version.outputs.wine }}-arm64-${{ steps.timestamp.outputs.value }},
           target: hangover
