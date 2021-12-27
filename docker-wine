@@ -18,10 +18,15 @@ print_help () {
     echo "  --name=VALUE          Name of the docker container instantiated"
     echo "                          (default is 'wine')"
     echo "  --arm64               Start the containter using linux/arm64 platform for ARM"
-    echo "                          and Apple Silicon (M1) native image"
+    echo "                          and Apple Silicon (M1) native image. NOTE: only able"
+    echo "                          to run 64-bit Windows binaries built for ARM CPUs"
     echo "  --as-root             Start the container as root"
     echo "  --as-me               Start the container using your current username, UID and"
     echo "                          GID (default when alternate --home value specified)"
+    echo "  --hangover            Start the container using linux/arm64 platform build of"
+    echo "                          Hangover for Wine. Hangover is in early alpha, but is"
+    echo "                          designed to run 32-bit and 64-bit x86 Windows binaries"
+    echo "                          on ARM CPUs such as Apple Silicon (M1)"
     echo "  --notty               Start container attached with no tty"
     echo "  --nordp               Use a version of the docker-wine image that does not"
     echo "                          include RDP server packages for a reduced image size"
@@ -436,6 +441,10 @@ while [ $# -gt 0 ]; do
         ;;
     --as-me)
         add_run_args_for_as_me
+        ;;
+    --hangover)
+        add_run_arg --platform="linux/arm64"
+        IMAGE_TAG="hangover"
         ;;
     --notty)
         NOTTY="yes"
