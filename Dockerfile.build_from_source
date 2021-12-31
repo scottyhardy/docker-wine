@@ -62,7 +62,7 @@ ADD hangover.tar.gz /usr/local/lib/hangover
 RUN echo '#!/bin/bash' > /usr/local/bin/wine \
     && echo '# Wrapper script for Hangover build of Wine' >> /usr/local/bin/wine \
     && echo 'export HOQEMU="/usr/local/lib/hangover/build/qemu/x86_64-windows-user/qemu-x86_64.exe.so"' >> /usr/local/bin/wine \
-    && echo '/usr/local/lib/hangover/build/wine-host/loader/wine "$@"' >> /usr/local/bin/wine \
+    && echo 'exec /usr/local/lib/hangover/build/wine-host/loader/wine "$@"' >> /usr/local/bin/wine \
     && chmod +x /usr/local/bin/wine
 ENTRYPOINT ["/usr/bin/entrypoint"]
 
