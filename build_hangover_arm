@@ -2,15 +2,12 @@
 
 # Checkout hangover repository
 if [ ! -d hangover ]; then
-    git clone  --depth=1 git@github.com:AndreRH/hangover.git
-    cd hangover
-    git submodule update --init --depth=1
-    cd ..
+    git clone --depth=1 git@github.com:AndreRH/hangover.git
+    git -C hangover submodule update --init --depth=1
 else
-    cd hangover
-    git fetch && git pull origin master
-    git submodule update --depth=1
-    cd ..
+    git -C hangover fetch
+    git -C hangover pull origin master
+    git -C hangover submodule update --depth=1
 fi
 
 # Build hangover
