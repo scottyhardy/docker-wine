@@ -337,6 +337,7 @@ run_container () {
     esac
 
     # Add common docker run args
+    add_run_arg --init
     add_run_arg --rm
     add_run_arg --hostname="$(hostname)"
     add_run_arg --name="${CONTAINER_NAME}"
