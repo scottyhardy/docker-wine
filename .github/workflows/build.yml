@@ -1,0 +1,97 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 3 * * SUN'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        wine_branch:
+          - stable
+          - devel
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build and export to local Docker instance
+        uses: docker/build-push-action@v2
+        with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
+          load: true
+          tags: docker-wine:latest
+      -
+        name: Test
+        run: |
+          ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Extract wine version
+        id: wine_ver
+        env:
+          WINE_BRANCH: ${{ matrix.wine_branch }}
+        run: |
+          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
+          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
+              echo "Found wine version '${WINE_VER}'"
+              echo "::set-output name=value::${WINE_VER}"
+          else
+              echo "ERROR: Unable to determine wine version"
+              exit 1
+          fi
+      -
+        name: Generate timestamp
+        id: timestamp
+        run: |
+          TIMESTAMP="$(date +"%Y%m%d")"
+          echo "Timestamp: ${TIMESTAMP}"
+          echo "::set-output name=value::${TIMESTAMP}"
+      -
+        name: Determine tags
+        uses: haya14busa/action-cond@v1
+        id: tags
+        with:
+          cond: ${{ matrix.wine_branch == 'stable' }}
+          if_true:
+            scottyhardy/docker-wine:latest,
+            scottyhardy/docker-wine:${{ matrix.wine_branch }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
+          if_false:
+            scottyhardy/docker-wine:${{ matrix.wine_branch }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
+          push: true
+          tags: ${{ steps.tags.outputs.value }}
+      -
+        name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: scottyhardy/docker-wine

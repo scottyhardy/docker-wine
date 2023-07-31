@@ -1,0 +1,52 @@
+name: test
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        wine_branch:
+          - stable
+          - devel
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Build and export to local Docker instance
+        uses: docker/build-push-action@v2
+        with:
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
+          load: true
+          tags: docker-wine:latest
+      -
+        name: Extract wine version
+        id: wine_ver
+        env:
+          WINE_BRANCH: ${{ matrix.wine_branch }}
+        run: |
+          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
+          | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
+          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
+              echo "Found wine version '${WINE_VER}'"
+              echo "::set-output name=value::${WINE_VER}"
+          else
+              echo "ERROR: Unable to determine wine version"
+              exit 1
+          fi
+      -
+        name: Test
+        run: |
+          ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40

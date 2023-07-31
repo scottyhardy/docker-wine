@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+PLATFORM=${PLATFORM:-arm64}
+
+docker buildx build \
+    --load \
+    --platform="linux/${PLATFORM}" \
+    -f Dockerfile.build_from_source \
+    -t "docker-wine:${PLATFORM}" \
+    .

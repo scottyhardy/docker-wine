@@ -71,7 +71,7 @@ NO_RDP="${NO_RDP:-no}"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
 
 # Get the codename for latest version of wine-${WINE-BRANCH}
-UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
+#UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
 
 # Just use latest if codename unable to be determined
 if [ -n "${UBUNTU_CODENAME}" ]; then

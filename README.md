@@ -1,6 +1,6 @@
 # docker-wine
 
-[![Build Status](https://travis-ci.com/scottyhardy/docker-wine.svg?branch=master)](https://travis-ci.com/scottyhardy/docker-wine)
+[![build](https://github.com/scottyhardy/docker-wine/actions/workflows/build.yml/badge.svg)](https://github.com/scottyhardy/docker-wine/actions/workflows/build.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/scottyhardy/docker-wine.svg?style=social)](https://hub.docker.com/r/scottyhardy/docker-wine)
 [![Docker Stars](https://img.shields.io/docker/stars/scottyhardy/docker-wine.svg?style=social)](https://hub.docker.com/r/scottyhardy/docker-wine)
 [![GitHub forks](https://img.shields.io/github/forks/scottyhardy/docker-wine.svg?style=social)](https://github.com/scottyhardy/docker-wine/network)
