@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  docker:
+  docker_build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,32 +38,24 @@ jobs:
         run: |
           ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
 
-      - name: Login to DockerHub
+      - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract wine version
-        id: wine_ver
+        id: wine_version
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
-          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
-          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)+(-\S+)*$"; then
-            echo "Found wine version '${WINE_VER}'"
-            echo "::set-output name=value::${WINE_VER}"
-          else
-            echo "ERROR: Unable to determine wine version"
-            exit 1
-          fi
+          WINE_VERSION="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
+          echo "WINE_VERSION=${WINE_VERSION}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Generate timestamp
         id: timestamp
         run: |
-          TIMESTAMP="$(date +"%Y%m%d")"
-          echo "Timestamp: ${TIMESTAMP}"
-          echo "::set-output name=value::${TIMESTAMP}"
+          echo "TIMESTAMP=$(date +"%Y%m%d")" | tee -a "$GITHUB_OUTPUT"
 
       - name: Determine tags
         uses: haya14busa/action-cond@v1
@@ -73,12 +65,12 @@ jobs:
           if_true: |
             scottyhardy/docker-wine:latest,
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.value }}
           if_false: |
             scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_ver.outputs.value }}-${{ steps.timestamp.outputs.value }}
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }},
+            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.value }}
 
       - name: Build and push
         id: docker_build
@@ -89,7 +81,7 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.value }}
 
-      - name: Update repo description
+      - name: Update Docker Hub repository description
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
