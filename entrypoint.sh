@@ -8,7 +8,6 @@ is_disabled () {
     echo "$1" | grep -q -i -E "^(no|off|false|0)$"
 }
 
-
 # Set user account and run values
 USER_NAME=${USER_NAME:-wineuser}
 USER_UID=${USER_UID:-1010}
@@ -28,6 +27,9 @@ if [ "${USER_NAME}" = 'root' ] || [ "${USER_UID}" -eq 0 ] || [ "${USER_GID}" -eq
     echo "ERROR: To run as root, either set env RUN_AS_ROOT=yes or use ./docker-wine --as-root"
     exit 1
 fi
+
+# Delete default ubuntu account if exists
+id ubuntu > /dev/null 2>&1 && deluser --remove-home ubuntu
 
 # Create the user account
 grep -q ":${USER_GID}:$" /etc/group || groupadd --gid "${USER_GID}" "${USER_NAME}"
