@@ -54,6 +54,7 @@ RUN apt-get update && \
         unzip \
         wget \
         winbind \
+        xauth \
         xvfb \
         zenity && \
     rm -rf /var/lib/apt/lists/*
