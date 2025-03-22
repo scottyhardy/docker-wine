@@ -145,18 +145,25 @@ RUN wget -nv -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Wine
 # Copy Box86 and Box64 binaries and libraries from builder
 COPY --from=builder /tmp/install/ /
 
-# Download gecko and mono installers
-COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
-RUN /root/download_gecko_and_mono.sh "$(BOX86_NOBANNER=1 BOX86_LOG=0 box86 wine --version | sed -E 's/^wine-//')"
-
 # Configure locale for unicode
 ENV LANG=en_US.UTF-8
 RUN locale-gen en_US.UTF-8
 
 # Replace /bin/bash with box64-bash wrapper
 RUN mv /bin/bash /bin/bash-native && \
-    printf '#!/bin/bash-native\nexport BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_BIN=/usr/local/bin/box64\nexport BOX64_LOG=0\nexport BOX64_NOBANNER=1\nexport BOX86_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_BIN=/usr/local/bin/box86\nexport BOX86_LOG=0\nexport BOX86_NOBANNER=1\nexport LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:$LD_LIBRARY_PATH\nexec /usr/local/bin/box64 /usr/local/bin/box64-bash "$@"' > /bin/bash && \
+    printf "#!/bin/bash-native\nexport BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_BIN=/usr/local/bin/box64\nexport BOX64_LOG=0\nexport BOX64_NOBANNER=1\nexport BOX86_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_BIN=/usr/local/bin/box86\nexport BOX86_LOG=0\nexport BOX86_NOBANNER=1\nexport LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\nexec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"" > /bin/bash && \
     chmod +x /bin/bash
+
+# Replace wine symlinks with wrappers
+RUN for bin in wine wine64 wineboot winecfg wineserver; do \
+        rm -f "/usr/bin/${bin}" && \
+        printf "#!/bin/bash-native\nexport BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_BIN=/usr/local/bin/box64\nexport BOX64_LOG=0\nexport BOX64_NOBANNER=1\nexport BOX86_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_BIN=/usr/local/bin/box86\nexport BOX86_LOG=0\nexport BOX86_NOBANNER=1\nexport LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\nexport WINEARCH=\${WINEARCH:-win32}\nexport WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\nexec /usr/local/bin/box64 /usr/local/bin/box64-bash -c \"/opt/wine-${WINE_BRANCH}/bin/${bin} \"\$@\"\"" > "/usr/bin/${bin}" && \
+        chmod +x "/usr/bin/${bin}"; \
+    done
+
+# Download gecko and mono installers
+COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
+RUN /root/download_gecko_and_mono.sh "$(wine --version | sed -E 's/^wine-//')"
 
 # Copy configuration files
 COPY pulse-client.conf /root/pulse/client.conf
