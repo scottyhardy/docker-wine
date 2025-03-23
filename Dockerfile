@@ -151,13 +151,28 @@ RUN locale-gen en_US.UTF-8
 
 # Replace /bin/bash with box64-bash wrapper
 RUN mv /bin/bash /bin/bash-native && \
-    printf "#!/bin/bash-native\nexport BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_BIN=/usr/local/bin/box64\nexport BOX64_LOG=0\nexport BOX64_NOBANNER=1\nexport BOX86_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_BIN=/usr/local/bin/box86\nexport BOX86_LOG=0\nexport BOX86_NOBANNER=1\nexport LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\nexec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"" > /bin/bash && \
+    printf "#!/bin/bash-native\n" > /bin/bash && \
+    printf "export BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\n" >> /bin/bash && \
+    printf "export BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\n" >> /bin/bash && \
+    printf "export BOX64_BIN=/usr/local/bin/box64\n" >> /bin/bash && \
+    printf "export BOX64_LOG=0\n" >> /bin/bash && \
+    printf "export BOX64_NOBANNER=1\n" >> /bin/bash && \
+    printf "export BOX86_PATH=/usr/lib/box86-i386-linux-gnu\n" >> /bin/bash && \
+    printf "export BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\n" >> /bin/bash && \
+    printf "export BOX86_BIN=/usr/local/bin/box86\n" >> /bin/bash && \
+    printf "export BOX86_LOG=0\n" >> /bin/bash && \
+    printf "export BOX86_NOBANNER=1\n" >> /bin/bash && \
+    printf "export LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\n" >> /bin/bash && \
+    printf "exec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"\n" >> /bin/bash && \
     chmod +x /bin/bash
 
 # Replace wine symlinks with wrappers
 RUN for bin in wine wine64 wineboot winecfg wineserver; do \
         rm -f "/usr/bin/${bin}" && \
-        printf "#!/bin/bash\n\nexport WINEARCH=\${WINEARCH:-win32}\nexport WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\nexec /bin/bash -c \"/opt/wine-${WINE_BRANCH}/bin/${bin} \"\$@\"\"" > "/usr/bin/${bin}" && \
+        printf "#!/bin/bash\n" > "/usr/bin/${bin}" && \
+        printf "export WINEARCH=\${WINEARCH:-win32}\n" >> "/usr/bin/${bin}" && \
+        printf "export WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\n" >> "/usr/bin/${bin}" && \
+        printf "exec /bin/bash -c \"/opt/wine-%s/bin/%s \"\$@\"\"\n" "${WINE_BRANCH}" "${bin}" >> "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
     done
 
