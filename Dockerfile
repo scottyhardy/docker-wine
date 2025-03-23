@@ -157,7 +157,7 @@ RUN mv /bin/bash /bin/bash-native && \
 # Replace wine symlinks with wrappers
 RUN for bin in wine wine64 wineboot winecfg wineserver; do \
         rm -f "/usr/bin/${bin}" && \
-        printf "#!/bin/bash-native\nexport BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\nexport BOX64_BIN=/usr/local/bin/box64\nexport BOX64_LOG=0\nexport BOX64_NOBANNER=1\nexport BOX86_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\nexport BOX86_BIN=/usr/local/bin/box86\nexport BOX86_LOG=0\nexport BOX86_NOBANNER=1\nexport LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\nexport WINEARCH=\${WINEARCH:-win32}\nexport WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\nexec /usr/local/bin/box64 /usr/local/bin/box64-bash -c \"/opt/wine-${WINE_BRANCH}/bin/${bin} \"\$@\"\"" > "/usr/bin/${bin}" && \
+        printf "#!/bin/bash\n\nexport WINEARCH=\${WINEARCH:-win32}\nexport WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\nexec /bin/bash -c \"/opt/wine-${WINE_BRANCH}/bin/${bin} \"\$@\"\"" > "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
     done
 
