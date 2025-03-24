@@ -132,8 +132,9 @@ RUN branch="${WINE_BRANCH}" && \
     wget -nv "${url_i386}wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" && \
     echo -e "Downloading dependencies . . ." && \
     dpkg --add-architecture armhf && apt-get update && \
-    apt-get install -y $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') && \
-    apt-get install -y $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
+        $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') \
+        $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
     rm -f "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
     rm -rf /var/lib/apt/lists/*
 
