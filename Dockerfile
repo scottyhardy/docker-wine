@@ -98,10 +98,12 @@ RUN branch="${WINE_BRANCH}" && \
     wget -nv "${url_amd64}wine-${branch}_${version}~${dist}${tag}_amd64.deb" && \
     url_i386="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-i386/" && \
     wget -nv "${url_i386}wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" && \
+    wget -nv "${url_i386}wine-${branch}_${version}~${dist}${tag}_i386.deb" && \
     echo -e "Extracting wine . . ." && \
     dpkg-deb -xv "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" wine-installer && \
     dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_amd64.deb" wine-installer && \
     dpkg-deb -xv "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" wine-installer && \
+    dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_i386.deb" wine-installer && \
     echo -e "Installing wine . . ." && \
     mv "wine-installer/opt/wine-${branch}" /opt/ && \
     rm -rf wine-installer *.deb && \
