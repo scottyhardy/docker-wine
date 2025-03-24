@@ -42,7 +42,7 @@ RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o
     rm -rf /var/lib/apt/lists/*
 
 # Build Box86 and Box64 for ARM
-FROM ${BASE_IMAGE}:${TAG} AS builder
+FROM debian:bookworm-slim AS builder
 
 # hadolint ignore=DL3008
 RUN dpkg --add-architecture armhf && \
@@ -76,7 +76,7 @@ RUN cmake .. -DRPI4ARM64=1 -DARM_DYNAREC=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo &&
 FROM common AS wine-arm64
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Download and extract x86_64 Wine binaries for ARM build
+# Download and extract x86 Wine binaries for ARM build
 ARG WINE_BRANCH
 ARG ARM_WINE_VERSION="8.0.2"
 RUN branch="${WINE_BRANCH}" && \
@@ -89,53 +89,33 @@ RUN branch="${WINE_BRANCH}" && \
     else \
         version="${ARM_WINE_VERSION}"; \
     fi && \
+    echo "Downloading wine version ${version} . . ." && \
     wget -nv "${url_amd64}wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
     wget -nv "${url_amd64}wine-${branch}_${version}~${dist}${tag}_amd64.deb" && \
     url_i386="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-i386/" && \
     wget -nv "${url_i386}wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" && \
     wget -nv "${url_i386}wine-${branch}_${version}~${dist}${tag}_i386.deb" && \
-    echo -e "Extracting wine . . ." && \
+    echo "Extracting wine . . ." && \
     dpkg-deb -xv "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" wine-installer && \
     dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_amd64.deb" wine-installer && \
     dpkg-deb -xv "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" wine-installer && \
     dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_i386.deb" wine-installer && \
-    echo -e "Installing wine . . ." && \
+    echo "Installing wine . . ." && \
     mv "wine-installer/opt/wine-${branch}" /opt/ && \
-    rm -rf wine-installer *.deb && \
+    rm -rf wine-installer && \
     for bin in wine wine64 wineboot winecfg wineserver; do \
         rm -f "/usr/bin/${bin}" && \
         printf "#!/bin/bash\n" > "/usr/bin/${bin}" && \
         printf "export WINEARCH=\${WINEARCH:-win32}\n" >> "/usr/bin/${bin}" && \
-        printf "export WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\n" >> "/usr/bin/${bin}" && \
         printf "exec /bin/bash -c \"/opt/wine-%s/bin/%s \"\$@\"\"\n" "${WINE_BRANCH}" "${bin}" >> "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
-    done
-
-# Download Wine dependencies
-# hadolint ignore=DL3008
-RUN branch="${WINE_BRANCH}" && \
-    id="$(grep ^ID= /etc/os-release | cut -d= -f2)" && \
-    if [ -z "${ARM_WINE_DIST}" ]; then \
-        dist="$(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2)"; \
-    else \
-        dist="${ARM_WINE_DIST}"; \
-    fi && \
-    tag="-1" && \
-    url_amd64="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-amd64/" && \
-    if [ "${ARM_WINE_VERSION}" = "latest" ]; then \
-        version="$(wget -qO- ${url_amd64} | grep -oP "wine-${branch}-amd64_\K[0-9.]+(?=~${dist}${tag}_amd64.deb)" | sort -V | tail -n 1)"; \
-    else \
-        version="${ARM_WINE_VERSION}"; \
-    fi && \
-    wget -nv "${url_amd64}wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
-    url_i386="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-i386/" && \
-    wget -nv "${url_i386}wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" && \
-    echo -e "Downloading dependencies . . ." && \
+    done && \
+    echo "Downloading dependencies . . ." && \
     dpkg --add-architecture armhf && apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') \
         $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
-    rm -f "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
+    rm -f wine-*.deb && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Box86 and Box64 install files from builder
