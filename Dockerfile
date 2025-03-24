@@ -78,15 +78,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Download and extract x86_64 Wine binaries for ARM build
 ARG WINE_BRANCH
-ARG ARM_WINE_DIST
 ARG ARM_WINE_VERSION="8.0.2"
 RUN branch="${WINE_BRANCH}" && \
     id="$(grep ^ID= /etc/os-release | cut -d= -f2)" && \
-    if [ -z "${ARM_WINE_DIST}" ]; then \
-        dist="$(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2)"; \
-    else \
-        dist="${ARM_WINE_DIST}"; \
-    fi && \
+    dist="$(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2)" \
     tag="-1" && \
     url_amd64="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-amd64/" && \
     if [ "${ARM_WINE_VERSION}" = "latest" ]; then \
@@ -107,11 +102,14 @@ RUN branch="${WINE_BRANCH}" && \
     echo -e "Installing wine . . ." && \
     mv "wine-installer/opt/wine-${branch}" /opt/ && \
     rm -rf wine-installer *.deb && \
-    ln -s "/opt/wine-${branch}/bin/wine" /usr/bin/wine && \
-    ln -s "/opt/wine-${branch}/bin/wine64" /usr/bin/wine64 && \
-    ln -s "/opt/wine-${branch}/bin/wineboot" /usr/bin/wineboot && \
-    ln -s "/opt/wine-${branch}/bin/winecfg" /usr/bin/winecfg && \
-    ln -s "/opt/wine-${branch}/bin/wineserver" /usr/bin/wineserver
+    for bin in wine wine64 wineboot winecfg wineserver; do \
+        rm -f "/usr/bin/${bin}" && \
+        printf "#!/bin/bash\n" > "/usr/bin/${bin}" && \
+        printf "export WINEARCH=\${WINEARCH:-win32}\n" >> "/usr/bin/${bin}" && \
+        printf "export WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\n" >> "/usr/bin/${bin}" && \
+        printf "exec /bin/bash -c \"/opt/wine-%s/bin/%s \"\$@\"\"\n" "${WINE_BRANCH}" "${bin}" >> "/usr/bin/${bin}" && \
+        chmod +x "/usr/bin/${bin}"; \
+    done
 
 # Download Wine dependencies
 # hadolint ignore=DL3008
@@ -136,10 +134,11 @@ RUN branch="${WINE_BRANCH}" && \
     dpkg --add-architecture armhf && apt-get update && \
     apt-get install -y $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') && \
     apt-get install -y $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
-    echo "Installing extra dependencies . . ." && \
-    apt-get install -y libc6:armhf libstdc++6:armhf && \
     rm -f "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
     rm -rf /var/lib/apt/lists/*
+
+# Copy Box86 and Box64 install files from builder
+COPY --from=builder /tmp/install/ /
 
 # Replace /bin/bash with box64-bash wrapper
 RUN mv /bin/bash /bin/bash-original && \
@@ -157,19 +156,6 @@ RUN mv /bin/bash /bin/bash-original && \
     printf "export LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\n" >> /bin/bash && \
     printf "exec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"\n" >> /bin/bash && \
     chmod +x /bin/bash
-
-# Copy Box86 and Box64 binaries and libraries from builder
-COPY --from=builder /tmp/install/ /
-
-# Create Wine wrapper scripts
-RUN for bin in wine wine64 wineboot winecfg wineserver; do \
-        rm -f "/usr/bin/${bin}" && \
-        printf "#!/bin/bash\n" > "/usr/bin/${bin}" && \
-        printf "export WINEARCH=\${WINEARCH:-win32}\n" >> "/usr/bin/${bin}" && \
-        printf "export WINEPREFIX=\${WINEPREFIX:-\$HOME/.wine}\n" >> "/usr/bin/${bin}" && \
-        printf "exec /bin/bash -c \"/opt/wine-%s/bin/%s \"\$@\"\"\n" "${WINE_BRANCH}" "${bin}" >> "/usr/bin/${bin}" && \
-        chmod +x "/usr/bin/${bin}"; \
-    done
 
 
 # hadolint ignore=DL3006
