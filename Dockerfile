@@ -29,8 +29,12 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
-ENV LANG="en_US.UTF-8"
-RUN locale-gen en_US.UTF-8
+ENV LANG="en_US.UTF-8" \
+    LANGUAGE="en_US:en" \
+    LC_ALL="en_US.UTF-8"
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen en_US.UTF-8 && \
+    update-locale LANG=en_US.UTF-8
 
 # Install Wine for x86_64
 FROM common AS wine-amd64
@@ -133,12 +137,12 @@ RUN mv /bin/bash /bin/bash-original && \
     printf "export BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu\n" >> /bin/bash && \
     printf "export BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu\n" >> /bin/bash && \
     printf "export BOX64_BIN=/usr/local/bin/box64\n" >> /bin/bash && \
-    printf "export BOX64_LOG=0\n" >> /bin/bash && \
+    printf "export BOX64_LOG=\${BOX64_LOG:-0}\n" >> /bin/bash && \
     printf "export BOX64_NOBANNER=1\n" >> /bin/bash && \
     printf "export BOX86_PATH=/usr/lib/box86-i386-linux-gnu\n" >> /bin/bash && \
     printf "export BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu\n" >> /bin/bash && \
     printf "export BOX86_BIN=/usr/local/bin/box86\n" >> /bin/bash && \
-    printf "export BOX86_LOG=0\n" >> /bin/bash && \
+    printf "export BOX86_LOG=\${BOX86_LOG:-0}\n" >> /bin/bash && \
     printf "export BOX86_NOBANNER=1\n" >> /bin/bash && \
     printf "export LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH\n" >> /bin/bash && \
     printf "exec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"\n" >> /bin/bash && \
@@ -155,7 +159,7 @@ RUN wget -nv -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Wine
 
 # Download gecko and mono installers
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
-RUN /root/download_gecko_and_mono.sh "$(wine --version | sed -E 's/^wine-//')"
+RUN MONO_ONLY=1 /root/download_gecko_and_mono.sh "$(wine --version | sed -E 's/^wine-//')"
 
 # Copy configuration files
 COPY pulse-client.conf /root/pulse/client.conf
