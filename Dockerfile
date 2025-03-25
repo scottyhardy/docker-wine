@@ -157,9 +157,16 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN wget -nv -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
     chmod +x /usr/local/bin/winetricks
 
-# Download gecko and mono installers
-COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
-RUN MONO_ONLY=1 /root/download_gecko_and_mono.sh "$(wine --version | sed -E 's/^wine-//')"
+# Download mono installers
+RUN wine_version="$(wine --version | sed -E 's/^wine-//')" && \
+    mono_version="$(wget -q -O- "https://raw.githubusercontent.com/wine-mirror/wine/wine-${wine_version}/dlls/appwiz.cpl/addons.c" | grep -E "^#define MONO_VERSION\s" | awk -F\" '{print $2}')" && \
+    mono_url="http://dl.winehq.org/wine/wine-mono/${mono_version}/" && \
+    mapfile -t files < <(wget -q -O- "${mono_url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(.*\.msi)\">.*|\1|p" | uniq) && \
+    mkdir -p "/usr/share/wine/mono" && \
+    for file in "${files[@]}"; do \
+        echo "Downloading '${file}'" && \
+        wget -nv -O "/usr/share/wine/mono/${file}" "${mono_url}${file}"; \
+    done
 
 # Copy configuration files
 COPY pulse-client.conf /root/pulse/client.conf
