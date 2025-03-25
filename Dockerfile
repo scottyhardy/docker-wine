@@ -28,6 +28,10 @@ RUN apt-get update && \
         zenity && \
     rm -rf /var/lib/apt/lists/*
 
+# Set locale
+ENV LANG="en_US.UTF-8"
+RUN locale-gen en_US.UTF-8
+
 # Install Wine for x86_64
 FROM common AS wine-amd64
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -76,14 +80,16 @@ RUN cmake .. -DRPI4ARM64=1 -DARM_DYNAREC=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo &&
 FROM common AS wine-arm64
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Download and extract x86 Wine binaries for ARM build
+# Download x86 Wine binaries and install necessary dependencies for the ARM build
 ARG WINE_BRANCH
 ARG ARM_WINE_VERSION="8.0.2"
+# hadolint ignore=DL3008,SC2046
 RUN branch="${WINE_BRANCH}" && \
     id="$(grep ^ID= /etc/os-release | cut -d= -f2)" && \
-    dist="$(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2)" \
+    dist="$(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2)" && \
     tag="-1" && \
     url_amd64="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-amd64/" && \
+    url_i386="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-i386/" && \
     if [ "${ARM_WINE_VERSION}" = "latest" ]; then \
         version="$(wget -qO- ${url_amd64} | grep -oP "wine-${branch}-amd64_\K[0-9.]+(?=~${dist}${tag}_amd64.deb)" | sort -V | tail -n 1)"; \
     else \
@@ -92,17 +98,13 @@ RUN branch="${WINE_BRANCH}" && \
     echo "Downloading wine version ${version} . . ." && \
     wget -nv "${url_amd64}wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" && \
     wget -nv "${url_amd64}wine-${branch}_${version}~${dist}${tag}_amd64.deb" && \
-    url_i386="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-i386/" && \
     wget -nv "${url_i386}wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" && \
     wget -nv "${url_i386}wine-${branch}_${version}~${dist}${tag}_i386.deb" && \
-    echo "Extracting wine . . ." && \
-    dpkg-deb -xv "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" wine-installer && \
-    dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_amd64.deb" wine-installer && \
-    dpkg-deb -xv "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" wine-installer && \
-    dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_i386.deb" wine-installer && \
     echo "Installing wine . . ." && \
-    mv "wine-installer/opt/wine-${branch}" /opt/ && \
-    rm -rf wine-installer && \
+    dpkg-deb -xv "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" / && \
+    dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_amd64.deb" / && \
+    dpkg-deb -xv "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" / && \
+    dpkg-deb -xv "wine-${branch}_${version}~${dist}${tag}_i386.deb" / && \
     for bin in wine wine64 wineboot winecfg wineserver; do \
         rm -f "/usr/bin/${bin}" && \
         printf "#!/bin/bash\n" > "/usr/bin/${bin}" && \
@@ -110,12 +112,16 @@ RUN branch="${WINE_BRANCH}" && \
         printf "exec /bin/bash -c \"/opt/wine-%s/bin/%s \"\$@\"\"\n" "${WINE_BRANCH}" "${bin}" >> "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
     done && \
-    echo "Downloading dependencies . . ." && \
-    dpkg --add-architecture armhf && apt-get update && \
+    echo "Installing dependencies . . ." && \
+    dpkg --add-architecture armhf && \
+    apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
-        $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') \
-        $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
-    rm -f wine-*.deb && \
+        $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^\s*//;s/\s*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') \
+        $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^\s*//;s/\s*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
+    rm -f "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" \
+          "wine-${branch}_${version}~${dist}${tag}_amd64.deb" \
+          "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" \
+          "wine-${branch}_${version}~${dist}${tag}_i386.deb" && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Box86 and Box64 install files from builder
@@ -146,10 +152,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Install Winetricks
 RUN wget -nv -O /usr/local/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks && \
     chmod +x /usr/local/bin/winetricks
-
-# Set locale
-ENV LANG=en_US.UTF-8
-RUN locale-gen en_US.UTF-8
 
 # Download gecko and mono installers
 COPY download_gecko_and_mono.sh /root/download_gecko_and_mono.sh
