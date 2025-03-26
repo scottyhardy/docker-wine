@@ -28,9 +28,6 @@ if [ "${USER_NAME}" = 'root' ] || [ "${USER_UID}" -eq 0 ] || [ "${USER_GID}" -eq
     exit 1
 fi
 
-# Delete default ubuntu account if exists
-id ubuntu > /dev/null 2>&1 && deluser --remove-home ubuntu
-
 # Create the user account
 grep -q ":${USER_GID}:$" /etc/group || groupadd --gid "${USER_GID}" "${USER_NAME}"
 grep -q "^${USER_NAME}:" /etc/passwd || useradd --shell /bin/bash --uid "${USER_UID}" --gid "${USER_GID}" --password "${USER_PASSWD}" --no-create-home --home-dir "${USER_HOME}" "${USER_NAME}"
@@ -117,8 +114,7 @@ elif is_enabled "${RDP_SERVER}"; then
         rm -f /var/lib/xrdp-pulseaudio-installer/module-xrdp-{sink,source}.so
     fi
 
-    # If the pid for sesman or xrdp is there they need to be removed
-    # or else sesman/xrdp won't start and connections will fail
+    # Remove existing sesman/xrdp PID files to prevent startup issues on container restart
     [ ! -f /var/run/xrdp/xrdp-sesman.pid ] || rm -f /var/run/xrdp/xrdp-sesman.pid
     [ ! -f /var/run/xrdp/xrdp.pid ] || rm -f /var/run/xrdp/xrdp.pid
 
