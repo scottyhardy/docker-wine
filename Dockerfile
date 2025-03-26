@@ -130,7 +130,14 @@ RUN branch="${WINE_BRANCH}" && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         $(dpkg-deb -I "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^\s*//;s/\s*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:armhf/') \
-        $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^\s*//;s/\s*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') && \
+        $(dpkg-deb -I "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" | grep -oP 'Depends: \K.*' | tr ',' '\n' | sed -E 's/\(.*\)//g' | sed 's/|.*//' | sed 's/^\s*//;s/\s*$//' | grep -v '^$' | grep -v '^dpkg$' | sed 's/$/:arm64/') \
+        libxinerama1:armhf \
+        libxxf86vm1:armhf \
+        libxrandr2:armhf \
+        libxcomposite1:armhf \
+        libxi6:armhf \
+        libxcursor1:armhf \
+        libcups2:armhf && \
     rm -f "wine-${branch}-amd64_${version}~${dist}${tag}_amd64.deb" \
           "wine-${branch}_${version}~${dist}${tag}_amd64.deb" \
           "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" \
