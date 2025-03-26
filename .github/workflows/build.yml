@@ -9,8 +9,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Lint Dockerfiles with hadolint
+        run: |
+          find . -type f -print0 | grep -z -E 'Dockerfile(\..*)?$' | xargs -0 -I {} docker run --rm -i hadolint/hadolint < {}
+
+      - name: Lint shell scripts with ShellCheck
+        run: |
+          find . -type f -exec grep -Iq '^#!' {} \; -print0 | xargs -0 -I {} docker run --rm -v "$PWD:/scripts" koalaman/shellcheck /scripts/{}
+
   docker_build:
     runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
         wine_branch:
