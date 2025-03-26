@@ -492,15 +492,15 @@ while [ $# -gt 0 ]; do
     --secure-password=*)
         add_run_arg --env="USER_PASSWD=${1#*=}"
         ;;
-    --device=*|--env=*|--mount=*|--network=*|--volume=*)
-        add_run_arg "$1"
-        ;;
     --workdir=*)
         WORKDIR="${1#*=}"
         ;;
     --help)
         print_help
         exit 0
+        ;;
+    --*)
+        add_run_arg "$1"
         ;;
     -*)
         echo "ERROR: '$1' is not a valid option"
