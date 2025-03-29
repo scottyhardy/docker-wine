@@ -17,11 +17,35 @@ jobs:
 
       - name: Lint Dockerfiles with hadolint
         run: |
-          find . -type f -print0 | grep -z -E 'Dockerfile(\..*)?$' | xargs -0 -I {} docker run --rm -i hadolint/hadolint < {}
+          docker pull hadolint/hadolint:latest
+          error_file=$(mktemp)
+          find . -type f -print0 | grep -z -E 'Dockerfile(\..*)?$' | while IFS= read -r -d '' file; do
+            echo "Running hadolint on $file . . ."
+            if ! docker run --rm -i hadolint/hadolint < "$file"; then
+              echo "error" >> "$error_file"
+            fi
+          done
+          if [ -s "$error_file" ]; then
+            echo "Hadolint found errors."
+            rm "$error_file"
+            exit 1
+          fi
+          rm "$error_file"
 
       - name: Lint shell scripts with ShellCheck
         run: |
-          find . -type f -exec grep -Iq '^#!' {} \; -print0 | xargs -0 -I {} docker run --rm -v "$PWD:/scripts" koalaman/shellcheck /scripts/{}
+          docker pull koalaman/shellcheck:latest
+          error_found=0
+          find . -type f -not -path './.*' -exec grep -Iq '^#!' {} \; -print0 | while IFS= read -r -d '' file; do
+            echo "Running shellcheck on $file . . ."
+            if ! docker run --rm -v "$PWD:/scripts" koalaman/shellcheck "/scripts/$file"; then
+              error_found=1
+            fi
+          done
+          if [ "$error_found" -ne 0 ]; then
+            echo "ShellCheck found errors."
+            exit 1
+          fi
 
   docker_build:
     runs-on: ubuntu-latest
