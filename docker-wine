@@ -38,6 +38,8 @@ print_help () {
     echo "                                           interactive bash session"
     echo "  --rdp-port=VALUE      Bind RDP to a different TCP port (default is 3389)"
     echo "  --shm-size=VALUE      Set the shared memory size (default is '1g' for 1 GB)"
+    echo "  --amd64               Run the container in x86_64 mode with emulation on ARM"
+    echo "                          (default is arm64)"
     echo "  --xvfb[=OPTIONAL]     Start xvfb"
     echo "                        OPTIONAL consists of comma separated values of:"
     echo "                          SERVER_NR      Server number to use, eg. :1"
@@ -448,6 +450,9 @@ while [ $# -gt 0 ]; do
         ;;
     --shm-size=*)
         SHM_SIZE="${1#*=}"
+        ;;
+    --amd64)
+        add_run_arg --platform="linux/amd64"
         ;;
     --xvfb)
         USE_XVFB="yes"

@@ -230,7 +230,7 @@ Here is a basic `docker run` command for X11 redirection on Linux that will star
 ```bash
 docker run -it \
   --rm \
-  --hostname="$(hostname)" \
+  --hostname="docker-wine" \
   --env="DISPLAY" \
   --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
   --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
@@ -242,13 +242,19 @@ Here is a basic `docker run` command for starting the RDP server on both macOS a
 ```bash
 docker run -it \
   --rm \
-  --hostname="$(hostname)" \
+  --hostname="docker-wine" \
   --env="RDP_SERVER=yes" \
   --publish="3389:3389/tcp" \
   scottyhardy/docker-wine /bin/bash
 ```
 
 ## Troubleshooting
+
+On ARM devices like M-series Apple Silicon or Raspberry Pi 3/4, try the x86_64 image with emulation for compatibility, though it may run slower than the ARM image. Add `--platform=linux/amd64` to your `docker run` command or use:
+
+```bash
+./docker-wine --amd64
+```
 
 To test video, try opening Notepad:
 
