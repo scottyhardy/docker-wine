@@ -36,7 +36,7 @@ jobs:
         run: |
           docker pull koalaman/shellcheck:latest
           error_found=0
-          find . -type f -not -path './.*' -exec grep -Iq '^#!' {} \; -print0 | while IFS= read -r -d '' file; do
+          find . -type f -not -path './.*' -exec grep -Iq '^#!.*sh' {} \; -print0 | while IFS= read -r -d '' file; do
             echo "Running shellcheck on $file . . ."
             if ! docker run --rm -v "$PWD:/scripts" koalaman/shellcheck "/scripts/$file"; then
               error_found=1
