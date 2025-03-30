@@ -46,7 +46,7 @@ jobs:
           fi
 
   build_and_test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs: lint
     strategy:
       matrix:
@@ -102,6 +102,7 @@ jobs:
       - name: Build and export amd64 container to local Docker instance
         uses: docker/build-push-action@v4
         with:
+          platforms: linux/amd64
           build-args: |
             WINE_BRANCH=${{ matrix.wine_branch }}
             WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
