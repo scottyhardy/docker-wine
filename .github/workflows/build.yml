@@ -133,8 +133,6 @@ jobs:
 
       - name: Extract wine version from container
         id: wine_version
-        env:
-          WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
           WINE_VERSION="$(docker run --rm docker-wine:amd64 /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
           echo "WINE_VERSION=${WINE_VERSION}" | tee -a "$GITHUB_OUTPUT"
