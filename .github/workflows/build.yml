@@ -154,7 +154,6 @@ jobs:
         id: tags
         run: |
           TAGS_ARRAY=(
-            "scottyhardy/docker-wine:${{ matrix.wine_branch }}"
             "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ matrix.wine_major_version }}"
             "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}"
             "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.TIMESTAMP }}"
@@ -168,7 +167,7 @@ jobs:
             )
           fi
           TAGS=$(IFS=,; echo "${TAGS_ARRAY[*]}")
-          echo "TAGS=$TAGS" >> "$GITHUB_OUTPUT"
+          echo "TAGS=${TAGS}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Build and push
         id: docker_build
@@ -176,7 +175,7 @@ jobs:
         with:
           build-args: |
             WINE_BRANCH=${{ matrix.wine_branch }}
-            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_VERSION }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
           platforms: ${{ matrix.platforms }}
           push: true
           tags: ${{ steps.tags.outputs.TAGS }}
