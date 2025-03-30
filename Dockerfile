@@ -1,5 +1,5 @@
 ARG BASE_IMAGE="scottyhardy/docker-remote-desktop"
-ARG TAG="latest"
+ARG TAG="debian-bookworm"
 ARG WINE_BRANCH="stable"
 ARG WINE_VERSION="8.0.2"
 
