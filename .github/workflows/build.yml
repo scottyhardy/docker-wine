@@ -148,7 +148,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Calculate tags
+
+      - name: Generate tags
         id: tags
         run: |
           TAGS_ARRAY=(
