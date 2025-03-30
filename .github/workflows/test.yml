@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
 
-  build_and_push:
+  build_and_test:
     runs-on: ubuntu-latest
     needs: lint
     strategy:
