@@ -18,92 +18,60 @@ get_hrefs () {
     elif command -v curl >/dev/null 2>&1; then
         download_cmd="curl -s -o-"
     else
-        echo "ERROR: Neither wget or curl is available, unable to perform download"
+        echo "ERROR: Install wget or curl to continue."
         exit 1
     fi
 
     $download_cmd "${url}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"(${regexp})\">.*|\1|p" | uniq
 }
 
-get_os_codename () {
+get_wine_version () {
     local branch="$1"
-    local url="https://dl.winehq.org/wine-builds/ubuntu/dists/"
+    local major_version="$2"
 
-    # Get the latest two Ubuntu version codenames that Wine is available on
-    local os_codenames=()
-    while IFS='' read -r line; do os_codenames+=("$line"); done < <(get_hrefs "${url}" "[^:]+/" | sed -E "s|/$||" | grep -v -E "^([p-z]|/)" | sort -r | head -2)
+    local id="debian"
+    local dist="bookworm"
+    local url="https://dl.winehq.org/wine-builds/${id}/dists/${dist}/main/binary-amd64/"
 
-    # Get the latest version of Wine available for each OS codename
-    local codename
-    local index=0
-    local wine_versions=()
-    for codename in "${os_codenames[@]}"; do
-        local version
-        version=$(get_hrefs "${url}${codename}/main/binary-amd64/" "wine-${branch}_.*\.deb" | sed -n -E "s/^wine-${branch}_([0-9]+(\.[0-9]+)*).*$/\1/p" | sort -rV | head -1)
-        wine_versions[${index}]="${version}"
-        index+=1
-    done
-
-    # Determine which OS codename has the latest version of Wine or use the _older_ OS if both the same
-    # as many issues when using latest OS. Refer to https://github.com/scottyhardy/docker-wine/issues/92
-    local latest_wine_ver
-    latest_wine_ver=$(printf '%s\n' "${wine_versions[@]}" | sort -rV | head -1)
-
-    local retval
-    if [ "${wine_versions[1]}" == "${latest_wine_ver}" ]; then
-        retval=${os_codenames[1]}     # previous Ubuntu version
+    local version
+    if [ "${major_version}" = "latest" ]; then
+        version="$(get_hrefs "${url}" "wine-${branch}_.*\.deb" | sed -n -E "s/^wine-${branch}_([0-9]+(\.[0-9]+)*).*$/\1/p" | sort -rV | head -1)"
     else
-        retval=${os_codenames[0]}     # latest Ubuntu version
+        version="$(get_hrefs "${url}" "wine-${branch}_.*\.deb" | sed -n -E "s/^wine-${branch}_([0-9]+(\.[0-9]+)*).*$/\1/p" | grep -E "^${major_version}" | sort -rV | head -1)"
     fi
 
-    # Return the OS codename to use
-    echo "${retval}"
+    echo "${version}"
 }
 
-
-# Array of command line args to be passed to the build command
-BUILD_ARGS=("$@")
-
-# Default values
 BUILD_CMD="docker build"
-DOCKER_REPO="${DOCKER_REPO:-docker-wine}"
-NO_RDP="${NO_RDP:-no}"
+BASE_IMAGE="${BASE_IMAGE:-scottyhardy/docker-remote-desktop}"
+TAG="${TAG:-latest}"
 WINE_BRANCH="${WINE_BRANCH:-stable}"
+WINE_VERSION="${WINE_VERSION:-}"
+WINE_MAJOR_VERSION="${WINE_MAJOR_VERSION:-8}"
+REPO="${DOCKER_REPO:-docker-wine}"
+REPO_TAG="${REPO_TAG:-latest}"
 
-# Get the codename for latest version of wine-${WINE-BRANCH}
-#UBUNTU_CODENAME="$(get_os_codename "${WINE_BRANCH}")"
-
-# Just use latest if codename unable to be determined
-if [ -n "${UBUNTU_CODENAME}" ]; then
-    echo "Found latest version of wine-${WINE_BRANCH} is available on Ubuntu ${UBUNTU_CODENAME}"
-else
-    echo "WARNING: Unable to determine version of Ubuntu to use with Wine, so using latest"
-    UBUNTU_CODENAME="latest"
-fi
-
-# Use standard Ubuntu image if using NO_RDP
-if is_enabled "${NO_RDP}"; then
-    BASE_IMAGE="ubuntu"
-    TAG="${UBUNTU_CODENAME}"
-elif is_disabled "${NO_RDP}"; then
-    BASE_IMAGE="scottyhardy/docker-remote-desktop"
-    TAG="ubuntu-${UBUNTU_CODENAME}"
-else
-    echo "ERROR: Invalid value '${NO_RDP}' used for NO_RDP"
-    exit 1
+if [ -z "${WINE_VERSION}" ]; then
+    WINE_VERSION=$(get_wine_version "${WINE_BRANCH}" "${WINE_MAJOR_VERSION}")
+elif [ "${WINE_VERSION}" = "latest" ]; then
+    WINE_VERSION=$(get_wine_version "${WINE_BRANCH}" "latest")
 fi
 
 if ! docker system info >/dev/null 2>&1; then
     if buildah -v >/dev/null 2>&1; then
         BUILD_CMD="buildah bud"
     else
-        echo "ERROR: Docker is not running or not installed, unable to proceed"
+        echo "ERROR: Docker daemon is not running. Check if the Docker service is active."
         exit 1
     fi
 fi
 
-${BUILD_CMD} "${BUILD_ARGS[@]}" \
+echo "Building wine-${WINE_BRANCH} ${WINE_VERSION} . . ."
+
+${BUILD_CMD} "$@" \
     --build-arg="BASE_IMAGE=${BASE_IMAGE}" \
     --build-arg="TAG=${TAG}" \
     --build-arg="WINE_BRANCH=${WINE_BRANCH}" \
-    -t "${DOCKER_REPO}" .
+    --build-arg="WINE_VERSION=${WINE_VERSION}" \
+    -t "${REPO}:${REPO_TAG}" .
