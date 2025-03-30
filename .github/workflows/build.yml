@@ -47,14 +47,35 @@ jobs:
             exit 1
           fi
 
-  docker_build:
+  build_and_push:
     runs-on: ubuntu-latest
     needs: lint
     strategy:
       matrix:
-        wine_branch:
-          - stable
-          - devel
+        include:
+          - wine_branch: stable
+            wine_major_version: 8
+            platforms: |
+              linux/amd64,
+              linux/arm64
+          - wine_branch: devel
+            wine_major_version: 8
+            platforms: |
+              linux/amd64,
+              linux/arm64
+          - wine_branch: stable
+            wine_major_version: 9
+            platforms: linux/amd64
+          - wine_branch: devel
+            wine_major_version: 9
+            platforms: linux/amd64
+          - wine_branch: stable
+            wine_major_version: 10
+            platforms: linux/amd64
+          - wine_branch: devel
+            wine_major_version: 10
+            platforms: linux/amd64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -65,30 +86,55 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and export to local Docker instance
+      - name: Determine wine version to install from major version
+        id: wine_install_version
+        run: |
+          WINE_BRANCH=${{ matrix.wine_branch }}
+          WINE_MAJOR_VERSION=${{ matrix.wine_major_version }}
+          ID="debian"
+          DIST="bookworm"
+          URL="https://dl.winehq.org/wine-builds/${ID}/dists/${DIST}/main/binary-amd64/"
+          if [ "${WINE_MAJOR_VERSION}" = "latest" ]; then
+            WINE_INSTALL_VERSION=$(wget -qO- "${URL}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*\.deb\">.*|\1|p" | sort -rV | head -1)
+          else
+            WINE_INSTALL_VERSION=$(wget -qO- "${URL}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*\.deb\">.*|\1|p" | grep -E "^${WINE_MAJOR_VERSION}" | sort -rV | head -1)
+          fi
+          echo "WINE_INSTALL_VERSION=${WINE_INSTALL_VERSION}" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Build and export amd64 container to local Docker instance
         uses: docker/build-push-action@v4
         with:
           build-args: |
             WINE_BRANCH=${{ matrix.wine_branch }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
           load: true
-          tags: docker-wine:latest
+          tags: docker-wine:amd64
 
-      - name: Test
+      - name: Test amd64 container
         run: |
-          ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
+          ./docker-wine --local --tag=amd64 --rm --xvfb --notty winetricks -q winamp
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: Build and export arm64 container to local Docker instance
+        if: contains(matrix.platforms, 'linux/arm64')
+        uses: docker/build-push-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
+          load: true
+          tags: docker-wine:arm64
 
-      - name: Extract wine version
+      - name: Test arm64 container
+        if: contains(matrix.platforms, 'linux/arm64')
+        run: |
+          ./docker-wine --local --tag=arm64 --rm --xvfb --notty winetricks -q winamp
+
+      - name: Extract wine version from container
         id: wine_version
         env:
           WINE_BRANCH: ${{ matrix.wine_branch }}
         run: |
-          WINE_VERSION="$(docker run --rm docker-wine /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
+          WINE_VERSION="$(docker run --rm docker-wine:amd64 /bin/bash -c "wine --version | sed -E 's/^wine-//'")"
           echo "WINE_VERSION=${WINE_VERSION}" | tee -a "$GITHUB_OUTPUT"
 
       - name: Generate timestamp
@@ -96,20 +142,30 @@ jobs:
         run: |
           echo "TIMESTAMP=$(date +"%Y%m%d")" | tee -a "$GITHUB_OUTPUT"
 
-      - name: Determine tags
-        uses: haya14busa/action-cond@v1
-        id: tags
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
-          cond: ${{ matrix.wine_branch == 'stable' }}
-          if_true: |
-            scottyhardy/docker-wine:latest,
-            scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.value }}
-          if_false: |
-            scottyhardy/docker-wine:${{ matrix.wine_branch }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }},
-            scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.value }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Calculate tags
+        id: tags
+        run: |
+          TAGS_ARRAY=(
+            "scottyhardy/docker-wine:${{ matrix.wine_branch }}"
+            "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ matrix.wine_major_version }}"
+            "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}"
+            "scottyhardy/docker-wine:${{ matrix.wine_branch }}-${{ steps.wine_version.outputs.WINE_VERSION }}-${{ steps.timestamp.outputs.value }}"
+          )
+          if [ "${{ matrix.wine_major_version }}" = "8" ]; then
+            TAGS_ARRAY+=("scottyhardy/docker-wine:${{ matrix.wine_branch }}")
+          fi
+          if [ "${{ matrix.wine_major_version }}" = "8" ] && [ "${{ matrix.wine_branch }}" = "stable" ]; then
+            TAGS_ARRAY+=(
+              "scottyhardy/docker-wine:latest"
+            )
+          fi
+          TAGS=$(IFS=,; echo "${TAGS_ARRAY[*]}")
+          echo "TAGS=$TAGS" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
         id: docker_build
@@ -117,8 +173,10 @@ jobs:
         with:
           build-args: |
             WINE_BRANCH=${{ matrix.wine_branch }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_VERSION }}
+          platforms: ${{ matrix.platforms }}
           push: true
-          tags: ${{ steps.tags.outputs.value }}
+          tags: ${{ steps.tags.outputs.TAGS }}
 
       - name: Update Docker Hub repository description
         uses: peter-evans/dockerhub-description@v2
