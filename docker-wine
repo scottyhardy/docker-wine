@@ -338,14 +338,14 @@ run_container () {
 
     # Add common docker run args
     add_run_arg --rm
-    add_run_arg --hostname="$(hostname)"
+    add_run_arg --hostname="docker-wine"
     add_run_arg --name="${CONTAINER_NAME}"
     add_run_arg --shm-size="${SHM_SIZE}"
     add_run_arg --workdir="${WORKDIR}"
     add_run_arg_timezone
 
-    # Append -nordp to image tag if NO_RDP is set to 'yes'
-    if [ "${NO_RDP}" == "yes" ]; then
+    # Append -nordp to image tag if RDP_SERVER is set to 'yes'
+    if [ "${RDP_SERVER}" == "yes" ]; then
 
         # Only append if image tag specified does not already end in -nordp
         if ! echo "${IMAGE_TAG}" | grep -q -E "\-nordp$"; then
@@ -360,8 +360,8 @@ run_container () {
         DOCKER_IMAGE="${LOCAL_IMAGE}"
     fi
 
-    # Add volume for user home only if not using --rm option
-    if [ "${NO_USER_VOLUME}" == "no" ]; then
+    # Add volume mount for user home
+    if [ "${VOLUME_MOUNT}" == "yes" ]; then
         add_run_arg --volume="${USER_VOLUME}:${USER_HOME}"
 
         # Create the docker volume to store user's home only if using default winehome
@@ -387,13 +387,12 @@ DOCKER_PULL_IMAGE="yes"
 HOST_RDP_PORT="3389"
 IMAGE_TAG="latest"
 LOCAL_IMAGE="docker-wine"
-NO_RDP="no"
-NO_USER_VOLUME="no"
+VOLUME_MOUNT="yes"
 NOTTY="no"
 SHM_SIZE="1g"
 SOUND="default"
 USE_LOCAL_IMAGE="no"
-USE_RDP_SERVER="no"
+RDP_SERVER="no"
 USER_HOME="/home/wineuser"
 USER_VOLUME="winehome"
 WORKDIR="${USER_HOME}"
@@ -418,7 +417,7 @@ while [ $# -gt 0 ]; do
         LOCAL_IMAGE="${1#*=}"
         ;;
     --rm)
-        NO_USER_VOLUME="yes"
+        VOLUME_MOUNT="no"
         ;;
     --tag=*)
         IMAGE_TAG="${1#*=}"
@@ -437,13 +436,13 @@ while [ $# -gt 0 ]; do
         NOTTY="yes"
         ;;
     --nordp)
-        NO_RDP="yes"
+        RDP_SERVER="no"
         ;;
     --rdp)
-        USE_RDP_SERVER="interactive"
+        RDP_SERVER="interactive"
         ;;
     --rdp=*)
-        USE_RDP_SERVER="${1#*=}"
+        RDP_SERVER="${1#*=}"
         ;;
     --rdp-port=*)
         HOST_RDP_PORT="${1#*=}"
@@ -523,18 +522,13 @@ if ! docker system info >/dev/null 2>&1; then
     exit 1
 fi
 
-if ! echo "${USE_RDP_SERVER}" | grep -q -E "^(no|start|stop|restart|interactive)$"; then
-    echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
+if ! echo "${RDP_SERVER}" | grep -q -E "^(no|start|stop|restart|interactive)$"; then
+    echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
     exit 1
 fi
 
-if [ "${USE_RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
+if [ "${RDP_SERVER}" != "no" ] && [ -n "${CMD_ARGS[0]}" ]; then
     echo "ERROR: Commands cannot be passed to container when using --rdp option"
-    exit 1
-fi
-
-if [ "${USE_RDP_SERVER}" != "no" ] && [ "${NO_RDP}" != "no" ]; then
-    echo "ERROR: Cannot combine conflicting options --rdp and --nordp"
     exit 1
 fi
 
@@ -548,13 +542,13 @@ if [ "${USE_XVFB}" == "yes" ] ; then
 
     run_container "interactive"
 
-# Run in RDP mode
-elif [ "${USE_RDP_SERVER}" != "no" ]; then
+# Run in remote desktop server mode
+elif [ "${RDP_SERVER}" != "no" ]; then
 
     add_run_arg --env="RDP_SERVER=yes"
     add_run_arg --publish="${HOST_RDP_PORT}:3389/tcp"
 
-    case "${USE_RDP_SERVER}" in
+    case "${RDP_SERVER}" in
         interactive)
             CMD_ARGS=("/bin/bash")
             run_container "interactive"
@@ -570,7 +564,7 @@ elif [ "${USE_RDP_SERVER}" != "no" ]; then
             run_container "detached"
             ;;
         *)
-            echo "ERROR: '${USE_RDP_SERVER}' is not a valid value for --rdp option"
+            echo "ERROR: '${RDP_SERVER}' is not a valid value for --rdp option"
             exit 1
             ;;
     esac
