@@ -29,6 +29,8 @@ wget https://raw.githubusercontent.com/scottyhardy/docker-wine/master/docker-win
 chmod +x docker-wine
 ```
 
+\* If the above commands fail (getting "ERROR: Docker is not running or not installed, unable to proceed" even with both Docker installed and running), your user account may not have permissions to manage Docker. A fix for this issue can be found [here](https://stackoverflow.com/a/48957722). This applies to every part of this readme regarding Docker on Linux. Do keep in mind that this fix assumes the user account this is applied to is privileged (ie: is already part of the `sudo` group).
+
 On macOS:
 
 ```bash
