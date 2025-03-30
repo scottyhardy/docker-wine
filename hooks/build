@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-# Used by Docker Hub to replace the normal autobuild build script
-# Docker Hub runs this script from the repo root, so the command below runs the build script in the parent directory
-bash -x build

@@ -4,49 +4,127 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
-  docker:
+  lint:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Lint Dockerfiles with hadolint
+        run: |
+          docker pull hadolint/hadolint:latest
+          error_file=$(mktemp)
+          find . -type f -print0 | grep -z -E 'Dockerfile(\..*)?$' | while IFS= read -r -d '' file; do
+            echo "Running hadolint on $file . . ."
+            if ! docker run --rm -i hadolint/hadolint < "$file"; then
+              echo "error" >> "$error_file"
+            fi
+          done
+          if [ -s "$error_file" ]; then
+            echo "Hadolint found errors."
+            rm "$error_file"
+            exit 1
+          fi
+          rm "$error_file"
+
+      - name: Lint shell scripts with ShellCheck
+        run: |
+          docker pull koalaman/shellcheck:latest
+          error_found=0
+          find . -type f -not -path './.*' -exec grep -Iq '^#!.*sh' {} \; -print0 | while IFS= read -r -d '' file; do
+            echo "Running shellcheck on $file . . ."
+            if ! docker run --rm -v "$PWD:/scripts" koalaman/shellcheck "/scripts/$file"; then
+              error_found=1
+            fi
+          done
+          if [ "$error_found" -ne 0 ]; then
+            echo "ShellCheck found errors."
+            exit 1
+          fi
+
+  build_and_test:
+    runs-on: ubuntu-latest
+    needs: lint
     strategy:
       matrix:
-        wine_branch:
-          - stable
-          - devel
+        include:
+          - wine_branch: stable
+            wine_major_version: 8
+            platforms: |
+              linux/amd64,
+              linux/arm64
+          - wine_branch: devel
+            wine_major_version: 8
+            platforms: |
+              linux/amd64,
+              linux/arm64
+          - wine_branch: stable
+            wine_major_version: 9
+            platforms: linux/amd64
+          - wine_branch: devel
+            wine_major_version: 9
+            platforms: linux/amd64
+          - wine_branch: stable
+            wine_major_version: 10
+            platforms: linux/amd64
+          - wine_branch: devel
+            wine_major_version: 10
+            platforms: linux/amd64
+
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Build and export to local Docker instance
-        uses: docker/build-push-action@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Determine wine version to install from major version
+        id: wine_install_version
+        run: |
+          WINE_BRANCH=${{ matrix.wine_branch }}
+          WINE_MAJOR_VERSION=${{ matrix.wine_major_version }}
+          ID="debian"
+          DIST="bookworm"
+          URL="https://dl.winehq.org/wine-builds/${ID}/dists/${DIST}/main/binary-amd64/"
+          if [ "${WINE_MAJOR_VERSION}" = "latest" ]; then
+            WINE_INSTALL_VERSION=$(wget -qO- "${URL}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*\.deb\">.*|\1|p" | sort -rV | head -1)
+          else
+            WINE_INSTALL_VERSION=$(wget -qO- "${URL}" | sed -E "s/></>\n</g" | sed -n -E "s|^.*<a href=\"wine-${WINE_BRANCH}_([0-9]+(\.[0-9]+)*).*\.deb\">.*|\1|p" | grep -E "^${WINE_MAJOR_VERSION}" | sort -rV | head -1)
+          fi
+          echo "WINE_INSTALL_VERSION=${WINE_INSTALL_VERSION}" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Build and export amd64 container to local Docker instance
+        uses: docker/build-push-action@v4
         with:
+          platforms: linux/amd64
           build-args: |
             WINE_BRANCH=${{ matrix.wine_branch }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
           load: true
-          tags: docker-wine:latest
-      -
-        name: Extract wine version
-        id: wine_ver
-        env:
-          WINE_BRANCH: ${{ matrix.wine_branch }}
+          tags: docker-wine:amd64
+
+      - name: Test amd64 container
         run: |
-          WINE_VER="$(docker run --rm docker-wine /bin/bash -c "dpkg -s wine-${WINE_BRANCH} \
-          | grep '^Version:\s' | awk '{print \$2}' | sed -E 's/~.*$//'" | tr -d "\r")"
-          if echo "${WINE_VER}" | grep -q -E "^[0-9]+(\.[0-9]+)*$"; then
-              echo "Found wine version '${WINE_VER}'"
-              echo "::set-output name=value::${WINE_VER}"
-          else
-              echo "ERROR: Unable to determine wine version"
-              exit 1
-          fi
-      -
-        name: Test
+          ./docker-wine --local --tag=amd64 --rm --xvfb --notty winetricks -q winamp
+
+      - name: Build and export arm64 container to local Docker instance
+        if: contains(matrix.platforms, 'linux/arm64')
+        uses: docker/build-push-action@v4
+        with:
+          platforms: linux/arm64
+          build-args: |
+            WINE_BRANCH=${{ matrix.wine_branch }}
+            WINE_VERSION=${{ steps.wine_install_version.outputs.WINE_INSTALL_VERSION }}
+          load: true
+          tags: docker-wine:arm64
+
+      - name: Test arm64 container
+        if: contains(matrix.platforms, 'linux/arm64')
         run: |
-          ./docker-wine --local --rm --xvfb --notty winetricks -q dotnet40
+          ./docker-wine --local --tag=arm64 --rm --xvfb --notty winetricks -q winamp

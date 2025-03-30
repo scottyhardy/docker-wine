@@ -8,7 +8,6 @@ is_disabled () {
     echo "$1" | grep -q -i -E "^(no|off|false|0)$"
 }
 
-
 # Set user account and run values
 USER_NAME=${USER_NAME:-wineuser}
 USER_UID=${USER_UID:-1010}
@@ -115,8 +114,7 @@ elif is_enabled "${RDP_SERVER}"; then
         rm -f /var/lib/xrdp-pulseaudio-installer/module-xrdp-{sink,source}.so
     fi
 
-    # If the pid for sesman or xrdp is there they need to be removed
-    # or else sesman/xrdp won't start and connections will fail
+    # Remove existing sesman/xrdp PID files to prevent startup issues on container restart
     [ ! -f /var/run/xrdp/xrdp-sesman.pid ] || rm -f /var/run/xrdp/xrdp-sesman.pid
     [ ! -f /var/run/xrdp/xrdp.pid ] || rm -f /var/run/xrdp/xrdp.pid
 
