@@ -76,14 +76,17 @@ RUN dpkg --add-architecture armhf && \
         libc6:armhf \
         libc6-dev-armhf-cross \
         libstdc++6:armhf \
-        python3
+        python3 \
+        wget
 
 # Clone and build box86
 RUN git clone https://github.com/ptitSeb/box86.git /tmp/box86
 WORKDIR /tmp/box86/build
 RUN cmake .. -DRPI4ARM64=1 -DARM_DYNAREC=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo && \
     make -j"$(nproc)" && \
-    make install DESTDIR=/tmp/install
+    make install DESTDIR=/tmp/install && \
+    wget -O /tmp/install/usr/local/bin/box86-bash https://github.com/ptitSeb/box86/raw/refs/heads/master/tests/bash && \
+    chmod +x /tmp/install/usr/local/bin/box86-bash
 
 # Clone and build box64
 RUN git clone https://github.com/ptitSeb/box64.git /tmp/box64
@@ -138,24 +141,7 @@ RUN branch="${WINE_BRANCH}" && \
           "wine-${branch}_${version}~${dist}${tag}_amd64.deb" \
           "wine-${branch}-i386_${version}~${dist}${tag}_i386.deb" \
           "wine-${branch}_${version}~${dist}${tag}_i386.deb" && \
-    rm -rf /var/lib/apt/lists/* && \
-    echo "Replacing /bin/bash with box64-bash wrapper . . ." && \
-    mv /bin/bash /bin/bash-original && \
-    echo "#!/bin/bash-original" > /bin/bash && \
-    echo "export BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu" >> /bin/bash && \
-    echo "export BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu" >> /bin/bash && \
-    echo "export BOX64_BIN=/usr/local/bin/box64" >> /bin/bash && \
-    echo "export BOX64_LOG=\${BOX64_LOG:-0}" >> /bin/bash && \
-    echo "export BOX64_NOBANNER=1" >> /bin/bash && \
-    echo "export BOX86_PATH=/usr/lib/box86-i386-linux-gnu" >> /bin/bash && \
-    echo "export BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu" >> /bin/bash && \
-    echo "export BOX86_BIN=/usr/local/bin/box86" >> /bin/bash && \
-    echo "export BOX86_LOG=\${BOX86_LOG:-0}" >> /bin/bash && \
-    echo "export BOX86_NOBANNER=1" >> /bin/bash && \
-    echo "export LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH" >> /bin/bash && \
-    echo "exec /usr/local/bin/box64 /usr/local/bin/box64-bash \"\$@\"" >> /bin/bash && \
-    chmod +x /bin/bash
-
+    rm -rf /var/lib/apt/lists/*
 # Copy box86 and box64 install files from builder
 COPY --from=builder /tmp/install/ /
 
@@ -168,9 +154,26 @@ RUN echo "Creating wrappers for wine binaries . . ." && \
     for bin in wine wine64 wineboot winecfg wineserver; do \
         rm -f "/usr/bin/${bin}" && \
         echo "#!/bin/bash" > "/usr/bin/${bin}" && \
+        echo "export BOX64_PATH=/usr/lib/box64-x86_64-linux-gnu" >> "/usr/bin/${bin}" && \
+        echo "export BOX64_LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu" >> "/usr/bin/${bin}" && \
+        echo "export BOX64_BIN=/usr/local/bin/box64" >> "/usr/bin/${bin}" && \
+        echo "export BOX64_LOG=\${BOX64_LOG:-0}" >> "/usr/bin/${bin}" && \
+        echo "export BOX64_NOBANNER=1" >> "/usr/bin/${bin}" && \
+        echo "export BOX64_BASH=/usr/local/bin/box64-bash" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_PATH=/usr/lib/box86-i386-linux-gnu" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_LD_LIBRARY_PATH=/usr/lib/box86-i386-linux-gnu" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_BIN=/usr/local/bin/box86" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_LOG=\${BOX86_LOG:-0}" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_NOBANNER=1" >> "/usr/bin/${bin}" && \
+        echo "export BOX86_BASH=/usr/local/bin/box86-bash" >> "/usr/bin/${bin}" && \
+        echo "export LD_LIBRARY_PATH=/usr/lib/box64-x86_64-linux-gnu:/usr/lib/box86-i386-linux-gnu:\$LD_LIBRARY_PATH" >> "/usr/bin/${bin}" && \
         echo "export WINEARCH=\${WINEARCH:-win32}" >> "/usr/bin/${bin}" && \
         echo "export WINEDEBUG=\${WINEDEBUG:--all}" >> "/usr/bin/${bin}" && \
-        echo "exec /bin/bash -c \"/opt/wine-${WINE_BRANCH}/bin/wine \\\"\\\$@\\\"\" -- \"\$@\"" >> "/usr/bin/${bin}" && \
+        echo "if [ \"\${WINEARCH}\" == \"win32\" ]; then " >> "/usr/bin/${bin}" && \
+        echo "  exec /bin/bash -c \"/usr/local/bin/box86 /opt/wine-${WINE_BRANCH}/bin/wine \\\"\\\$@\\\"\" -- \"\$@\"" >> "/usr/bin/${bin}" && \
+        echo "else" >> "/usr/bin/${bin}" && \
+        echo "  exec /bin/bash -c \"/usr/local/bin/box64 /opt/wine-${WINE_BRANCH}/bin/wine64 \\\"\\\$@\\\"\" -- \"\$@\"" >> "/usr/bin/${bin}" && \
+        echo "fi" >> "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
     done && \
     echo "Installing winetricks . . ." && \
