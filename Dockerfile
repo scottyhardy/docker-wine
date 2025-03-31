@@ -170,7 +170,7 @@ RUN echo "Creating wrappers for wine binaries . . ." && \
         echo "#!/bin/bash" > "/usr/bin/${bin}" && \
         echo "export WINEARCH=\${WINEARCH:-win32}" >> "/usr/bin/${bin}" && \
         echo "export WINEDEBUG=\${WINEDEBUG:--all}" >> "/usr/bin/${bin}" && \
-        echo "exec /bin/bash -c \"/opt/wine-${WINE_BRANCH}/bin/wine \\\"\\\$@\\\"\" -- \"\$@\"" >> "/usr/bin/${bin}" && \
+        echo "exec /bin/bash -c \"/opt/wine-${WINE_BRANCH}/bin/${bin} \\\"\\\$@\\\"\" -- \"\$@\"" >> "/usr/bin/${bin}" && \
         chmod +x "/usr/bin/${bin}"; \
     done && \
     echo "Installing winetricks . . ." && \
