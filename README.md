@@ -232,6 +232,7 @@ docker run -it \
   --rm \
   --hostname="$(hostname)" \
   --env="DISPLAY" \
+  --platform="linux/amd64" \
   --volume="${XAUTHORITY:-${HOME}/.Xauthority}:/root/.Xauthority:ro" \
   --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro" \
   scottyhardy/docker-wine /bin/bash
@@ -244,6 +245,7 @@ docker run -it \
   --rm \
   --hostname="$(hostname)" \
   --env="RDP_SERVER=yes" \
+  --platform="linux/amd64" \
   --publish="3389:3389/tcp" \
   scottyhardy/docker-wine /bin/bash
 ```
