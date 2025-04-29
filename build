@@ -87,7 +87,7 @@ if is_enabled "${NO_RDP}"; then
     TAG="${UBUNTU_CODENAME}"
 elif is_disabled "${NO_RDP}"; then
     BASE_IMAGE="scottyhardy/docker-remote-desktop"
-    TAG="ubuntu-${UBUNTU_CODENAME}"
+    TAG="latest"
 else
     echo "ERROR: Invalid value '${NO_RDP}' used for NO_RDP"
     exit 1
@@ -106,4 +106,5 @@ ${BUILD_CMD} "${BUILD_ARGS[@]}" \
     --build-arg="BASE_IMAGE=${BASE_IMAGE}" \
     --build-arg="TAG=${TAG}" \
     --build-arg="WINE_BRANCH=${WINE_BRANCH}" \
+    --pull \
     -t "${DOCKER_REPO}" .
