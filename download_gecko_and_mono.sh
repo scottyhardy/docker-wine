@@ -33,7 +33,8 @@ for APP in "gecko" "mono"; do
 
     # Get the list of files to download
     APP_URL="http://dl.winehq.org/wine/wine-${APP}/${APP_VER}/"
-    mapfile -t FILES < <(get_hrefs "${APP_URL}" ".*\.msi")
+    #mapfile -t FILES < <(get_hrefs "${APP_URL}" ".*\.msi")
+    FILES=("wine-${APP}-${APP_VER}-x86.msi")
 
     # Download the files
     [ ! -d "/usr/share/wine/${APP}" ] && mkdir -p "/usr/share/wine/${APP}"
