@@ -6,6 +6,7 @@ FROM ${BASE_IMAGE}:${TAG}
 RUN apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         apt-transport-https \
+        busybox-static \
         ca-certificates \
         cabextract \
         git \
