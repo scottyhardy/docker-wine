@@ -410,7 +410,7 @@ configure_pulseaudio_macos_socket () {
         if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
             echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
             mkdir -p "${HOME}/.config/pulse"
-            echo -e ".include $(brew --prefix)/var/homebrew/linked/pulseaudio/etc/pulse/default.pa\nload-module module-native-protocol-tcp auth-anonymous=1" > "${HOME}/.config/pulse/default.pa"
+            echo -e ".include $(brew --prefix)/var/homebrew/linked/pulseaudio/etc/pulse/default.pa\nload-module module-native-protocol-tcp" > "${HOME}/.config/pulse/default.pa"
         fi
 
         # Restart pulseaudio daemon to create the TCP socket
@@ -470,6 +470,9 @@ configure_pulseaudio_macos_socket () {
         # Add the pulseaudio TCP socket to run args
         #add_run_arg --env="PULSE_SERVER=tcp:host.docker.internal"
         add_run_arg --env="PULSE_SERVER=docker.for.mac.localhost"
+
+        # Share your ~/.config/pulse directory with the container for authentication
+        add_run_arg --volume="${HOME}/.config/pulse:/home/wineuser/.config/pulse"
     else
         echo "INFO: pulseaudio not installed so running without sound"
     fi
