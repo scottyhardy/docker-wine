@@ -234,6 +234,79 @@ install_xquartz() {
     return $installed
 }
 
+configure_pulseaudio () {
+
+    # Return 0 (true) if this function makes any changes
+    local changes_made=1
+
+    # Check XQuartz installed
+    if ! command -v pulseaudio >/dev/null 2>&1; then
+        local answer
+        local attempts
+        local max_attempts=5
+
+        # Prompt to allow install
+        echo "PulseAudio needs to be installed for sound forwarding to operate. If necessary, Homebrew will also be installed to perform the installation of PulseAudio."
+        for (( attempts = 0; attempts < max_attempts; attempts++ )); do
+
+            read -r -p "Do you want to continue? [y/N] " answer
+
+            # Default is No
+            [ -z "${answer}" ] && answer="n"
+
+            case "${answer}" in
+                [Yy]|[Yy][Ee][Ss])
+                    install_pulseaudio || exit 1
+                    changes_made=0
+                    break
+                    ;;
+                [Nn]|[Nn][Oo])
+                    echo "Unable to start container with sound forwarding. Please install PulseAudio or alternatively use Remote Desktop. e.g. $0 --rdp"
+                    exit 0
+                    ;;
+                *)
+                    echo "Invalid response.  Please use y or n"
+                    ;;
+            esac
+        done
+
+        # Fail after too many attempts
+        if [ "${attempts}" -ge "${max_attempts}" ]; then
+            echo "ERROR: Too many invalid responses"
+            exit 1
+        fi
+    fi
+
+    return $changes_made
+}
+
+install_pulseaudio() {
+
+    # Return 0 if PulseAudio is successfully installed
+    local installed=1
+
+    # Install Homebrew
+    if ! command -v brew >/dev/null 2>&1; then
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+        # Confirm installed
+        if ! command -v brew >/dev/null 2>&1; then
+            echo "ERROR: Failed to install Homebrew, unable to proceed with PulseAudio installation"
+            exit 1
+        fi
+    fi
+
+    # Install PulseAudio
+    if ! command -v pulseaudio >/dev/null 2>&1; then
+        brew install pulseaudio switchaudio-osx
+
+        # Confirm installed
+        if command -v pulseaudio >/dev/null 2>&1 && command -v SwitchAudioSource; then installed=0; fi
+    fi
+
+    return $installed
+}
+
 add_x11_key () {
     local display="$1"
 
@@ -264,7 +337,7 @@ configure_sound () {
             ;;
         macos)
             if [ "${SOUND}" == "default" ]; then
-                SOUND="dummy"
+                SOUND="macos"
             fi
             ;;
         *)
@@ -276,6 +349,9 @@ configure_sound () {
     case "${SOUND}" in
         unix)
             configure_pulseaudio_unix_socket
+            ;;
+        macos)
+            configure_pulseaudio_macos_socket
             ;;
         dummy|none)
             add_run_arg --env="DUMMY_PULSEAUDIO=yes"
@@ -313,6 +389,80 @@ configure_pulseaudio_unix_socket () {
         else
             echo "INFO: pulseaudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
         fi
+    else
+        echo "INFO: pulseaudio not installed so running without sound"
+    fi
+}
+
+configure_pulseaudio_macos_socket () {
+
+    # Use audio if pulseaudio is installed
+    if command -v pulseaudio >/dev/null 2>&1; then
+
+        # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
+        if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+            echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
+            mkdir -p "${HOME}/.config/pulse"
+            echo -e ".include $(brew --prefix)/var/homebrew/linked/pulseaudio/etc/pulse/default.pa\nload-module module-native-protocol-tcp auth-anonymous=1" > "${HOME}/.config/pulse/default.pa"
+        fi
+
+        # Restart pulseaudio daemon to create the TCP socket
+        if ! lsof -i :4713 > /dev/null; then
+            echo "INFO: No socket found for pulseaudio so restarting service..."
+            pulseaudio -k >/dev/null 2>&1
+            pulseaudio --exit-idle-time\=-1 >/dev/null 2>&1 &
+            sleep 1
+        fi
+
+        # Get current macOS audio output
+        target_description=$(SwitchAudioSource -c | tr -d '\r')
+        # echo "🔊 SwitchAudioSource -c: '$target_description'"
+
+        # Normalize in bash
+        normalized_target=$(echo "$target_description" | tr -d '\r[:space:]' | tr '[:upper:]' '[:lower:]')
+
+        # Find matching sink
+        matched_sink=$(LANG=en pactl list sinks | awk -v target="$normalized_target" '
+        function normalize(str) {
+            gsub(/\r/, "", str)
+            gsub(/[[:space:]]+/, "", str)
+            return tolower(str)
+        }
+
+        /^[[:space:]]*Name:/ {
+            current_name = $2
+        }
+
+        /^[[:space:]]*Description:/ {
+            raw_desc = substr($0, index($0, $2))
+            norm_desc = normalize(raw_desc)
+
+            # Debug logs (stderr)
+            #print "🔍 Comparing:" > "/dev/stderr"
+            #print "   Description      : " raw_desc > "/dev/stderr"
+            #print "   normalized sink  : [" norm_desc "]" > "/dev/stderr"
+            #print "   normalized target: [" target "]" > "/dev/stderr"
+
+            if (norm_desc == target) {
+            #print "✅ Match found: sink name = " current_name > "/dev/stderr"
+            print current_name   # <-- THIS LINE GOES TO STDOUT
+            exit
+            }
+        }
+        ')
+        # Handle result
+        if [[ -z "$matched_sink" ]]; then
+            echo "❌ No matching sink found for: '$target_description'"
+            #exit 1
+        else
+            # Set default sink
+            # echo "🔧 Running: pactl set-default-sink $matched_sink"
+            pactl set-default-sink "$matched_sink"
+        fi
+
+        # Add the pulseaudio TCP socket to run args
+        #add_run_arg --env="PULSE_SERVER=tcp:host.docker.internal"
+        add_run_arg --env="PULSE_SERVER=docker.for.mac.localhost"
     else
         echo "INFO: pulseaudio not installed so running without sound"
     fi
