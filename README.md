@@ -12,7 +12,7 @@
 
 The docker-wine container can either be run with X11 forwarding or as an RDP server to suit your use case.  The default is to use X11 forwarding which utilizes your machine's X server to render graphics directly into your current session and play sounds through pulseaudio.
 
-Using docker-wine with an RDP server allows the container to be run on a headless machine or a machine that may not be running an X server. You can then use a Remote Desktop client to connect to the container which may be located either on your local or a remote machine.  This is currently the only solution if you require sound on macOS.
+Using docker-wine with an RDP server allows the container to be run on a headless machine or a machine that may not be running an X server. You can then use a Remote Desktop client to connect to the container which may be located either on your local or a remote machine.
 
 ---
 
