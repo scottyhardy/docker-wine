@@ -239,7 +239,7 @@ configure_pulseaudio () {
     # Return 0 (true) if this function makes any changes
     local changes_made=1
 
-    # Check XQuartz installed
+    # Check PulseAudio installed
     if ! command -v pulseaudio >/dev/null 2>&1; then
         local answer
         local attempts
@@ -262,7 +262,7 @@ configure_pulseaudio () {
                     ;;
                 [Nn]|[Nn][Oo])
                     echo "Unable to start container with sound forwarding. Please install PulseAudio or alternatively use Remote Desktop. e.g. $0 --rdp"
-                    exit 0
+                    #exit 0
                     ;;
                 *)
                     echo "Invalid response.  Please use y or n"
@@ -292,17 +292,22 @@ install_pulseaudio() {
         # Confirm installed
         if ! command -v brew >/dev/null 2>&1; then
             echo "ERROR: Failed to install Homebrew, unable to proceed with PulseAudio installation"
-            exit 1
+            #exit 1
         fi
     fi
 
     # Install PulseAudio
-    if ! command -v pulseaudio >/dev/null 2>&1; then
-        brew install pulseaudio switchaudio-osx
-
-        # Confirm installed
-        if command -v pulseaudio >/dev/null 2>&1 && command -v SwitchAudioSource; then installed=0; fi
+    if command -v brew >/dev/null 2>&1 && ! command -v pulseaudio >/dev/null 2>&1; then
+        brew install pulseaudio
     fi
+
+    # Install SwitchAudioSource
+    if command -v brew >/dev/null 2>&1 && ! command -v pulseaudio >/dev/null 2>&1; then
+        brew install switchaudio-osx
+    fi
+
+    # Confirm installed
+    if command -v pulseaudio >/dev/null 2>&1 && command -v SwitchAudioSource; then installed=0; fi
 
     return $installed
 }
@@ -364,6 +369,8 @@ configure_sound () {
 }
 
 configure_pulseaudio_unix_socket () {
+
+    configure_pulseaudio
 
     # Use audio if pulseaudio is installed
     if command -v pulseaudio >/dev/null 2>&1; then
