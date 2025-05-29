@@ -240,7 +240,7 @@ configure_pulseaudio () {
     local changes_made=1
 
     # Check PulseAudio installed
-    if ! command -v pulseaudio >/dev/null 2>&1; then
+    if ! command -v pulseaudio >/dev/null 2>&1 || ! command -v SwitchAudioSource >/dev/null 2>&1; then
         local answer
         local attempts
         local max_attempts=5
@@ -302,7 +302,7 @@ install_pulseaudio() {
     fi
 
     # Install SwitchAudioSource
-    if command -v brew >/dev/null 2>&1 && ! command -v pulseaudio >/dev/null 2>&1; then
+    if command -v brew >/dev/null 2>&1 && ! command -v SwitchAudioSource >/dev/null 2>&1; then
         brew install switchaudio-osx
     fi
 
@@ -370,8 +370,6 @@ configure_sound () {
 
 configure_pulseaudio_unix_socket () {
 
-    configure_pulseaudio
-
     # Use audio if pulseaudio is installed
     if command -v pulseaudio >/dev/null 2>&1; then
 
@@ -402,6 +400,8 @@ configure_pulseaudio_unix_socket () {
 }
 
 configure_pulseaudio_macos_socket () {
+
+    configure_pulseaudio
 
     # Use audio if pulseaudio is installed
     if command -v pulseaudio >/dev/null 2>&1; then
