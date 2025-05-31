@@ -749,6 +749,22 @@ else
         # Ensure XQuartz is running so ~/.Xauthority file is updated with new X11 key
         if ! ps -e | awk '{print $4}' | grep -q "/opt/X11/bin/Xquartz"; then
             open -a xquartz
+
+            # Wait for X11 socket to appear (timeout: 15s)
+            SOCKET="/tmp/.X11-unix/X0"
+            for i in {1..15}; do
+                if [ -S "$SOCKET" ]; then
+                    #echo "✅ X11 socket is now available."
+                    break
+                fi
+                #echo "⏳ Waiting for X11 socket ($i/15)..."
+                sleep 1
+            done
+
+            if [ ! -S "$SOCKET" ]; then
+                echo "❌ Timeout: X11 socket still not available."
+                exit 1
+            fi
         fi
 
         # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
