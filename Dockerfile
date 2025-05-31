@@ -55,7 +55,7 @@ RUN chmod +x /root/download_gecko_and_mono.sh \
 
 # Configure locale for unicode
 RUN locale-gen en_US.UTF-8
-ENV LANG en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 COPY pulse-client.conf /root/pulse/client.conf
 COPY entrypoint.sh /usr/bin/entrypoint
