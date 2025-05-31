@@ -23,13 +23,14 @@ RUN apt-get update \
         winbind \
         xvfb \
         zenity \
+        nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
 ARG WINE_BRANCH="stable"
 RUN wget -nv -O winehq.key https://dl.winehq.org/wine-builds/winehq.key && \
-    APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add winehq.key && \
-    echo "deb https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list && \
+    gpg --output /usr/share/keyrings/winehq-archive-keyring.gpg --dearmor winehq.key && \
+    echo "deb [signed-by=/usr/share/keyrings/winehq-archive-keyring.gpg] https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list && \
     dpkg --add-architecture i386 && \
     apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} && \
