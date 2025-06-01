@@ -35,7 +35,8 @@ RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor > 
     DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} && \
     DEBIAN_FRONTEND="noninteractive" apt-get install -y \
         libwine \
-        libwine:i386 \
+        libwine:i386 && \
+    DEBIAN_FRONTEND="noninteractive" apt-get remove -y libgl1:i386 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install winetricks
