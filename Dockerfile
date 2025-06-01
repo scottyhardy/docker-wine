@@ -37,10 +37,6 @@ RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor > 
         libwine \
         libwine:i386 \
         libgl1:i386 \
-        libvulkan1 \
-        libvulkan1:i386 \
-        mesa-vulkan-drivers \
-        mesa-vulkan-drivers:i386 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install winetricks
