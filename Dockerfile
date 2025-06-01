@@ -28,8 +28,7 @@ RUN apt-get update \
 
 # Install wine
 ARG WINE_BRANCH="stable"
-RUN wget -nv -O winehq.key https://dl.winehq.org/wine-builds/winehq.key && \
-    gpg --output /usr/share/keyrings/winehq-archive-keyring.gpg --dearmor winehq.key && \
+RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor > /usr/share/keyrings/winehq-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/winehq-archive-keyring.gpg] https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list && \
     dpkg --add-architecture i386 && \
     apt-get update && \
@@ -42,7 +41,7 @@ RUN wget -nv -O winehq.key https://dl.winehq.org/wine-builds/winehq.key && \
         libvulkan1:i386 \
         mesa-vulkan-drivers \
         mesa-vulkan-drivers:i386 \
-    && rm -rf /var/lib/apt/lists/* winehq.key
+    && rm -rf /var/lib/apt/lists/*
 
 # Install winetricks
 RUN wget -nv -O /usr/bin/winetricks https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks \
