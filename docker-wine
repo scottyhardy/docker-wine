@@ -325,7 +325,7 @@ add_x11_key () {
     for i in {1..15}; do
         HEX=$(xauth list "${display}" | head -n1 | awk '{print $3}')
         (( 16#$HEX ))
-        if ["${HEX}" == "0"]; then
+        if [ "${HEX}" == "0" ]; then
             #echo "✅ X11 socket is now available."
             break
         fi
@@ -333,7 +333,7 @@ add_x11_key () {
         sleep 1
     done
 
-    if ! ["${HEX}" == "0"]; then
+    if ! [ "${HEX}" == "0" ]; then
         echo "❌ Timeout: X11 socket still not available."
         exit 1
     fi
