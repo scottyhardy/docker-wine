@@ -27,7 +27,7 @@ RUN apt-get update \
 
 # Install wine
 ARG WINE_BRANCH="stable"
-RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor > /usr/share/keyrings/winehq-archive-keyring.gpg \
+RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /usr/share/keyrings/winehq-archive-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/winehq-archive-keyring.gpg] https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list \
     && dpkg --add-architecture i386 \
     && apt-get update \
