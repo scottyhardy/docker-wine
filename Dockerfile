@@ -23,7 +23,6 @@ RUN apt-get update \
         winbind \
         xvfb \
         zenity \
-        nano \
     && rm -rf /var/lib/apt/lists/*
 
 # Install wine
@@ -32,11 +31,7 @@ RUN wget -nv -O- https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor > 
     echo "deb [signed-by=/usr/share/keyrings/winehq-archive-keyring.gpg] https://dl.winehq.org/wine-builds/ubuntu/ $(grep VERSION_CODENAME= /etc/os-release | cut -d= -f2) main" >> /etc/apt/sources.list && \
     dpkg --add-architecture i386 && \
     apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install -y \
-        libwine \
-        libwine:i386 && \
-    DEBIAN_FRONTEND="noninteractive" apt-get remove -y libgl1:i386 \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y --install-recommends winehq-${WINE_BRANCH} \
     && rm -rf /var/lib/apt/lists/*
 
 # Install winetricks
