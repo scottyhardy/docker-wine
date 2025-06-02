@@ -322,6 +322,23 @@ add_x11_key () {
     fi
 
     # Get the hex key for the display from host user's .Xauthority file and store in ~/.docker-wine.Xkey
+    for i in {1..15}; do
+        HEX=$(xauth list "${display}" | head -n1 | awk '{print $3}')
+        if [[ "$HEX" =~ ^[0-9a-fA-F]+$ ]]; then
+            #echo "✅ X11 socket is now available."
+            break
+        fi
+        #echo "⏳ Waiting for X11 socket ($i/15)..."
+        sleep 1
+    done
+
+    HEX=$(xauth list "${display}" | head -n1 | awk '{print $3}')
+    if ! [[ "$HEX" =~ ^[0-9a-fA-F]+$ ]]; then
+        echo "❌ Timeout: X11 socket still not available."
+        exit 1
+    fi
+
+    # Get the hex key for the display from host user's .Xauthority file and store in ~/.docker-wine.Xkey
     xauth list "${display}" | head -n1 | awk '{print $3}' > ~/.docker-wine.Xkey
 
     # Lock down permissions
