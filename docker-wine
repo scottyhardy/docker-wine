@@ -692,28 +692,8 @@ CMD_ARGS=("$@")
 
 # Sanity checks
 if ! docker system info >/dev/null 2>&1; then
-    if [ "$(uname)" == "Darwin" ]; then
-        if open -a Docker.app; then
-            #echo "⏳ Waiting for Docker to initialize... (timeout: 15s)"
-            timeout=15
-            elapsed=0
-
-            while ! docker-compose ls > /dev/null 2>&1; do
-                sleep 1
-                ((elapsed++))
-                if [ "$elapsed" -ge "$timeout" ]; then
-                    echo "❌ Timeout waiting for Docker to start."
-                    exit 1
-                fi
-            done
-        else
-            echo "ERROR: Docker is not running or not installed, unable to proceed"
-            exit 1
-        fi
-    else
-        echo "ERROR: Docker is not running or not installed, unable to proceed"
-        exit 1
-    fi
+    echo "ERROR: Docker is not running or not installed, unable to proceed"
+    exit 1
 fi
 
 if ! echo "${USE_RDP_SERVER}" | grep -q -E "^(no|start|stop|restart|interactive)$"; then
