@@ -322,6 +322,23 @@ add_x11_key () {
     fi
 
     # Get the hex key for the display from host user's .Xauthority file and store in ~/.docker-wine.Xkey
+    for i in {1..15}; do
+        HEX=$(xauth list "${display}" | head -n1 | awk '{print $3}')
+        (( 16#$HEX ))
+        if ["${HEX}" == "0"]; then
+            #echo "✅ X11 socket is now available."
+            break
+        fi
+        #echo "⏳ Waiting for X11 socket ($i/15)..."
+        sleep 1
+    done
+
+    if ! ["${HEX}" == "0"]; then
+        echo "❌ Timeout: X11 socket still not available."
+        exit 1
+    fi
+
+    # Get the hex key for the display from host user's .Xauthority file and store in ~/.docker-wine.Xkey
     xauth list "${display}" | head -n1 | awk '{print $3}' > ~/.docker-wine.Xkey
 
     # Lock down permissions
@@ -769,21 +786,6 @@ else
         # Ensure XQuartz is running so ~/.Xauthority file is updated with new X11 key
         if ! ps -e | awk '{print $4}' | grep -q "/opt/X11/bin/Xquartz"; then
             open -a xquartz
-
-            # Wait for X11 socket to appear (timeout: 15s)
-            for i in {1..15}; do
-                if DISPLAY=:0 xdpyinfo >/dev/null 2>&1; then
-                    #echo "✅ X11 socket is now available."
-                    break
-                fi
-                #echo "⏳ Waiting for X11 socket ($i/15)..."
-                sleep 1
-            done
-
-            if DISPLAY=:0 xdpyinfo >/dev/null 2>&1; then
-                echo "❌ Timeout: X11 socket still not available."
-                exit 1
-            fi
         fi
 
         # Store the X11 key for the display in ~/.docker-wine.Xkey and add to run args
