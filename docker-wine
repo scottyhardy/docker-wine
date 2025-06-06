@@ -773,6 +773,7 @@ else
 
         # Add Linux run args
         add_run_arg --env="DISPLAY"
+        add_run_arg --volume="$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY:/tmp/$WAYLAND_DISPLAY"
         add_run_arg --volume="/tmp/.X11-unix:/tmp/.X11-unix:ro"
 
         run_container "interactive"
