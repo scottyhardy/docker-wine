@@ -51,9 +51,8 @@ print_help () {
     echo "                          default        Use the default pulseaudio config for"
     echo "                                           host OS (unix is default for Linux,"
     echo "                                           dummy is default for macOS)"
-    echo "                          unix           Use UNIX socket '/tmp/pulse-socket' to"
-    echo "                                           connect to the host machine's"
-    echo "                                           pulseaudio server (Linux only)"
+    echo "                          unix           Use the host machine's pulseaudio"
+    echo "                                           server (Linux only)"
     echo "                          dummy          Run pulseaudio server in container with"
     echo "                                           dummy (null) output"
     echo "                          none           Alias for dummy"
@@ -262,7 +261,7 @@ configure_pulseaudio () {
                     ;;
                 [Nn]|[Nn][Oo])
                     echo "Unable to start container with sound forwarding. Please install PulseAudio or alternatively use Remote Desktop. e.g. $0 --rdp"
-                    #exit 0
+                    break;
                     ;;
                 *)
                     echo "Invalid response.  Please use y or n"
@@ -370,34 +369,46 @@ configure_sound () {
 
 configure_pulseaudio_unix_socket () {
 
-    configure_pulseaudio
+    # Prefer explicitely configured server
+    pulse_socket="${PULSE_SERVER-}"
+    if [ -z "${pulse_socket}" ] && command -v pactl >/dev/null 2>&1; then
+      # Autodetect running server
+      pulse_socket="$(LANG=C pactl info | sed -n 's/^Server String: \(.*\)/\1/p')"
+    fi
 
-    # Use audio if pulseaudio is installed
-    if command -v pulseaudio >/dev/null 2>&1; then
+    if [ -z "${pulse_socket}" ]; then
+        configure_pulseaudio
 
-        # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
-        if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
-            echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
-            mkdir -p "${HOME}/.config/pulse"
-            echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket" > "${HOME}/.config/pulse/default.pa"
+        # Use audio if pulseaudio is installed
+        if command -v pulseaudio >/dev/null 2>&1; then
+            pulse_socket=/tmp/pulse-socket
+
+            # One-off setup for creation of UNIX socket for pulseaudio to allow access for other users
+            if [ ! -f "${HOME}/.config/pulse/default.pa" ]; then
+                echo "INFO: Creating pulseaudio config file ${HOME}/.config/pulse/default.pa"
+                mkdir -p "${HOME}/.config/pulse"
+                echo -e ".include /etc/pulse/default.pa\nload-module module-native-protocol-unix auth-anonymous=1 socket=${pulse_socket}" > "${HOME}/.config/pulse/default.pa"
+            fi
+
+            # Restart pulseaudio daemon to create the UNIX socket
+            if [ ! -e "${pulse_socket}" ]; then
+                echo "INFO: No socket found for pulseaudio so restarting service..."
+                pulseaudio -k
+                pulseaudio --start
+                sleep 1
+            fi
         fi
+    fi
 
-        # Restart pulseaudio daemon to create the UNIX socket
-        if [ ! -e "/tmp/pulse-socket" ]; then
-            echo "INFO: No socket found for pulseaudio so restarting service..."
-            pulseaudio -k
-            pulseaudio --start
-            sleep 1
-        fi
-
+    if [ "${pulse_socket}" ]; then
         # Add the pulseaudio UNIX socket to run args
-        if [ -e "/tmp/pulse-socket" ]; then
-            add_run_arg --volume="/tmp/pulse-socket:/tmp/pulse-socket"
+        if [ -e "${pulse_socket}" ]; then
+            add_run_arg --volume="${pulse_socket}:/tmp/pulse-socket"
         else
-            echo "INFO: pulseaudio socket /tmp/pulse-socket doesn't exist, so sound will not function"
+            echo "INFO: pulseaudio socket ${pulse_socket} doesn't exist, so sound will not function"
         fi
     else
-        echo "INFO: pulseaudio not installed so running without sound"
+        echo "INFO: No PulseAudio server found, so running without sound"
     fi
 }
 
